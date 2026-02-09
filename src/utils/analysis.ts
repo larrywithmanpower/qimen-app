@@ -24,7 +24,6 @@ const RED_AUSPICIOUS = {
 
 export function analyzePalace(palaceNum: number, data: PalaceData): PalaceAnalysis {
   let currentData = data;
-  let isCenter = false;
   let displayPalaceName = data.name;
 
   // 1. Check 5 (Central Palace Rule)

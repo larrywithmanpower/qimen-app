@@ -24,7 +24,7 @@ function App() {
 
   // Auto-update time effect
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     if (isAutoMode) {
       const updateTime = () => {
         setSelectedDate(new Date());
@@ -111,7 +111,7 @@ function App() {
                 <DatePicker
                   ref={datePickerRef}
                   selected={selectedDate}
-                  onChange={(date) => {
+                  onChange={(date: Date | null) => {
                     if (date) {
                       setIsAutoMode(false);
                       setSelectedDate(date);
@@ -126,7 +126,7 @@ function App() {
                   className={`bg-transparent border-none focus:ring-0 outline-none font-mono text-base sm:text-lg w-full text-center ${isAutoMode ? 'text-slate-400 pointer-events-none' : 'text-amber-100 cursor-pointer'}`}
                   readOnly={isAutoMode}
                   disabled={isAutoMode}
-                  popperPlacement="bottom-center"
+                  popperPlacement="bottom"
                   shouldCloseOnSelect={false}
                   renderCustomHeader={({
                     date,
