@@ -1,0 +1,55 @@
+{
+  "hash": "b8d81981",
+  "configHash": "11dac44c",
+  "lockfileHash": "47c9aa4c",
+  "browserHash": "f6ba5401",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "107b638f",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "ecae6c6b",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "cb17e49c",
+      "needsInterop": true
+    },
+    "lucide-react": {
+      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "ee63040c",
+      "needsInterop": false
+    },
+    "lunar-javascript": {
+      "src": "../../node_modules/lunar-javascript/index.js",
+      "file": "lunar-javascript.js",
+      "fileHash": "d9a6b533",
+      "needsInterop": true
+    },
+    "qimen-dunjia": {
+      "src": "../../node_modules/qimen-dunjia/index.js",
+      "file": "qimen-dunjia.js",
+      "fileHash": "6aa3753f",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-VX2H6PUQ": {
+      "file": "chunk-VX2H6PUQ.js"
+    },
+    "chunk-CB6PYVUF": {
+      "file": "chunk-CB6PYVUF.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
+    }
+  }
+}
