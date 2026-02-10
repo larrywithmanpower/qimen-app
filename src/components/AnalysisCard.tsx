@@ -1,0 +1,130 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { Sparkles, Loader2, ChevronDown } from 'lucide-react';
+
+interface AnalysisCardProps {
+  palaceNum: number;
+  palaceName: string;
+  result: string;
+  details: string[];
+  userQuestion?: string;
+  isCenter?: boolean;
+  resultColorClass: string;
+  badgeColorClass: string;
+  palaceData: any;
+}
+
+const AnalysisCard: React.FC<AnalysisCardProps> = ({
+  palaceName,
+  result,
+  details,
+  userQuestion,
+  isCenter,
+  resultColorClass,
+  badgeColorClass,
+  palaceData
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [aiResult, setAiResult] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  const handleAskAI = async () => {
+    setIsLoading(true);
+    // Placeholder for AI logic
+    console.log("Asking AI with data:", {
+      palaceSymbols: palaceData,
+      result,
+      userQuestion
+    });
+
+    // Simulate API call
+    setTimeout(() => {
+      setAiResult("### 大師解析\n\n根據您詢問的「" + userQuestion + "」，在此宮位中，我們可以看到符號的組合呈現出特殊的意涵...\n\n- **建議**：目前宜守不宜動。\n- **應期**：近期內會有轉機。");
+      setIsLoading(false);
+      setIsExpanded(true);
+    }, 2000);
+  };
+
+  useEffect(() => {
+    if (isExpanded && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [isExpanded, aiResult]);
+
+  return (
+    <div className={`p-6 rounded-3xl border transition-all duration-500 hover:shadow-xl flex flex-col ${resultColorClass}`}>
+      <div className="flex justify-between items-center mb-5 border-b border-theme-border/30 pb-4">
+        <h3 className="text-xl font-bold tracking-tight">
+          {palaceName}
+          {isCenter && <span className="text-[10px] opacity-40 ml-2 font-normal">(寄宮)</span>}
+        </h3>
+        <div className={`px-4 py-1.5 rounded-full text-sm font-black tracking-widest shadow-md ${badgeColorClass}`}>
+          {result}
+        </div>
+      </div>
+
+      <div className="space-y-4 mb-6 flex-grow">
+        {details.map((detail, idx) => (
+          <div key={idx} className="text-base font-serif opacity-80 flex items-start gap-3 leading-relaxed">
+            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-current opacity-30 flex-shrink-0"></span>
+            {detail}
+          </div>
+        ))}
+      </div>
+
+      {userQuestion && (
+        <div className="mt-auto border-t border-theme-border/30 pt-4">
+          {!aiResult ? (
+            <button
+              onClick={handleAskAI}
+              disabled={isLoading}
+              className="w-full py-3 px-4 rounded-xl bg-theme-accent/10 border border-theme-accent/20 text-theme-accent font-bold flex items-center justify-center gap-2 hover:bg-theme-accent/20 transition-all group disabled:opacity-50"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  <span>大師正在起卦中...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles size={18} className="group-hover:scale-110 transition-transform" />
+                  <span>✨ 詢問大師解析</span>
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <div
+                className={`overflow-hidden transition-all duration-700 ease-in-out ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}
+              >
+                <div ref={resultRef} className="bg-theme-bg/50 rounded-2xl p-5 border border-theme-accent/10 mt-2">
+                  <div className="flex items-center gap-2 text-theme-accent mb-3 text-sm font-bold">
+                    <Sparkles size={14} />
+                    <span>大師智慧解析</span>
+                  </div>
+                  <div className="prose prose-sm prose-invert max-w-none text-theme-primary/90 font-serif leading-relaxed">
+                    {/* Markdown rendering placeholder */}
+                    {aiResult.split('\n').map((line, i) => (
+                      <p key={i} className={line.startsWith('###') ? 'text-lg font-bold text-theme-primary mt-4 mb-2' : 'mb-2'}>
+                        {line.replace('### ', '').replace('**', '').replace('**', '')}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="w-full text-xs text-theme-primary/40 flex items-center justify-center gap-1 hover:text-theme-primary transition-colors py-1"
+              >
+                <ChevronDown size={14} className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                {isExpanded ? '收合解析' : '展開 AI 解析結果'}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default AnalysisCard;

@@ -10,6 +10,7 @@ import { zhTW } from 'date-fns/locale/zh-TW';
 import { analyzePalace } from './utils/analysis';
 import QuestionInput from './components/QuestionInput';
 import type { QuestionType } from './components/QuestionInput';
+import AnalysisCard from './components/AnalysisCard';
 
 // Register locale
 registerLocale('zh-TW', zhTW);
@@ -304,26 +305,18 @@ function App() {
                               : 'bg-green-600 text-white shadow-lg shadow-green-600/20';
 
                           return (
-                            <div key={palaceNum} className={`p-6 rounded-3xl border transition-all duration-500 hover:shadow-xl ${resultColorClass}`}>
-                              <div className="flex justify-between items-center mb-5 border-b border-theme-border/30 pb-4">
-                                <h3 className="text-xl font-bold tracking-tight">
-                                  {result.palaceName}
-                                  {isCenter && <span className="text-[10px] opacity-40 ml-2 font-normal">(寄宮)</span>}
-                                </h3>
-                                <div className={`px-4 py-1.5 rounded-full text-sm font-black tracking-widest shadow-md ${badgeColorClass}`}>
-                                  {result.result}
-                                </div>
-                              </div>
-
-                              <div className="space-y-4">
-                                {result.details.map((detail, idx) => (
-                                  <div key={idx} className="text-base font-serif opacity-80 flex items-start gap-3 leading-relaxed">
-                                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-current opacity-30 flex-shrink-0"></span>
-                                    {detail}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
+                            <AnalysisCard
+                              key={palaceNum}
+                              palaceNum={palaceNum}
+                              palaceName={result.palaceName}
+                              result={result.result}
+                              details={result.details}
+                              userQuestion={userQuestion}
+                              isCenter={isCenter}
+                              resultColorClass={resultColorClass}
+                              badgeColorClass={badgeColorClass}
+                              palaceData={analysisData}
+                            />
                           );
                         })}
                       </div>
