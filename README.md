@@ -1,5 +1,7 @@
 # 奇門遁甲排盤系統 (Qi Men Dun Jia Chart)
 
+> **🚀 線上展示：[https://larrywithmanpower.github.io/qimen-app/](https://larrywithmanpower.github.io/qimen-app/)**
+
 這是一個基於 **React**, **TypeScript** 和 **Tailwind CSS** 開發的現代化奇門遁甲排盤應用程式。提供精美的介面、即時排盤功能以及吉凶分析，並支援電腦與手機版型 (RWD)。
 
 ## ✨ 功能特色
