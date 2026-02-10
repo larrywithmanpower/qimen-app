@@ -222,16 +222,16 @@ function App() {
                     const result = analyzePalace(palaceNum, analysisData);
 
                     const resultColorClass = result.result === '大凶'
-                      ? 'bg-red-500/20 border-red-700/50 text-red-100'
+                      ? 'bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400'
                       : result.result === '凶'
                         ? 'bg-theme-card border-theme-border text-theme-primary'
-                        : 'bg-green-500/20 border-green-700/50 text-green-100';
+                        : 'bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400';
 
                     const badgeColorClass = result.result === '大凶'
-                      ? 'bg-red-600'
+                      ? 'bg-red-600 text-white'
                       : result.result === '凶'
-                        ? 'bg-theme-border text-theme-primary/70'
-                        : 'bg-green-600';
+                        ? 'bg-slate-500 text-white shadow-sm'
+                        : 'bg-green-600 text-white';
 
                     return (
                       <div key={palaceNum} className={`p-4 rounded-xl border ${resultColorClass} shadow-md`}>
@@ -270,7 +270,7 @@ function App() {
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-theme-card p-4 rounded-lg border border-theme-border flex flex-col items-center justify-center shadow-md transition-shadow hover:shadow-lg">
-      <span className="text-theme-primary/60 text-sm mb-1">{label}</span>
+      <span className="text-theme-primary opacity-60 text-sm mb-1 font-medium">{label}</span>
       <span className="text-theme-primary text-xl font-bold">{value}</span>
     </div>
   );
