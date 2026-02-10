@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQiMen } from './hooks/useQiMen';
-import { Calendar, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Sparkles, HelpCircle } from 'lucide-react';
+import GuideModal from './components/GuideModal';
 import { format } from 'date-fns';
 import QimenChart from './components/QimenChart';
 import ThemeSwitcher from './components/ThemeSwitcher';
@@ -23,6 +24,7 @@ function App() {
 
   const [userQuestion, setUserQuestion] = useState('');
   const [isCharting, setIsCharting] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     return new Date();
@@ -89,6 +91,16 @@ function App() {
     <div className="min-h-screen bg-theme-bg text-theme-primary p-4 sm:p-8 flex flex-col items-center transition-colors duration-300">
       <div className="w-full max-w-4xl flex justify-between items-center mb-4">
         <div className="flex items-center gap-2">
+          <h1 className="text-3xl font-black bg-gradient-to-r from-theme-primary to-theme-accent bg-clip-text text-transparent">
+            奇門大師
+          </h1>
+          <button
+            onClick={() => setIsGuideOpen(true)}
+            className="mt-1 p-1.5 rounded-full hover:bg-theme-accent/10 text-theme-primary/30 hover:text-theme-accent transition-all"
+            title="查看使用指南"
+          >
+            <HelpCircle size={20} />
+          </button>
           {isCharting && (
             <button
               onClick={handleReset}
@@ -167,7 +179,7 @@ function App() {
                         timeIntervals={15}
                         dateFormat="yyyy/MM/dd aa h:mm"
                         locale="zh-TW"
-                        className={`bg-transparent border-none focus:ring-0 outline-none font-mono text-xl text-theme-primary font-bold tracking-tight ${isQuestionMode ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                        className={`bg - transparent border - none focus: ring - 0 outline - none font - mono text - xl text - theme - primary font - bold tracking - tight ${isQuestionMode ? 'cursor-not-allowed' : 'cursor-pointer'} `}
                         readOnly={isAutoMode || isQuestionMode}
                         disabled={isAutoMode || isQuestionMode}
                         popperPlacement="bottom"
@@ -227,19 +239,19 @@ function App() {
                         setSelectedDate(new Date());
                         setSelectedPalaces([]);
                       }}
-                      className={`text-xs px-4 py-2 rounded-xl transition-all font-bold border ${isAutoMode
+                      className={`text - xs px - 4 py - 2 rounded - xl transition - all font - bold border ${isAutoMode
                         ? 'bg-theme-primary text-theme-bg border-theme-primary shadow-lg shadow-theme-primary/10'
                         : 'bg-theme-bg/50 text-theme-primary/40 border-theme-border hover:text-theme-primary/80 hover:border-theme-primary/30'
-                        }`}
+                        } `}
                     >
                       現在時間
                     </button>
                     <button
                       onClick={handleManualClick}
-                      className={`text-xs px-4 py-2 rounded-xl transition-all font-bold border ${!isAutoMode
+                      className={`text - xs px - 4 py - 2 rounded - xl transition - all font - bold border ${!isAutoMode
                         ? 'bg-theme-primary text-theme-bg border-theme-primary shadow-lg shadow-theme-primary/10'
                         : 'bg-theme-bg/50 text-theme-primary/40 border-theme-border hover:text-theme-primary/80 hover:border-theme-primary/30'
-                        }`}
+                        } `}
                     >
                       調整時間
                     </button>
@@ -333,6 +345,11 @@ function App() {
           </main>
         </div>
       )}
+      {/* Guide Modal */}
+      <GuideModal
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+      />
     </div>
   );
 }
