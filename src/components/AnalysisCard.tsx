@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Loader2, ChevronDown } from 'lucide-react';
+import { Sparkles, Loader2, ChevronDown, Copy, Check } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import { fetchMasterAnalysis } from '../services/aiService';
 
 interface AnalysisCardProps {
   palaceNum: number;
@@ -26,23 +28,35 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [copied, setCopied] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+
+  const handleCopy = async () => {
+    if (aiResult) {
+      await navigator.clipboard.writeText(aiResult);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   const handleAskAI = async () => {
     setIsLoading(true);
-    // Placeholder for AI logic
-    console.log("Asking AI with data:", {
-      palaceSymbols: palaceData,
-      result,
-      userQuestion
-    });
-
-    // Simulate API call
-    setTimeout(() => {
-      setAiResult("### 大師解析\n\n根據您詢問的「" + userQuestion + "」，在此宮位中，我們可以看到符號的組合呈現出特殊的意涵...\n\n- **建議**：目前宜守不宜動。\n- **應期**：近期內會有轉機。");
-      setIsLoading(false);
+    setAiResult(null);
+    try {
+      const text = await fetchMasterAnalysis(
+        userQuestion || '',
+        palaceData,
+        result
+      );
+      setAiResult(text);
       setIsExpanded(true);
-    }, 2000);
+    } catch (error) {
+      console.error(error);
+      setAiResult("⚠️ 大師目前忙線中，請稍後再試。");
+      setIsExpanded(true);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -83,7 +97,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
               {isLoading ? (
                 <>
                   <Loader2 size={18} className="animate-spin" />
-                  <span>大師正在起卦中...</span>
+                  <span>大師分析中...</span>
                 </>
               ) : (
                 <>
@@ -98,17 +112,31 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
                 className={`overflow-hidden transition-all duration-700 ease-in-out ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}
               >
                 <div ref={resultRef} className="bg-theme-bg/50 rounded-2xl p-5 border border-theme-accent/10 mt-2">
-                  <div className="flex items-center gap-2 text-theme-accent mb-3 text-sm font-bold">
-                    <Sparkles size={14} />
-                    <span>大師智慧解析</span>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2 text-theme-accent text-sm font-bold">
+                      <Sparkles size={14} />
+                      <span>大師智慧解析</span>
+                    </div>
+                    <button
+                      onClick={handleCopy}
+                      className="text-theme-primary/40 hover:text-theme-accent transition-colors p-1 rounded-md hover:bg-theme-accent/10"
+                      title="複製解析內容"
+                    >
+                      {copied ? <Check size={14} /> : <Copy size={14} />}
+                    </button>
                   </div>
-                  <div className="prose prose-sm prose-invert max-w-none text-theme-primary/90 font-serif leading-relaxed">
-                    {/* Markdown rendering placeholder */}
-                    {aiResult.split('\n').map((line, i) => (
-                      <p key={i} className={line.startsWith('###') ? 'text-lg font-bold text-theme-primary mt-4 mb-2' : 'mb-2'}>
-                        {line.replace('### ', '').replace('**', '').replace('**', '')}
-                      </p>
-                    ))}
+                  <div className="prose prose-sm prose-invert max-w-none text-theme-primary/90 font-serif leading-relaxed max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                    <ReactMarkdown
+                      components={{
+                        strong: ({ node, ...props }) => <span className="text-theme-accent font-bold" {...props} />,
+                        h3: ({ node, ...props }) => <h3 className="text-lg font-bold text-theme-primary mt-4 mb-2 border-b border-theme-border/30 pb-1" {...props} />,
+                        ul: ({ node, ...props }) => <ul className="list-disc pl-4 space-y-1 my-2 opacity-90" {...props} />,
+                        li: ({ node, ...props }) => <li className="marker:text-theme-accent" {...props} />,
+                        p: ({ node, ...props }) => <p className="mb-2" {...props} />,
+                      }}
+                    >
+                      {aiResult || ''}
+                    </ReactMarkdown>
                   </div>
                 </div>
               </div>
