@@ -8,19 +8,36 @@ export interface PalaceAnalysis {
   details: string[];
 }
 
-const GREEN_OMINOUS = {
+export const GREEN_OMINOUS = {
   gods: ['白虎'],
   stars: ['天蓬', '天芮'],
   doors: ['死門'],
   stems: ['庚']
 };
 
-const RED_AUSPICIOUS = {
+export const RED_AUSPICIOUS = {
   gods: ['值符', '太陰', '六合', '九天'], // +20
   stars: ['天輔', '天心', '天任'], // +20
   doors: ['開門', '休門', '生門'], // +40
   stems: ['乙', '丙', '丁', '戊'] // +10
 };
+
+export type ElementType = 'god' | 'star' | 'door' | 'stem';
+export type ElementStatus = 'auspicious' | 'ominous' | 'neutral';
+
+export function getElementStatus(type: ElementType, value: string): ElementStatus {
+  const mapping = {
+    god: { red: RED_AUSPICIOUS.gods, green: GREEN_OMINOUS.gods },
+    star: { red: RED_AUSPICIOUS.stars, green: GREEN_OMINOUS.stars },
+    door: { red: RED_AUSPICIOUS.doors, green: GREEN_OMINOUS.doors },
+    stem: { red: RED_AUSPICIOUS.stems, green: GREEN_OMINOUS.stems },
+  };
+
+  const config = mapping[type];
+  if (config.red.includes(value)) return 'auspicious';
+  if (config.green.includes(value)) return 'ominous';
+  return 'neutral';
+}
 
 export function analyzePalace(palaceNum: number, data: PalaceData): PalaceAnalysis {
   let currentData = data;

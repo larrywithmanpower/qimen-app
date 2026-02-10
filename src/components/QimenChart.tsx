@@ -1,5 +1,7 @@
 import React from 'react';
 import type { PalaceData } from '../hooks/useQiMen';
+import { getElementStatus } from '../utils/analysis';
+import { Check } from 'lucide-react';
 
 interface QimenChartProps {
   palaces: Record<number, PalaceData>;
@@ -20,7 +22,7 @@ const QimenChart: React.FC<QimenChartProps> = ({ palaces, selectedPalaces, onPal
   ];
 
   return (
-    <div className="grid grid-cols-3 gap-0.5 border-2 border-slate-700 bg-slate-900 rounded-lg overflow-hidden shadow-2xl w-full max-w-3xl mx-auto">
+    <div className="grid grid-cols-3 gap-px border-2 border-theme-border bg-theme-border rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto ring-1 ring-theme-border">
       {gridMapping.map((palaceNum) => {
         const palace = palaces[palaceNum];
         // Palace 5 is Center
@@ -47,48 +49,68 @@ const PalaceCell: React.FC<{
   isSelected: boolean;
   onClick: () => void;
 }> = ({ data, isCenter, isSelected, onClick }) => {
-  if (!data) return <div className="border border-slate-700 bg-slate-800"></div>;
+  if (!data) return <div className="bg-theme-bg"></div>;
+
+  const getStatusColor = (type: 'god' | 'star' | 'door' | 'stem', value: string, baseColor: string) => {
+    const status = getElementStatus(type, value);
+    if (status === 'auspicious') return 'text-red-500 font-bold drop-shadow-[0_0_1px_rgba(239,68,68,0.5)]';
+    if (status === 'ominous') return 'text-green-500 font-bold drop-shadow-[0_0_1px_rgba(34,197,94,0.5)]';
+    return baseColor;
+  };
 
   return (
     <button
       onClick={onClick}
-      className={`relative border min-h-[110px] sm:min-h-[180px] p-1 sm:p-3 flex flex-col items-center justify-between transition-all w-full
-        ${isCenter ? 'bg-slate-800/80' : 'bg-slate-800/50 hover:bg-slate-700/80'}
+      className={`relative min-h-[125px] sm:min-h-[200px] p-2 sm:p-5 flex flex-col items-center justify-between transition-all w-full outline-none group
+        ${isCenter ? 'bg-theme-card/95' : 'bg-theme-card/70 hover:bg-theme-card/90'}
         ${isSelected
-          ? 'border-yellow-400 ring-2 ring-yellow-400/50 z-10 scale-[1.02] shadow-[0_0_15px_rgba(250,204,21,0.3)]'
-          : 'border-slate-700 hover:border-slate-500'
+          ? 'z-20 bg-theme-accent/10 ring-2 ring-inset ring-theme-accent shadow-[inset_0_0_20px_rgba(var(--color-accent-rgb),0.1)]'
+          : ''
         }
       `}
     >
-      {/* Background/Watermark Name (Top Left or Subtle) */}
-      <div className={`absolute top-1 left-1 text-[10px] font-mono ${isSelected ? 'text-yellow-300 font-bold' : 'text-slate-600'}`}>
+      {/* Background/Watermark Name - Increased size for better readability */}
+      <div className={`absolute top-1 left-1/2 -translate-x-1/2 text-xs sm:text-base font-semibold opacity-30 select-none transition-opacity group-hover:opacity-50 whitespace-nowrap ${isSelected ? 'text-theme-accent opacity-60' : 'text-theme-primary'}`}>
         {data.name}
       </div>
 
+      {/* Selection Indicator (Checkmark) */}
+      {isSelected && (
+        <div className="absolute top-1.5 right-1.5 text-theme-accent animate-in fade-in zoom-in duration-300">
+          <Check size={14} strokeWidth={3} />
+        </div>
+      )}
+
       {/* Top Section: God (Left) & Star (Right) */}
-      <div className="w-full flex justify-between items-start px-1 mt-1 sm:mt-2">
-        <div className="text-[10px] sm:text-sm text-amber-200/80 writing-vertical-rl" style={{ writingMode: 'vertical-rl' }}>
+      <div className="w-full flex justify-between items-start px-0.5 mt-1">
+        <div
+          className={`text-sm sm:text-xl writing-vertical-rl transition-colors ${getStatusColor('god', data.god, 'text-theme-primary/80')}`}
+          style={{ writingMode: 'vertical-rl' }}
+        >
           {data.god}
         </div>
-        <div className="text-[10px] sm:text-sm text-emerald-200/80 writing-vertical-rl" style={{ writingMode: 'vertical-rl' }}>
+        <div
+          className={`text-sm sm:text-xl writing-vertical-rl transition-colors ${getStatusColor('star', data.star, 'text-theme-primary/80')}`}
+          style={{ writingMode: 'vertical-rl' }}
+        >
           {data.star}
         </div>
       </div>
 
       {/* Center Section: Stems & Door */}
-      <div className="flex flex-col items-center justify-center flex-1 gap-0.5 sm:gap-1 py-1 sm:py-2">
+      <div className="flex flex-col items-center justify-center flex-1 gap-1.5 sm:gap-3 py-1">
         {/* Heaven Stem */}
-        <div className="text-sm sm:text-lg font-bold text-sky-300 leading-none">
+        <div className={`text-xl sm:text-3xl font-bold leading-none ${getStatusColor('stem', data.heavenStem, 'text-sky-400')}`}>
           {data.heavenStem}
         </div>
 
         {/* Door - Most Prominent */}
-        <div className={`text-xl sm:text-3xl font-black leading-tight tracking-wider my-0.5 sm:my-1 drop-shadow-md ${isSelected ? 'text-yellow-400 animate-pulse' : 'text-amber-400'}`}>
+        <div className={`text-3xl sm:text-5xl font-black leading-tight tracking-[0.15em] my-1 drop-shadow-xl transition-transform group-hover:scale-105 ${getStatusColor('door', data.door, 'text-cyan-500')} ${isSelected && 'drop-shadow-[0_0_8px_rgba(var(--color-accent-rgb),0.3)]'}`}>
           {data.door}
         </div>
 
         {/* Earth Stem */}
-        <div className="text-sm sm:text-lg font-bold text-orange-200/80 leading-none">
+        <div className="text-base sm:text-xl font-bold text-theme-primary/50 leading-none">
           {data.earthStem}
         </div>
       </div>

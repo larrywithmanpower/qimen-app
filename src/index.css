@@ -2,8 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-bg: #0f172a;
+  --color-primary: #f59e0b;
+  --color-border: #334155;
+  --color-card: #1e293b;
+  --color-accent: #f59e0b;
+  /* Default accent same as primary for dark */
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.theme-light {
+  --color-bg: #fdf6e3;
+  --color-primary: #1c1917;
+  --color-border: #d6d3d1;
+  --color-card: #f5f5f4;
+  --color-accent: #991b1b;
+}
+
+.theme-emerald {
+  --color-bg: #022c22;
+  --color-primary: #34d399;
+  --color-border: #064e3b;
+  --color-card: #065f46;
+  --color-accent: #fbbf24;
+}
+
 body {
-  @apply bg-slate-900 text-slate-100;
+  background-color: var(--color-bg);
+  color: var(--color-primary);
 }
 
 /* Native Picker Override (Fallback) */
@@ -24,47 +51,50 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 /* 1. Ensure high Z-Index */
 .react-datepicker-popper {
   z-index: 9999 !important;
-  /* Extremely high to beat any chart overlap */
 }
 
 /* 2. Main Container - Flex Row Layout */
 .react-datepicker {
-  @apply bg-slate-800 border border-slate-700 font-sans text-slate-100 shadow-2xl rounded-xl overflow-hidden !important;
-  /* Main Container - Grid Layout for Robustness */
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  @apply font-sans shadow-2xl rounded-xl overflow-hidden !important;
+  color: var(--color-primary) !important;
   display: grid !important;
   grid-template-columns: max-content 6rem !important;
   grid-template-rows: 1fr auto !important;
-  /* Row 1: Content, Row 2: Bottom Bar */
   width: max-content !important;
   padding: 0 !important;
-  /* Remove any padding triggers */
 }
 
 /* 3. Header Styling - UNIFIED HEIGHT */
-/* Left Header (Month/Year + Days) */
 .react-datepicker__header {
-  @apply bg-slate-900 border-b border-slate-700 !important;
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border) !important;
   padding: 0 !important;
-  /* Allow custom header to define height */
   height: auto !important;
   box-sizing: border-box !important;
 }
 
 .react-datepicker__current-month {
-  @apply text-amber-100 font-bold mb-2 !important;
+  color: var(--color-primary) !important;
+  @apply font-bold mb-2 !important;
 }
 
 .react-datepicker__day-name {
   @apply text-slate-400 font-medium !important;
 }
 
+.theme-light .react-datepicker__day-name {
+  @apply text-slate-500 !important;
+}
+
 /* Right Header (Time) - MATCH HEIGHT & COLOR */
 .react-datepicker-time__header {
-  @apply bg-slate-900 border-b border-slate-700 font-bold !important;
-  color: #f59e0b !important;
-  /* Force Amber-500 Hex */
-  fill: #f59e0b !important;
-  /* Fixed 50px height for alignment with custom header */
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border) !important;
+  @apply font-bold !important;
+  color: var(--color-primary) !important;
+  fill: var(--color-primary) !important;
   height: 50px !important;
   display: flex !important;
   align-items: center !important;
@@ -74,12 +104,21 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 }
 
 .react-datepicker__day {
-  @apply text-slate-200 hover:bg-slate-700 rounded-full transition-colors !important;
+  color: var(--color-primary) !important;
+  @apply rounded-full transition-colors !important;
+  opacity: 0.8;
+}
+
+.react-datepicker__day:hover {
+  background-color: var(--color-bg);
+  opacity: 1;
 }
 
 .react-datepicker__day--selected,
 .react-datepicker__day--keyboard-selected {
-  @apply bg-amber-500 text-slate-900 font-bold shadow-lg shadow-amber-500/20 !important;
+  background-color: var(--color-accent) !important;
+  color: var(--color-bg) !important;
+  @apply font-bold shadow-lg !important;
 }
 
 .react-datepicker__day--disabled {
@@ -88,7 +127,8 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 
 /* 4. Month Container */
 .react-datepicker__month-container {
-  @apply flex-1 border-r border-slate-700 !important;
+  @apply flex-1 !important;
+  border-right: 1px solid var(--color-border) !important;
   display: flex !important;
   flex-direction: column !important;
   grid-column: 1 !important;
@@ -97,30 +137,27 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 
 /* 5. Time Container - Side by Side with Scroll Fix */
 .react-datepicker__time-container {
-  @apply bg-slate-800 w-24 border-l-0 !important;
+  background-color: var(--color-card);
+  @apply w-24 border-l-0 !important;
   grid-column: 2 !important;
   grid-row: 1 !important;
-  /* Infinite Scroll Fix in Grid: contribute 0 height to row, but stretch to match row height */
   height: 0 !important;
   min-height: 100% !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
-  border-left: 1px solid #334155 !important;
+  border-left: 1px solid var(--color-border) !important;
 }
 
 .react-datepicker__time-container .react-datepicker__time {
-  @apply bg-slate-800 !important;
+  background-color: var(--color-card) !important;
   height: 100% !important;
-  /* Fill container */
   border-bottom-right-radius: 0 !important;
 }
 
 .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
   height: 100% !important;
-  /* Fill container */
   overflow-y: auto !important;
-  /* ENABLE SCROLL */
   width: 100% !important;
   border-bottom-right-radius: 0 !important;
 }
@@ -131,30 +168,48 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 }
 
 .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box::-webkit-scrollbar-track {
-  @apply bg-slate-800;
+  background-color: var(--color-bg);
 }
 
 .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box::-webkit-scrollbar-thumb {
-  @apply bg-slate-600 rounded-full;
+  background-color: var(--color-border);
+  @apply rounded-full;
 }
 
 .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item {
-  @apply text-slate-300 hover:bg-slate-700 h-8 flex items-center justify-center transition-colors text-sm !important;
+  color: var(--color-primary);
+  opacity: 0.7;
+  @apply h-8 flex items-center justify-center transition-colors text-sm !important;
   padding: 0 !important;
 }
 
+.react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item:hover {
+  background-color: var(--color-bg);
+  opacity: 1;
+}
+
 .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box ul.react-datepicker__time-list li.react-datepicker__time-list-item--selected {
-  @apply bg-amber-500 text-slate-900 font-bold !important;
+  background-color: var(--color-accent) !important;
+  color: var(--color-bg) !important;
+  @apply font-bold !important;
 }
 
 /* Navigation Icons */
 .react-datepicker__navigation-icon::before {
-  @apply border-slate-400 hover:border-amber-400 transition-colors !important;
+  border-color: var(--color-primary) !important;
+  opacity: 0.5;
+  @apply transition-colors !important;
+}
+
+.react-datepicker__navigation-icon:hover::before {
+  opacity: 1;
 }
 
 /* 6. Children Container (Confirm Button) - Explicitly Full Width Bottom */
 .react-datepicker__children-container {
-  @apply w-full border-t border-slate-700 bg-slate-900 p-2 !important;
+  background-color: var(--color-bg);
+  border-top: 1px solid var(--color-border) !important;
+  @apply w-full p-2 !important;
   grid-column: 1 / span 2 !important;
   grid-row: 2 !important;
   width: 100% !important;
@@ -169,34 +224,26 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 
 /* Mobile Responsive */
 @media (max-width: 640px) {
-
-  /* 1. Main Container: Stack Vertically */
   .react-datepicker {
     display: flex !important;
     flex-direction: column !important;
     width: 90vw !important;
-    /* Responsive width */
     max-width: 350px !important;
     padding: 0 !important;
-    /* Reset desktop padding */
   }
 
-  /* 2. Month Container: Full Width */
   .react-datepicker__month-container {
     width: 100% !important;
     border-right: none !important;
-    border-bottom: 1px solid #334155 !important;
+    border-bottom: 1px solid var(--color-border) !important;
     grid-column: auto !important;
     grid-row: auto !important;
   }
 
-  /* 3. Time Container: Below Month */
   .react-datepicker__time-container {
     position: relative !important;
-    /* Reset absolute */
     width: 100% !important;
     height: 150px !important;
-    /* Fixed height for scroll */
     min-height: auto !important;
     border-left: none !important;
     grid-column: auto !important;
@@ -208,15 +255,12 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 
   .react-datepicker__header--time {
     display: none !important;
-    /* Hide 'Time' header on mobile to save space, or keep it if desired? expanding list is enough */
   }
 
   .react-datepicker-time__header {
     display: none !important;
-    /* Hide the header text as well */
   }
 
-  /* 4. Children Container: Bottom */
   .react-datepicker__children-container {
     width: 100% !important;
     margin: 0 !important;

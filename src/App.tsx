@@ -3,6 +3,7 @@ import { useQiMen } from './hooks/useQiMen';
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import QimenChart from './components/QimenChart';
+import ThemeSwitcher from './components/ThemeSwitcher';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { zhTW } from 'date-fns/locale/zh-TW';
@@ -60,11 +61,14 @@ function App() {
   const qimenData = useQiMen(selectedDate);
 
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-8 flex flex-col items-center">
+    <div className="min-h-screen bg-theme-bg text-theme-primary p-8 flex flex-col items-center transition-colors duration-300">
+      <div className="w-full max-w-4xl flex justify-end mb-4">
+        <ThemeSwitcher />
+      </div>
       <header className="mb-12 text-center w-full max-w-md">
-        <h1 className="text-4xl font-bold text-amber-200 mb-6">奇門遁甲排盤</h1>
+        <h1 className="text-4xl font-bold text-theme-primary mb-6 opacity-90">奇門遁甲排盤</h1>
 
-        <div className="bg-slate-800 p-6 rounded-xl shadow-lg border border-slate-700 space-y-4">
+        <div className="bg-theme-card p-6 rounded-xl shadow-lg border border-theme-border space-y-4">
           <div className="flex flex-col gap-4">
 
             <div className="flex gap-4">
@@ -75,8 +79,8 @@ function App() {
                   setSelectedPalaces([]);
                 }}
                 className={`flex-1 py-2 px-4 rounded-lg transition-all font-medium border ${isAutoMode
-                  ? 'bg-amber-500 text-slate-900 border-amber-500 shadow-md'
-                  : 'bg-slate-700/50 text-slate-400 border-slate-600 hover:text-slate-200 hover:bg-slate-700'
+                  ? 'bg-theme-primary text-theme-bg border-theme-primary shadow-md'
+                  : 'bg-theme-bg/50 text-theme-primary/60 border-theme-border hover:text-theme-primary hover:bg-theme-bg'
                   }`}
               >
                 現在時間
@@ -86,8 +90,8 @@ function App() {
                 ref={manualButtonRef}
                 onClick={handleManualClick}
                 className={`flex-1 py-2 px-4 rounded-lg transition-all font-medium border ${!isAutoMode
-                  ? 'bg-amber-500 text-slate-900 border-amber-500 shadow-md'
-                  : 'bg-slate-700/50 text-slate-400 border-slate-600 hover:text-slate-200 hover:bg-slate-700'
+                  ? 'bg-theme-primary text-theme-bg border-theme-primary shadow-md'
+                  : 'bg-theme-bg/50 text-theme-primary/60 border-theme-border hover:text-theme-primary hover:bg-theme-bg'
                   }`}
               >
                 自行輸入
@@ -96,12 +100,12 @@ function App() {
 
             <div
               ref={wrapperRef}
-              className={`flex items-center justify-center gap-4 p-3 rounded-lg border transition-colors ${!isAutoMode ? 'bg-slate-700/50 border-amber-500/50 ring-2 ring-amber-500/20' : 'bg-slate-700/30 border-slate-600/50'
+              className={`flex items-center justify-center gap-4 p-3 rounded-lg border transition-colors ${!isAutoMode ? 'bg-theme-bg/50 border-theme-primary/50 ring-2 ring-theme-primary/20' : 'bg-theme-bg/30 border-theme-border/50'
                 }`}
             >
               <button
                 onClick={handleManualClick}
-                className={`p-2 rounded-full hover:bg-slate-600/50 transition-colors ${isAutoMode ? "text-slate-500" : "text-amber-400"}`}
+                className={`p-2 rounded-full hover:bg-theme-bg/50 transition-colors ${isAutoMode ? "text-theme-primary/40" : "text-theme-primary"}`}
                 title="點擊開啟日期選擇器"
               >
                 <Calendar size={24} />
@@ -123,7 +127,7 @@ function App() {
                   timeIntervals={15}
                   dateFormat="yyyy/MM/dd aa h:mm"
                   locale="zh-TW"
-                  className={`bg-transparent border-none focus:ring-0 outline-none font-mono text-base sm:text-lg w-full text-center ${isAutoMode ? 'text-slate-400 pointer-events-none' : 'text-amber-100 cursor-pointer'}`}
+                  className={`bg-transparent border-none focus:ring-0 outline-none font-mono text-base sm:text-lg w-full text-center ${isAutoMode ? 'text-theme-primary/40 pointer-events-none' : 'text-theme-primary cursor-pointer'}`}
                   readOnly={isAutoMode}
                   disabled={isAutoMode}
                   popperPlacement="bottom"
@@ -135,17 +139,17 @@ function App() {
                     prevMonthButtonDisabled,
                     nextMonthButtonDisabled,
                   }) => (
-                    <div className="flex items-center justify-between px-4 h-[50px] bg-slate-900 box-border">
+                    <div className="flex items-center justify-between px-4 h-[50px] bg-theme-bg box-border">
                       <button
                         onClick={decreaseMonth}
                         disabled={prevMonthButtonDisabled}
                         type="button"
-                        className="p-2 hover:bg-slate-700 rounded-full text-amber-500 transition-colors disabled:opacity-50"
+                        className="p-2 hover:bg-theme-card rounded-full text-theme-primary transition-colors disabled:opacity-50"
                       >
                         <ChevronLeft size={20} />
                       </button>
 
-                      <span className="text-amber-500 font-bold text-lg">
+                      <span className="text-theme-primary font-bold text-lg">
                         {format(date, "MMMM yyyy", { locale: zhTW })}
                       </span>
 
@@ -153,21 +157,21 @@ function App() {
                         onClick={increaseMonth}
                         disabled={nextMonthButtonDisabled}
                         type="button"
-                        className="p-2 hover:bg-slate-700 rounded-full text-amber-500 transition-colors disabled:opacity-50"
+                        className="p-2 hover:bg-theme-card rounded-full text-theme-primary transition-colors disabled:opacity-50"
                       >
                         <ChevronRight size={20} />
                       </button>
                     </div>
                   )}
                 >
-                  <div className="border-t border-slate-700 p-2 flex justify-end bg-slate-900">
+                  <div className="border-t border-theme-border p-2 flex justify-end bg-theme-bg">
                     <button
                       onClick={() => {
                         if (datePickerRef.current) {
                           datePickerRef.current.setOpen(false);
                         }
                       }}
-                      className="bg-amber-500 text-slate-900 px-4 py-1 rounded font-bold hover:bg-amber-400 transition-colors text-sm"
+                      className="bg-theme-primary text-theme-bg px-4 py-1 rounded font-bold hover:opacity-90 transition-colors text-sm"
                     >
                       確定
                     </button>
@@ -191,7 +195,7 @@ function App() {
               <InfoCard label="值使" value={qimenData.zhiShi} />
             </section>
 
-            <section className="bg-slate-800 rounded-xl p-4 border border-slate-700 flex justify-center">
+            <section className="bg-theme-card rounded-xl p-4 border border-theme-border flex justify-center shadow-inner overflow-x-auto">
               <QimenChart
                 palaces={qimenData.palaces}
                 selectedPalaces={selectedPalaces}
@@ -202,8 +206,8 @@ function App() {
             {/* Analysis Results */}
             {selectedPalaces.length > 0 && (
               <section className="grid gap-4 mt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-2xl font-bold text-amber-100 mb-2 flex items-center gap-2">
-                  <span className="w-1 h-8 bg-amber-500 rounded-full inline-block"></span>
+                <h2 className="text-2xl font-bold text-theme-primary mb-2 flex items-center gap-2">
+                  <span className="w-1 h-8 bg-theme-accent rounded-full inline-block"></span>
                   吉凶分析
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -217,24 +221,33 @@ function App() {
                     const analysisData = isCenter ? { ...data, name: "中五 (寄坤二)" } : data;
                     const result = analyzePalace(palaceNum, analysisData);
 
+                    const resultColorClass = result.result === '大凶'
+                      ? 'bg-red-500/20 border-red-700/50 text-red-100'
+                      : result.result === '凶'
+                        ? 'bg-theme-card border-theme-border text-theme-primary'
+                        : 'bg-green-500/20 border-green-700/50 text-green-100';
+
+                    const badgeColorClass = result.result === '大凶'
+                      ? 'bg-red-600'
+                      : result.result === '凶'
+                        ? 'bg-theme-border text-theme-primary/70'
+                        : 'bg-green-600';
+
                     return (
-                      <div key={palaceNum} className={`p-4 rounded-xl border ${result.result === '大凶' ? 'bg-red-900/20 border-red-700/50' : result.result === '凶' ? 'bg-slate-800 border-slate-700' : 'bg-green-900/20 border-green-700/50'}`}>
-                        <div className="flex justify-between items-start mb-3 border-b border-slate-700/50 pb-2">
-                          <h3 className="text-lg font-bold text-slate-200">
+                      <div key={palaceNum} className={`p-4 rounded-xl border ${resultColorClass} shadow-md`}>
+                        <div className="flex justify-between items-start mb-3 border-b border-theme-border/50 pb-2">
+                          <h3 className="text-lg font-bold">
                             {result.palaceName}
-                            {isCenter && <span className="text-xs text-slate-400 ml-2">(寄宮)</span>}
+                            {isCenter && <span className="text-xs opacity-60 ml-2">(寄宮)</span>}
                           </h3>
-                          <div className={`px-3 py-1 rounded text-sm font-bold ${result.result === '大凶' ? 'bg-red-500 text-white shadow-red-500/20 shadow-lg' :
-                            result.result === '凶' ? 'bg-slate-600 text-slate-300' :
-                              'bg-green-500 text-white shadow-green-500/20 shadow-lg'
-                            }`}>
+                          <div className={`px-3 py-1 rounded text-sm font-bold text-white shadow-lg ${badgeColorClass}`}>
                             {result.result}
                           </div>
                         </div>
 
                         <div className="space-y-2">
                           {result.details.map((detail, idx) => (
-                            <div key={idx} className="text-sm font-mono text-slate-300 flex items-center gap-2">
+                            <div key={idx} className="text-sm font-mono opacity-80 flex items-center gap-2">
                               {detail}
                             </div>
                           ))}
@@ -247,18 +260,18 @@ function App() {
             )}
           </div>
         ) : (
-          <div className="text-center text-slate-400">計算中...</div>
+          <div className="text-center text-theme-primary/50">計算中...</div>
         )}
       </main>
-    </div >
+    </div>
   );
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-slate-800 p-4 rounded-lg border border-slate-700 flex flex-col items-center justify-center shadow-md">
-      <span className="text-slate-400 text-sm mb-1">{label}</span>
-      <span className="text-amber-100 text-xl font-bold">{value}</span>
+    <div className="bg-theme-card p-4 rounded-lg border border-theme-border flex flex-col items-center justify-center shadow-md transition-shadow hover:shadow-lg">
+      <span className="text-theme-primary/60 text-sm mb-1">{label}</span>
+      <span className="text-theme-primary text-xl font-bold">{value}</span>
     </div>
   );
 }
