@@ -21,7 +21,6 @@ function App() {
   const [selectedPalaces, setSelectedPalaces] = useState<number[]>([]);
 
   const [userQuestion, setUserQuestion] = useState('');
-  const [questionType, setQuestionType] = useState<QuestionType>('general');
   const [isCharting, setIsCharting] = useState(false);
 
   const [selectedDate, setSelectedDate] = useState(() => {
@@ -59,9 +58,8 @@ function App() {
     });
   };
 
-  const handleStartCharting = (question: string, type: QuestionType) => {
+  const handleStartCharting = (question: string, _type: QuestionType) => {
     setUserQuestion(question);
-    setQuestionType(type);
     setIsCharting(true);
     setSelectedPalaces([]);
 
@@ -79,7 +77,6 @@ function App() {
     setIsCharting(false);
     setSelectedPalaces([]);
     setUserQuestion('');
-    setQuestionType('general');
     setIsAutoMode(false); // Reset to manual for next pull or let QuestionInput handle it
   };
 
