@@ -18,6 +18,8 @@ import { fetchMultiPalaceAnalysis } from './services/aiService';
 import ReactMarkdown from 'react-markdown';
 import { Loader2 } from 'lucide-react';
 import RitualLoading from './components/RitualLoading';
+import Onboarding from './components/Onboarding';
+import { AnimatePresence } from 'framer-motion';
 
 // Register locale
 registerLocale('zh-TW', zhTW);
@@ -32,6 +34,7 @@ function App() {
   const [isCharting, setIsCharting] = useState(false);
   const [isPreCharting, setIsPreCharting] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [restoredEntry, setRestoredEntry] = useState<HistoryEntry | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -61,6 +64,13 @@ function App() {
       setScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
+
+    // Onboarding check
+    const hasSeenGuide = localStorage.getItem('hasSeenGuide');
+    if (!hasSeenGuide) {
+      setTimeout(() => setShowOnboarding(true), 1500);
+    }
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -173,9 +183,9 @@ function App() {
               奇門大師
             </h1>
             <button
-              onClick={() => setIsGuideOpen(true)}
+              onClick={() => setShowOnboarding(true)}
               className="mt-1 p-1.5 rounded-full hover:bg-theme-accent/10 text-theme-primary/30 hover:text-theme-accent transition-all"
-              title="查看使用指南"
+              title="查看新手教學"
             >
               <HelpCircle size={20} />
             </button>
@@ -509,6 +519,12 @@ function App() {
           onClose={() => setIsHistoryOpen(false)}
           onRestore={handleRestoreHistory}
         />
+
+        <AnimatePresence>
+          {showOnboarding && (
+            <Onboarding onClose={() => setShowOnboarding(false)} />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
