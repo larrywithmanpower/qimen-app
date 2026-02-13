@@ -14,6 +14,9 @@ import { analyzePalace } from './utils/analysis';
 import QuestionInput from './components/QuestionInput';
 import type { QuestionType } from './components/QuestionInput';
 import AnalysisCard from './components/AnalysisCard';
+import { fetchMultiPalaceAnalysis } from './services/aiService';
+import ReactMarkdown from 'react-markdown';
+import { Loader2 } from 'lucide-react';
 
 // Register locale
 registerLocale('zh-TW', zhTW);
@@ -30,6 +33,8 @@ function App() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [restoredEntry, setRestoredEntry] = useState<HistoryEntry | null>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [isComparing, setIsComparing] = useState(false);
+  const [comparisonResult, setComparisonResult] = useState<string | null>(null);
 
   const [selectedDate, setSelectedDate] = useState(() => {
     return new Date();
@@ -96,6 +101,7 @@ function App() {
     setUserQuestion('');
     setIsAutoMode(false); // Reset to manual for next pull or let QuestionInput handle it
     setRestoredEntry(null);
+    setComparisonResult(null);
   };
 
   const handleRestoreHistory = (entry: HistoryEntry) => {
@@ -107,6 +113,34 @@ function App() {
     setIsAutoMode(false);
   };
 
+  const handleComparePalaces = async () => {
+    if (selectedPalaces.length < 2 || !qimenData) return;
+    setIsComparing(true);
+    setComparisonResult(null);
+
+    const palacesToCompare = selectedPalaces.map(num => {
+      const isCenter = num === 5;
+      const targetNum = isCenter ? 2 : num;
+      const data = qimenData.palaces[targetNum];
+      const analysis = analyzePalace(num, isCenter ? { ...data, name: "中五 (寄坤二)" } : data);
+      return {
+        ...data,
+        name: analysis.palaceName,
+        resultScore: analysis.result
+      };
+    });
+
+    try {
+      const text = await fetchMultiPalaceAnalysis(userQuestion, palacesToCompare);
+      setComparisonResult(text);
+    } catch (error) {
+      console.error(error);
+      setComparisonResult("⚠️ 大師在比對時分神了，請再試一次。");
+    } finally {
+      setIsComparing(false);
+    }
+  };
+
   const qimenData = useQiMen(selectedDate);
 
   const isQuestionMode = userQuestion.length > 0;
@@ -116,8 +150,8 @@ function App() {
       {/* Sticky Header */}
       <header
         className={`sticky top-0 z-40 w-full flex justify-center transition-all duration-300 ${scrolled
-            ? 'bg-theme-bg/80 backdrop-blur-xl border-b border-theme-border/30 shadow-lg py-2'
-            : 'bg-theme-bg/0 backdrop-blur-none border-b border-transparent py-4'
+          ? 'bg-theme-bg/80 backdrop-blur-xl border-b border-theme-border/30 shadow-lg py-2'
+          : 'bg-theme-bg/0 backdrop-blur-none border-b border-transparent py-4'
           }`}
       >
         <div className="w-full max-w-4xl flex justify-between items-center px-4 sm:px-8">
@@ -383,6 +417,58 @@ function App() {
                             );
                           })}
                         </div>
+                      </section>
+                    )}
+
+                    {/* Master Comparison Section */}
+                    {selectedPalaces.length > 1 && (
+                      <section className="mt-8 border-t border-theme-border pt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+                        {!comparisonResult ? (
+                          <button
+                            onClick={handleComparePalaces}
+                            disabled={isComparing}
+                            className="w-full py-4 rounded-2xl bg-theme-accent text-theme-bg font-black text-lg shadow-xl shadow-theme-accent/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                          >
+                            {isComparing ? (
+                              <>
+                                <Loader2 className="animate-spin" size={24} />
+                                <span>大師正在進行綜合對比...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles size={24} />
+                                <span>✨ 請大師進行多宮位綜合比對</span>
+                              </>
+                            )}
+                          </button>
+                        ) : (
+                          <div className="bg-theme-card/30 rounded-3xl border border-theme-accent/20 p-6 sm:p-8">
+                            <div className="flex items-center gap-3 mb-6">
+                              <div className="p-2 rounded-lg bg-theme-accent/10 text-theme-accent">
+                                <Sparkles size={20} />
+                              </div>
+                              <h3 className="text-xl font-bold">大師綜合比對建議</h3>
+                              <button
+                                onClick={() => setComparisonResult(null)}
+                                className="ml-auto text-xs text-theme-primary/30 hover:text-theme-primary"
+                              >
+                                重新比對
+                              </button>
+                            </div>
+                            <div className="prose prose-invert max-w-none text-theme-primary/90 font-serif leading-relaxed">
+                              <ReactMarkdown
+                                components={{
+                                  strong: ({ node, ...props }) => <span className="text-theme-accent font-bold" {...props} />,
+                                  h3: ({ node, ...props }) => <h3 className="text-xl font-bold text-theme-primary mt-6 mb-3 border-b border-theme-border/30 pb-2" {...props} />,
+                                  ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-2 my-4" {...props} />,
+                                  p: ({ node, ...props }) => <p className="mb-4" {...props} />,
+                                }}
+                              >
+                                {comparisonResult}
+                              </ReactMarkdown>
+                            </div>
+                          </div>
+                        )}
                       </section>
                     )}
                   </div>
