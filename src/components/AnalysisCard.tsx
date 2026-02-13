@@ -5,6 +5,7 @@ import { fetchMasterAnalysis } from '../services/aiService';
 import { useHistory } from '../context/HistoryContext';
 import { exportElementAsImage } from '../utils/exportImage';
 import { motion } from 'framer-motion';
+import { triggerSuccessHaptic } from '../utils/haptics';
 
 interface AnalysisCardProps {
   palaceNum: number;
@@ -17,6 +18,7 @@ interface AnalysisCardProps {
   badgeColorClass: string;
   palaceData: any;
   predefinedResult?: string | null;
+  isMainPalace?: boolean;
 }
 
 const AnalysisCard: React.FC<AnalysisCardProps> = ({
@@ -29,7 +31,8 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   resultColorClass,
   badgeColorClass,
   palaceData,
-  predefinedResult
+  predefinedResult,
+  isMainPalace = false
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(predefinedResult || null);
@@ -183,32 +186,46 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
               <div
                 className={`overflow-hidden transition-all duration-700 ease-in-out ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}
               >
-                <div ref={resultRef} className="bg-theme-bg/50 rounded-2xl p-5 border border-theme-accent/10 mt-2">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2 text-theme-accent text-sm font-bold">
-                      <Sparkles size={14} />
-                      <span>大師智慧解析</span>
+                <motion.div
+                  ref={resultRef}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  onAnimationComplete={() => {
+                    if (isExpanded) triggerSuccessHaptic();
+                  }}
+                  className="bg-theme-bg/50 rounded-2xl p-5 border border-theme-accent/10 mt-2"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div className="flex flex-wrap items-center gap-2 text-theme-accent text-sm font-bold">
+                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-theme-accent/5 border border-theme-accent/10">
+                        <Sparkles size={14} />
+                        <span>大師智慧解析</span>
+                      </div>
+                      {isMainPalace && (
+                        <span className="px-2 py-1 rounded-lg bg-theme-accent/20 text-[10px] animate-pulse border border-theme-accent/30 shadow-glow-sm">✨ 心動之宮</span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
                       <button
                         onClick={handleExport}
                         disabled={isExporting}
-                        className="text-theme-primary/40 hover:text-theme-accent transition-colors p-1.5 rounded-md hover:bg-theme-accent/10 flex items-center gap-1.5 text-[10px] font-bold"
+                        className="text-theme-primary/40 hover:text-theme-accent transition-all p-2 rounded-xl hover:bg-theme-accent/10 flex items-center gap-1.5 text-xs font-bold border border-transparent hover:border-theme-accent/20 active:scale-95 disabled:opacity-50"
                         title="匯出圖文卡片"
                       >
-                        {isExporting ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
-                        {isExporting ? '正在生成...' : '📸 匯出圖片'}
+                        {isExporting ? <Loader2 size={16} className="animate-spin" /> : <ImageIcon size={16} />}
+                        <span className="hidden sm:inline">{isExporting ? '正在生成...' : '匯出圖片'}</span>
                       </button>
                       <button
                         onClick={handleCopy}
-                        className="text-theme-primary/40 hover:text-theme-accent transition-colors p-1.5 rounded-md hover:bg-theme-accent/10"
+                        className="text-theme-primary/40 hover:text-theme-accent transition-all p-2 rounded-xl hover:bg-theme-accent/10 flex items-center gap-1.5 text-xs font-bold border border-transparent hover:border-theme-accent/20 active:scale-95"
                         title="複製解析內容"
                       >
-                        {copied ? <Check size={14} /> : <Copy size={14} />}
+                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                        <span className="hidden sm:inline">複製文字</span>
                       </button>
                     </div>
                   </div>
-                  <div className="prose prose-sm prose-invert max-w-none text-theme-primary/90 font-serif leading-relaxed max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                  <div className="prose prose-sm prose-invert max-w-none text-theme-primary/90 font-serif leading-relaxed max-h-96 overflow-y-auto pr-2 custom-scrollbar ios-smooth-scroll no-scrollbar">
                     <ReactMarkdown
                       components={{
                         strong: ({ node, ...props }) => <span className="text-theme-accent font-bold" {...props} />,
@@ -221,7 +238,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
                       {aiResult || ''}
                     </ReactMarkdown>
                   </div>
-                </div>
+                </motion.div>
               </div>
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
@@ -233,8 +250,9 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
             </div>
           )}
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQiMen } from './hooks/useQiMen';
-import { Calendar, ChevronLeft, ChevronRight, Sparkles, HelpCircle, History as HistoryIcon } from 'lucide-react';
-import GuideModal from './components/GuideModal';
+import { Calendar, ChevronLeft, ChevronRight, Sparkles, HelpCircle, History as HistoryIcon, Loader2 } from 'lucide-react';
 import HistoryDrawer from './components/HistoryDrawer';
 import type { HistoryEntry } from './types/history';
 import { format } from 'date-fns';
@@ -16,24 +15,27 @@ import type { QuestionType } from './components/QuestionInput';
 import AnalysisCard from './components/AnalysisCard';
 import { fetchMultiPalaceAnalysis } from './services/aiService';
 import ReactMarkdown from 'react-markdown';
-import { Loader2 } from 'lucide-react';
 import RitualLoading from './components/RitualLoading';
 import Onboarding from './components/Onboarding';
+import NumberPicker from './components/NumberPicker';
 import { AnimatePresence } from 'framer-motion';
+import { triggerSuccessHaptic, triggerLightHaptic, triggerWarningHaptic } from './utils/haptics';
+import './styles/animations.css';
 
 // Register locale
 registerLocale('zh-TW', zhTW);
 
 function App() {
   const [isAutoMode, setIsAutoMode] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
   const datePickerRef = useRef<DatePicker>(null);
   const [selectedPalaces, setSelectedPalaces] = useState<number[]>([]);
 
   const [userQuestion, setUserQuestion] = useState('');
   const [isCharting, setIsCharting] = useState(false);
   const [isPreCharting, setIsPreCharting] = useState(false);
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isPickingNumber, setIsPickingNumber] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [mainSelectedNum, setMainSelectedNum] = useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [restoredEntry, setRestoredEntry] = useState<HistoryEntry | null>(null);
@@ -93,31 +95,47 @@ function App() {
   };
 
   const handleStartCharting = (question: string, _type: QuestionType) => {
+    if (!question.trim()) {
+      triggerWarningHaptic();
+      return;
+    }
     setUserQuestion(question);
     setIsCharting(true);
-    setIsPreCharting(true);
+    setIsPickingNumber(true); // Start with number picking
+    setIsRevealed(false);
+    setMainSelectedNum(null);
     setSelectedPalaces([]);
+    triggerLightHaptic();
 
-    // Artificial delay for ritual feel and smoother rendering
+    setIsAutoMode(true);
+    setSelectedDate(new Date());
+  };
+
+  const handleSelectNumber = (num: number) => {
+    setMainSelectedNum(num);
+    setIsPickingNumber(false);
+    setIsPreCharting(true); // Start ritual Loading
+
+    // Ritual delay
     setTimeout(() => {
       setIsPreCharting(false);
-    }, 850);
+      setIsRevealed(true); // Reveal the chart
+      setSelectedPalaces([num]); // Auto select the chosen palace
+      triggerSuccessHaptic();
 
-    // If a question is provided, force current time (Now)
-    if (question.trim()) {
-      setIsAutoMode(true);
-      setSelectedDate(new Date());
-    } else {
-      // If "Other" (no question), allow manual mode (stays at whatever it was or user can change)
-      setIsAutoMode(false);
-    }
+      // Scroll to top of chart
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 1200); // Slightly longer ritual for "breaking the seal" feel
   };
 
   const handleReset = () => {
     setIsCharting(false);
+    setIsPickingNumber(false);
+    setIsRevealed(false);
+    setMainSelectedNum(null);
     setSelectedPalaces([]);
     setUserQuestion('');
-    setIsAutoMode(false); // Reset to manual for next pull or let QuestionInput handle it
+    setIsAutoMode(false);
     setRestoredEntry(null);
     setComparisonResult(null);
   };
@@ -127,13 +145,11 @@ function App() {
     setSelectedDate(new Date(entry.date));
     setUserQuestion(entry.question);
     setSelectedPalaces([entry.palaceNum]);
+    setMainSelectedNum(entry.palaceNum);
     setIsCharting(true);
-    setIsPreCharting(true);
+    setIsPreCharting(false);
+    setIsRevealed(true); // Restore as revealed
     setIsAutoMode(false);
-
-    setTimeout(() => {
-      setIsPreCharting(false);
-    }, 800);
   };
 
   const handleComparePalaces = async () => {
@@ -170,11 +186,12 @@ function App() {
 
   return (
     <div className="min-h-screen bg-theme-bg text-theme-primary transition-colors duration-300 flex flex-col items-center">
-      {/* Sticky Header */}
+      {/* Fixed Header with height preservation */}
+      <div className="h-[72px] w-full invisible pointer-events-none" />
       <header
-        className={`sticky top-0 z-40 w-full flex justify-center transition-all duration-300 ${scrolled
-          ? 'bg-theme-bg/80 backdrop-blur-xl border-b border-theme-border/30 shadow-lg py-2'
-          : 'bg-theme-bg/0 backdrop-blur-none border-b border-transparent py-4'
+        className={`fixed top-0 z-40 w-full flex justify-center transition-all duration-500 ease-in-out ${scrolled
+          ? 'bg-theme-bg/80 backdrop-blur-xl border-b border-theme-border/30 shadow-lg py-3'
+          : 'bg-theme-bg/0 backdrop-blur-none border-b border-transparent py-5'
           }`}
       >
         <div className="w-full max-w-4xl flex justify-between items-center px-4 sm:px-8">
@@ -228,44 +245,39 @@ function App() {
           </div>
         ) : (
           <div id="qimen-main-report" className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-700">
-            {isQuestionMode && (
-              <header className="mb-10 text-center flex flex-col items-center">
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-theme-accent/10 border border-theme-accent/20 text-theme-accent text-sm font-bold mb-6 shadow-sm">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-theme-accent opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-theme-accent"></span>
-                  </span>
-                  正在為您解析
-                </div>
-                <h2 className="text-2xl sm:text-4xl font-bold text-theme-primary max-w-2xl leading-relaxed font-serif tracking-wide border-b-2 border-theme-accent/20 pb-4 italic">
-                  「{userQuestion}」
-                </h2>
-              </header>
-            )}
-
-            {isPreCharting ? (
+            {isPickingNumber ? (
+              <NumberPicker onSelect={handleSelectNumber} />
+            ) : isPreCharting ? (
               <RitualLoading />
             ) : (
               <main className="w-full space-y-8">
+                {isQuestionMode && isRevealed && (
+                  <header className="mb-10 text-center flex flex-col items-center animate-in fade-in slide-in-from-top-4 duration-700">
+                    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-theme-accent/10 border border-theme-accent/20 text-theme-accent text-sm font-bold mb-6 shadow-sm">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-theme-accent opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-theme-accent"></span>
+                      </span>
+                      正在為您解析
+                    </div>
+                    <h2 className="text-2xl sm:text-4xl font-bold text-theme-primary max-w-2xl leading-relaxed font-serif tracking-wide border-b-2 border-theme-accent/20 pb-4 italic">
+                      「{userQuestion}」
+                    </h2>
+                  </header>
+                )}
                 <div className="bg-theme-card p-6 sm:p-8 rounded-3xl border border-theme-border shadow-2xl space-y-10">
                   <section className="flex flex-col sm:flex-row gap-8 items-center justify-between border-b border-theme-border pb-8">
                     <div className="flex flex-col gap-2">
                       <span className="text-[10px] font-bold text-theme-primary/30 uppercase tracking-[0.2em] leading-none">盤面時空</span>
                       <div
-                        ref={wrapperRef}
                         className={`flex items-center gap-4 bg-theme-bg/30 p-2 pr-4 rounded-xl border transition-all ${isQuestionMode
                           ? 'border-theme-border/20 opacity-60 grayscale cursor-not-allowed'
                           : 'border-theme-border/50 hover:border-theme-accent/50 group'
                           }`}
                       >
-                        <button
-                          onClick={handleManualClick}
-                          disabled={isQuestionMode}
-                          className={`p-2 rounded-lg bg-theme-accent/10 text-theme-accent shadow-inner transition-transform ${!isQuestionMode && 'group-hover:scale-110'}`}
-                          title={isQuestionMode ? "提問模式限制鎖定於當前時間" : "點擊開啟日期選擇器"}
-                        >
+                        <div className="p-2 rounded-lg bg-theme-accent/10 text-theme-accent shadow-inner">
                           <Calendar size={18} />
-                        </button>
+                        </div>
                         <div className="relative">
                           <DatePicker
                             ref={datePickerRef}
@@ -371,7 +383,7 @@ function App() {
 
                   {qimenData ? (
                     <div className="space-y-12">
-                      <section className="grid grid-cols-3 md:grid-cols-6 gap-4">
+                      <section className={`grid grid-cols-3 md:grid-cols-6 gap-4 transition-all duration-1000 ${!isRevealed ? 'blur-md opacity-30 grayscale pointer-events-none' : 'opacity-100'}`}>
                         <InfoCard label="節氣" value={qimenData.solarTerm} icon={<Sparkles size={14} className="text-theme-accent/40" />} />
                         <InfoCard label="遁甲" value={qimenData.isYang ? '陽遁' : '陰遁'} />
                         <InfoCard label="局數" value={`${qimenData.juNumber} 局`} />
@@ -385,6 +397,8 @@ function App() {
                           palaces={qimenData.palaces}
                           selectedPalaces={selectedPalaces}
                           onPalaceClick={handlePalaceClick}
+                          isRevealed={isRevealed}
+                          mainSelectedNum={mainSelectedNum}
                         />
                       </section>
 
@@ -439,6 +453,7 @@ function App() {
                                       ? restoredEntry.aiResult
                                       : null
                                   }
+                                  isMainPalace={palaceNum === mainSelectedNum}
                                 />
                               );
                             })}
@@ -481,7 +496,7 @@ function App() {
                                   重新比對
                                 </button>
                               </div>
-                              <div className="prose prose-invert max-w-none text-theme-primary/90 font-serif leading-relaxed">
+                              <div className="prose prose-invert max-w-none text-theme-primary/90 font-serif leading-relaxed ios-smooth-scroll no-scrollbar overflow-y-auto max-h-[60vh]">
                                 <ReactMarkdown
                                   components={{
                                     strong: ({ node, ...props }) => <span className="text-theme-accent font-bold" {...props} />,
@@ -509,11 +524,6 @@ function App() {
             )}
           </div>
         )}
-        <GuideModal
-          isOpen={isGuideOpen}
-          onClose={() => setIsGuideOpen(false)}
-        />
-
         <HistoryDrawer
           isOpen={isHistoryOpen}
           onClose={() => setIsHistoryOpen(false)}
