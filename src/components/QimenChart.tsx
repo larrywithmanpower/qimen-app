@@ -2,6 +2,7 @@ import React from 'react';
 import type { PalaceData } from '../hooks/useQiMen';
 import { getElementStatus } from '../utils/analysis';
 import { Check } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 interface QimenChartProps {
   palaces: Record<number, PalaceData>;
@@ -10,22 +11,32 @@ interface QimenChartProps {
 }
 
 const QimenChart: React.FC<QimenChartProps> = ({ palaces, selectedPalaces, onPalaceClick }) => {
-  // 九宮格位置對應的宮位號碼 (1-9)
-  // Grid layout (3x3):
-  // 4 (巽) | 9 (離) | 2 (坤)
-  // 3 (震) | 5 (中) | 7 (兌)
-  // 8 (艮) | 1 (坎) | 6 (乾)
   const gridMapping = [
     4, 9, 2, // Row 1
     3, 5, 7, // Row 2
     8, 1, 6  // Row 3
   ];
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+        delayChildren: 0.1
+      }
+    }
+  };
+
   return (
-    <div className="grid grid-cols-3 gap-px border-2 border-theme-border bg-theme-border rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto ring-1 ring-theme-border">
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+      className="grid grid-cols-3 gap-px border-2 border-theme-border bg-theme-border rounded-xl overflow-hidden shadow-2xl w-full max-w-3xl mx-auto ring-1 ring-theme-border"
+    >
       {gridMapping.map((palaceNum) => {
         const palace = palaces[palaceNum];
-        // Palace 5 is Center
         const isCenter = palaceNum === 5;
         const isSelected = selectedPalaces.includes(palaceNum);
 
@@ -39,7 +50,7 @@ const QimenChart: React.FC<QimenChartProps> = ({ palaces, selectedPalaces, onPal
           />
         );
       })}
-    </div>
+    </motion.div>
   );
 };
 
@@ -58,8 +69,32 @@ const PalaceCell: React.FC<{
     return baseColor;
   };
 
+  const isImportant = (type: 'god' | 'star' | 'door', value: string) => {
+    return (getElementStatus(type, value) as string) !== 'normal';
+  };
+
+  const cellVariants = {
+    hidden: { opacity: 0, scale: 0.96, y: 12 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: { type: "spring", damping: 20, stiffness: 80 } as any
+    }
+  };
+
+  const symbolVariants = {
+    hidden: { opacity: 0, scale: 0.85 },
+    visible: {
+      opacity: 1,
+      scale: 1,
+      transition: { duration: 0.4, ease: "easeOut" } as any
+    }
+  };
+
   return (
-    <button
+    <motion.button
+      variants={cellVariants}
       onClick={onClick}
       className={`palace-cell-btn relative min-h-[125px] sm:min-h-[200px] p-2 sm:p-5 flex flex-col items-center justify-between transition-all w-full outline-none group
         ${isCenter ? 'bg-theme-card/95' : 'bg-theme-card/70 hover:bg-theme-card/90'}
@@ -68,53 +103,74 @@ const PalaceCell: React.FC<{
           : ''
         }
       `}
+      whileHover={{ scale: 0.98 }}
+      whileTap={{ scale: 0.95 }}
     >
-      {/* Background/Watermark Name - Increased size for better readability */}
       <div className={`absolute top-1 left-1/2 -translate-x-1/2 text-xs sm:text-base font-semibold opacity-30 select-none transition-opacity group-hover:opacity-50 whitespace-nowrap ${isSelected ? 'text-theme-accent opacity-60' : 'text-theme-primary'}`}>
         {data.name}
       </div>
 
-      {/* Selection Indicator (Checkmark) */}
       {isSelected && (
-        <div className="absolute top-1.5 right-1.5 text-theme-accent animate-in fade-in zoom-in duration-300">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="absolute top-1.5 right-1.5 text-theme-accent shadow-glow"
+        >
           <Check size={14} strokeWidth={3} />
-        </div>
+        </motion.div>
       )}
 
-      {/* Top Section: God (Left) & Star (Right) */}
       <div className="w-full flex justify-between items-start px-0.5 mt-1">
-        <div
+        <motion.div
+          variants={symbolVariants}
+          animate={isImportant('god', data.god) ? { opacity: [0.6, 1, 0.6] } : {}}
+          transition={{ repeat: Infinity, duration: 2.5 }}
           className={`text-sm sm:text-xl writing-vertical-rl transition-colors ${getStatusColor('god', data.god, 'text-theme-primary/80')}`}
           style={{ writingMode: 'vertical-rl' }}
         >
           {data.god}
-        </div>
-        <div
+        </motion.div>
+        <motion.div
+          variants={symbolVariants}
+          animate={isImportant('star', data.star) ? { opacity: [0.6, 1, 0.6] } : {}}
+          transition={{ repeat: Infinity, duration: 3 }}
           className={`text-sm sm:text-xl writing-vertical-rl transition-colors ${getStatusColor('star', data.star, 'text-theme-primary/80')}`}
           style={{ writingMode: 'vertical-rl' }}
         >
           {data.star}
-        </div>
+        </motion.div>
       </div>
 
-      {/* Center Section: Stems & Door */}
-      <div className="flex flex-col items-center justify-center flex-1 gap-1.5 sm:gap-3 py-1">
-        {/* Heaven Stem */}
-        <div className={`text-xl sm:text-3xl font-bold leading-none ${getStatusColor('stem', data.heavenStem, 'text-sky-400')}`}>
+      <div className="flex flex-col items-center justify-center flex-1 gap-1 py-1">
+        <motion.div
+          variants={symbolVariants}
+          className={`text-xl sm:text-3xl font-bold leading-none ${getStatusColor('stem', data.heavenStem, 'text-sky-400')}`}
+        >
           {data.heavenStem}
-        </div>
+        </motion.div>
 
-        {/* Door - Most Prominent */}
-        <div className={`text-3xl sm:text-5xl font-black leading-tight tracking-[0.15em] my-1 drop-shadow-xl transition-transform group-hover:scale-105 ${getStatusColor('door', data.door, 'text-cyan-500')} ${isSelected && 'drop-shadow-[0_0_8px_rgba(var(--color-accent-rgb),0.3)]'}`}>
-          {data.door}
-        </div>
+        <motion.div
+          variants={symbolVariants}
+          className={`text-3xl sm:text-5xl font-black leading-tight tracking-[0.15em] my-1 drop-shadow-xl transition-transform group-hover:scale-105 ${getStatusColor('door', data.door, 'text-cyan-500')} ${isSelected && 'drop-shadow-[0_0_8px_rgba(var(--color-accent-rgb),0.3)]'}`}
+        >
+          <motion.span
+            animate={isImportant('door', data.door) ? {
+              textShadow: ["0 0 4px rgba(239,68,68,0)", "0 0 12px rgba(239,68,68,0.35)", "0 0 4px rgba(239,68,68,0)"]
+            } : {}}
+            transition={{ repeat: Infinity, duration: 3 }}
+          >
+            {data.door}
+          </motion.span>
+        </motion.div>
 
-        {/* Earth Stem */}
-        <div className="text-base sm:text-xl font-bold text-theme-primary/50 leading-none">
+        <motion.div
+          variants={symbolVariants}
+          className="text-base sm:text-xl font-bold text-theme-primary/50 leading-none"
+        >
           {data.earthStem}
-        </div>
+        </motion.div>
       </div>
-    </button>
+    </motion.button>
   );
 };
 

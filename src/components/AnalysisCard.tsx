@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { fetchMasterAnalysis } from '../services/aiService';
 import { useHistory } from '../context/HistoryContext';
 import { exportElementAsImage } from '../utils/exportImage';
+import { motion } from 'framer-motion';
 
 interface AnalysisCardProps {
   palaceNum: number;
@@ -132,24 +133,51 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
 
       {userQuestion && (
         <div className="mt-auto border-t border-theme-border/30 pt-4">
-          {(!aiResult || aiResult.startsWith('⚠️')) ? (
-            <button
+          {isLoading ? (
+            <div className="flex flex-col items-center gap-4 py-8 bg-theme-accent/5 rounded-2xl border border-theme-accent/10 w-full animate-in fade-in duration-500 mb-4">
+              <div className="relative w-20 h-20">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 border-2 border-theme-accent/20 rounded-full border-dashed"
+                />
+                <motion.div
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-2 border border-theme-accent/10 rounded-full"
+                />
+                <div className="absolute inset-0 flex items-center justify-center text-theme-accent">
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="text-2xl font-black"
+                  >
+                    ☯️
+                  </motion.div>
+                </div>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-theme-accent font-bold tracking-widest text-sm animate-pulse">大師正在推演天機...</span>
+                <div className="w-48 h-1 bg-theme-accent/10 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ x: "-100%" }}
+                    animate={{ x: "100%" }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    className="w-full h-full bg-theme-accent shadow-[0_0_10px_#eab308]"
+                  />
+                </div>
+              </div>
+            </div>
+          ) : !aiResult || aiResult.startsWith('⚠️') ? (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleAskAI}
-              disabled={isLoading}
-              className="w-full py-3 px-4 rounded-xl bg-theme-accent/10 border border-theme-accent/20 text-theme-accent font-bold flex items-center justify-center gap-2 hover:bg-theme-accent/20 transition-all group disabled:opacity-50"
+              className="w-full py-3 px-4 rounded-xl bg-theme-accent/10 border border-theme-accent/20 text-theme-accent font-bold flex items-center justify-center gap-2 hover:bg-theme-accent/20 transition-all group mb-4"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 size={18} className="animate-spin" />
-                  <span>大師分析中...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles size={18} className="group-hover:scale-110 transition-transform" />
-                  <span>{aiResult?.startsWith('⚠️') ? '✨ 重新詢問大師' : '✨ 詢問大師解析'}</span>
-                </>
-              )}
-            </button>
+              <Sparkles size={18} className="group-hover:scale-110 transition-transform" />
+              <span>{aiResult?.startsWith('⚠️') ? '✨ 重新詢問大師' : '✨ 詢問大師解析'}</span>
+            </motion.button>
           ) : (
             <div className="space-y-2">
               <div
