@@ -51,7 +51,8 @@ export const fetchMasterAnalysis = async (
     console.log("正在嘗試發送請求 (New SDK)...");
 
     // 使用最新模型 gemini-2.5-flash
-    const response = await ai.models.generateContent({
+    // @ts-ignore: SDK types might not support the signal argument yet
+    const response = await (ai.models as any).generateContent({
       model: "gemini-2.5-flash",
       contents: [
         {
