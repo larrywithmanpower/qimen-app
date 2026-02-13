@@ -11,7 +11,8 @@ const ai = new GoogleGenAI({ apiKey: API_KEY });
 export const fetchMasterAnalysis = async (
   question: string,
   palaceData: any,
-  resultScore: string
+  resultScore: string,
+  signal?: AbortSignal
 ): Promise<string> => {
   if (!API_KEY) {
     throw new Error("請先設定 VITE_GEMINI_API_KEY 環境變數");
@@ -58,20 +59,23 @@ export const fetchMasterAnalysis = async (
           parts: [{ text: systemPrompt }]
         }
       ]
-    });
+    }, { signal });
 
-    // 檢查回傳結構，新版 SDK 回傳可能不同，這裡假設 response.text() 或 response.text 存在
-    // 根據 user 提示: return response.text;
-    // 實際 @google/genai 的 response 結構通常需要確認，但 user 範例寫 response.text
-    // 為了保險，先 log 一下，但 user 範例是 response.text
-    // 根據 Network Response 結構手動取得文字
     const candidate = response.candidates?.[0];
     const text = candidate?.content?.parts?.[0]?.text;
 
-    return text || "大師沈默了（無回應內容）";
+    if (!text) {
+      throw new Error("大師沈默了（無回應內容）");
+    }
 
-  } catch (error) {
+    return text;
+
+  } catch (error: any) {
+    if (error.name === 'AbortError') {
+      console.warn("API 請求已逾時或被取消");
+      throw new Error("大師解析時間過長，請確認網路狀況後重試 (Timeout)");
+    }
     console.error("API 請求發生錯誤 (New SDK):", error);
-    throw new Error("大師正在閉關中，請稍後再試 (API Error)");
+    throw error;
   }
 };

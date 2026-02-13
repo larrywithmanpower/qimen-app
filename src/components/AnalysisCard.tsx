@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Loader2, ChevronDown, Copy, Check } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { fetchMasterAnalysis } from '../services/aiService';
+import { useHistory } from '../context/HistoryContext';
 
 interface AnalysisCardProps {
   palaceNum: number;
@@ -13,9 +14,11 @@ interface AnalysisCardProps {
   resultColorClass: string;
   badgeColorClass: string;
   palaceData: any;
+  predefinedResult?: string | null;
 }
 
 const AnalysisCard: React.FC<AnalysisCardProps> = ({
+  palaceNum,
   palaceName,
   result,
   details,
@@ -23,13 +26,23 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   isCenter,
   resultColorClass,
   badgeColorClass,
-  palaceData
+  palaceData,
+  predefinedResult
 }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [aiResult, setAiResult] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [aiResult, setAiResult] = useState<string | null>(predefinedResult || null);
+  const [isExpanded, setIsExpanded] = useState(predefinedResult ? true : false);
   const [copied, setCopied] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+  const { addHistoryEntry } = useHistory();
+
+  // Sync with predefinedResult when it changes (e.g. on restoration)
+  useEffect(() => {
+    if (predefinedResult) {
+      setAiResult(predefinedResult);
+      setIsExpanded(true);
+    }
+  }, [predefinedResult]);
 
   const handleCopy = async () => {
     if (aiResult) {
@@ -42,19 +55,37 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   const handleAskAI = async () => {
     setIsLoading(true);
     setAiResult(null);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
     try {
       const text = await fetchMasterAnalysis(
         userQuestion || '',
         palaceData,
-        result
+        result,
+        controller.signal
       );
       setAiResult(text);
       setIsExpanded(true);
-    } catch (error) {
+
+      // Save to history
+      addHistoryEntry({
+        date: palaceData.date || new Date().toISOString(), // Fallback if not provided
+        question: userQuestion || '',
+        palaceNum,
+        palaceName,
+        aiResult: text,
+        palaceData,
+        resultScore: result
+      });
+    } catch (error: any) {
       console.error(error);
-      setAiResult("⚠️ 大師目前忙線中，請稍後再試。");
+      const errorMsg = error.message || "大師目前忙線中，請稍後再試。";
+      setAiResult(`⚠️ ${errorMsg}`);
       setIsExpanded(true);
     } finally {
+      clearTimeout(timeoutId);
       setIsLoading(false);
     }
   };
@@ -88,7 +119,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
 
       {userQuestion && (
         <div className="mt-auto border-t border-theme-border/30 pt-4">
-          {!aiResult ? (
+          {(!aiResult || aiResult.startsWith('⚠️')) ? (
             <button
               onClick={handleAskAI}
               disabled={isLoading}
@@ -102,7 +133,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
               ) : (
                 <>
                   <Sparkles size={18} className="group-hover:scale-110 transition-transform" />
-                  <span>✨ 詢問大師解析</span>
+                  <span>{aiResult?.startsWith('⚠️') ? '✨ 重新詢問大師' : '✨ 詢問大師解析'}</span>
                 </>
               )}
             </button>
