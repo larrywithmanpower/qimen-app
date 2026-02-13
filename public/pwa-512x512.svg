@@ -1,0 +1,5 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="100" fill="#0F172A"/>
+  <circle cx="256" cy="256" r="200" stroke="#EAB308" stroke-width="12" stroke-dasharray="30 15"/>
+  <text x="256" y="310" text-anchor="middle" fill="#EAB308" style="font-family: serif; font-size: 220px; font-weight: bold;">奇</text>
+</svg>
