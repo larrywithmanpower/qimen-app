@@ -13,6 +13,7 @@
     "@google/genai": "^1.40.0",
     "@types/react-datepicker": "^7.0.0",
     "date-fns": "^4.1.0",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.475.0",
     "lunar-javascript": "^1.6.43",
     "qimen-dunjia": "^2.1.0",

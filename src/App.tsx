@@ -204,7 +204,7 @@ function App() {
             <QuestionInput onStart={handleStartCharting} />
           </div>
         ) : (
-          <div className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-700">
+          <div id="qimen-main-report" className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-700">
             {isQuestionMode && (
               <header className="mb-10 text-center flex flex-col items-center">
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-theme-accent/10 border border-theme-accent/20 text-theme-accent text-sm font-bold mb-6 shadow-sm">

@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Loader2, ChevronDown, Copy, Check } from 'lucide-react';
+import { Sparkles, Loader2, ChevronDown, Copy, Check, Image as ImageIcon } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { fetchMasterAnalysis } from '../services/aiService';
 import { useHistory } from '../context/HistoryContext';
+import { exportElementAsImage } from '../utils/exportImage';
 
 interface AnalysisCardProps {
   palaceNum: number;
@@ -33,6 +34,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   const [aiResult, setAiResult] = useState<string | null>(predefinedResult || null);
   const [isExpanded, setIsExpanded] = useState(predefinedResult ? true : false);
   const [copied, setCopied] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const { addHistoryEntry } = useHistory();
 
@@ -49,6 +51,17 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
       await navigator.clipboard.writeText(aiResult);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await exportElementAsImage('qimen-main-report', `奇門鑑定-${palaceName}-${new Date().getTime()}`);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsExporting(false);
     }
   };
 
@@ -148,13 +161,24 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
                       <Sparkles size={14} />
                       <span>大師智慧解析</span>
                     </div>
-                    <button
-                      onClick={handleCopy}
-                      className="text-theme-primary/40 hover:text-theme-accent transition-colors p-1 rounded-md hover:bg-theme-accent/10"
-                      title="複製解析內容"
-                    >
-                      {copied ? <Check size={14} /> : <Copy size={14} />}
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleExport}
+                        disabled={isExporting}
+                        className="text-theme-primary/40 hover:text-theme-accent transition-colors p-1.5 rounded-md hover:bg-theme-accent/10 flex items-center gap-1.5 text-[10px] font-bold"
+                        title="匯出圖文卡片"
+                      >
+                        {isExporting ? <Loader2 size={14} className="animate-spin" /> : <ImageIcon size={14} />}
+                        {isExporting ? '正在生成...' : '📸 匯出圖片'}
+                      </button>
+                      <button
+                        onClick={handleCopy}
+                        className="text-theme-primary/40 hover:text-theme-accent transition-colors p-1.5 rounded-md hover:bg-theme-accent/10"
+                        title="複製解析內容"
+                      >
+                        {copied ? <Check size={14} /> : <Copy size={14} />}
+                      </button>
+                    </div>
                   </div>
                   <div className="prose prose-sm prose-invert max-w-none text-theme-primary/90 font-serif leading-relaxed max-h-96 overflow-y-auto pr-2 custom-scrollbar">
                     <ReactMarkdown
