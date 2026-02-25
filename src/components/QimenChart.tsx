@@ -152,6 +152,7 @@ const PalaceCell: React.FC<{
           transition={{ repeat: Infinity, duration: 2.5 }}
           className={`text-sm sm:text-xl writing-vertical-rl transition-colors ${getStatusColor('god', data.god, 'text-theme-primary/80')} ${!isRevealed && 'blur-sm opacity-10'}`}
           style={{ writingMode: 'vertical-rl' }}
+          aria-label={`奇門遁甲 - ${data.god}(神) - 吉兆指標`}
         >
           {data.god}
         </motion.div>
@@ -161,6 +162,7 @@ const PalaceCell: React.FC<{
           transition={{ repeat: Infinity, duration: 3 }}
           className={`text-sm sm:text-xl writing-vertical-rl transition-colors ${getStatusColor('star', data.star, 'text-theme-primary/80')} ${!isRevealed && 'blur-sm opacity-10'}`}
           style={{ writingMode: 'vertical-rl' }}
+          aria-label={`奇門遁甲 - ${data.star}(星) - 吉兆指標`}
         >
           {data.star}
         </motion.div>
@@ -183,6 +185,7 @@ const PalaceCell: React.FC<{
             ${isMainSelected && isRevealed ? 'scale-110' : ''}
             ${!isRevealed && 'blur-lg opacity-10'}
           `}
+          aria-label={`奇門遁甲 - ${data.door}(門) - 吉兆指標`}
         >
           <motion.span
             className="flex items-center justify-center"

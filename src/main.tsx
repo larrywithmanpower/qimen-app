@@ -11,13 +11,16 @@ registerSW({ immediate: true })
 
 import { ThemeProvider } from './context/ThemeContext.tsx'
 import { HistoryProvider } from './context/HistoryContext.tsx'
+import { HelmetProvider } from 'react-helmet-async';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ThemeProvider>
-      <HistoryProvider>
-        <App />
-      </HistoryProvider>
-    </ThemeProvider>
+    <HelmetProvider>
+      <ThemeProvider>
+        <HistoryProvider>
+          <App />
+        </HistoryProvider>
+      </ThemeProvider>
+    </HelmetProvider>
   </StrictMode>,
 )

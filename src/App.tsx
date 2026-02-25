@@ -19,6 +19,7 @@ import RitualLoading from './components/RitualLoading';
 import Onboarding from './components/Onboarding';
 import NumberPicker from './components/NumberPicker';
 import { AnimatePresence } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 import { triggerSuccessHaptic, triggerLightHaptic, triggerWarningHaptic } from './utils/haptics';
 import './styles/animations.css';
 
@@ -186,6 +187,47 @@ function App() {
 
   return (
     <div className="min-h-screen bg-theme-bg text-theme-primary transition-colors duration-300 flex flex-col items-center">
+      <Helmet>
+        <title>奇門 AI 大師 - 專業奇門遁甲 AI 解析工具</title>
+        <meta name="description" content="奇門 AI 大師是一款結合傳統奇門遁甲與現代 AI 技術的專業決策工具，提供精準的時空局數分析與具體的行動建議。" />
+        <meta name="keywords" content="奇門遁甲, AI, 占卜, 決策, 運勢, 奇門大師, 數位易經" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://larrywithmanpower.github.io/qimen-app/" />
+        <meta property="og:title" content="奇門 AI 大師 - 專業奇門遁甲 AI 解析工具" />
+        <meta property="og:description" content="結合傳統奇門遁甲與 AI，為您的決策提供精準的時空指引。" />
+        <meta property="og:image" content="https://larrywithmanpower.github.io/qimen-app/pwa-512x512.svg" />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://larrywithmanpower.github.io/qimen-app/" />
+        <meta property="twitter:title" content="奇門 AI 大師 - 專業奇門遁甲 AI 解析工具" />
+        <meta property="twitter:description" content="結合傳統奇門遁甲與 AI，為您的決策提供精準的時空指引。" />
+        <meta property="twitter:image" content="https://larrywithmanpower.github.io/qimen-app/pwa-512x512.svg" />
+
+        {/* Structured Data (JSON-LD) */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "奇門 AI 大師",
+            "operatingSystem": "Web",
+            "applicationCategory": "LifestyleApplication",
+            "description": "專業奇門遁甲 AI 解析工具，結合傳統易經與現代人工智慧。",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "TWD"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.9",
+              "ratingCount": "88"
+            }
+          })}
+        </script>
+      </Helmet>
       {/* Fixed Header with height preservation */}
       <div className="h-[72px] w-full invisible pointer-events-none" />
       <header

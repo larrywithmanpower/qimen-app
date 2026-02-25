@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import Sitemap from 'vite-plugin-sitemap'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -39,6 +40,10 @@ export default defineConfig({
         enabled: true,
         type: 'module'
       }
+    }),
+    Sitemap({
+      hostname: 'https://larrywithmanpower.github.io/qimen-app/',
+      dynamicRoutes: ['/qimen-app/'],
     })
   ],
   base: '/qimen-app/',
