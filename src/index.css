@@ -8,6 +8,7 @@
   --color-border: #334155;
   --color-card: #1e293b;
   --color-accent: #f59e0b;
+  --color-accent-rgb: 245, 158, 11;
   /* Default accent same as primary for dark */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
@@ -18,6 +19,7 @@
   --color-border: #d6d3d1;
   --color-card: #f5f5f4;
   --color-accent: #991b1b;
+  --color-accent-rgb: 153, 27, 27;
 }
 
 .theme-emerald {
@@ -26,6 +28,7 @@
   --color-border: #064e3b;
   --color-card: #065f46;
   --color-accent: #fbbf24;
+  --color-accent-rgb: 251, 191, 36;
 }
 
 body {

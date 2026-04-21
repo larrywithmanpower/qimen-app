@@ -1,6 +1,7 @@
 import React from 'react';
 import type { PalaceData } from '../hooks/useQiMen';
-import { getElementStatus } from '../utils/analysis';
+import { getElementMeta } from '../utils/analysis';
+import type { ElementType } from '../utils/analysis';
 import { Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -71,16 +72,46 @@ const PalaceCell: React.FC<{
 }> = ({ data, isCenter, isSelected, isMainSelected, isRevealed, onClick }) => {
   if (!data) return <div className="bg-theme-bg"></div>;
 
-  const getStatusColor = (type: 'god' | 'star' | 'door' | 'stem', value: string, baseColor: string) => {
-    if (!isRevealed) return baseColor; // Hide auspicious/ominous colors when masked
-    const status = getElementStatus(type, value);
-    if (status === 'auspicious') return 'text-red-500 font-bold drop-shadow-[0_0_1px_rgba(239,68,68,0.5)]';
-    if (status === 'ominous') return 'text-green-500 font-bold drop-shadow-[0_0_1px_rgba(34,197,94,0.5)]';
-    return baseColor;
+  // 依七層分級對應不同視覺強度：
+  //  +3 大吉 → 最強紅光；+2 吉 → 中強；+1 小吉 → 微光
+  //   0 中性 → 維持 baseColor
+  //  -1 小凶 → 微綠；-2 凶 → 中強；-3 大凶 → 最強綠光
+  const getStatusColor = (type: ElementType, value: string, baseColor: string) => {
+    if (!isRevealed) return baseColor;
+    const { score } = getElementMeta(type, value);
+    switch (score) {
+      case 3:
+        return 'text-red-500 font-bold drop-shadow-[0_0_6px_rgba(239,68,68,0.6)]';
+      case 2:
+        return 'text-red-500 font-semibold drop-shadow-[0_0_3px_rgba(239,68,68,0.45)]';
+      case 1:
+        return 'text-red-400 drop-shadow-[0_0_1px_rgba(239,68,68,0.3)]';
+      case -1:
+        return 'text-green-400 drop-shadow-[0_0_1px_rgba(34,197,94,0.3)]';
+      case -2:
+        return 'text-green-500 font-semibold drop-shadow-[0_0_3px_rgba(34,197,94,0.45)]';
+      case -3:
+        return 'text-green-500 font-bold drop-shadow-[0_0_6px_rgba(34,197,94,0.6)]';
+      default:
+        return baseColor;
+    }
   };
 
-  const isImportant = (type: 'god' | 'star' | 'door', value: string) => {
-    return (getElementStatus(type, value) as string) !== 'normal';
+  // 強度 2 以上才做呼吸動畫，避免弱吉凶也瘋狂閃爍
+  const isStrong = (type: ElementType, value: string) => {
+    return Math.abs(getElementMeta(type, value).score) >= 2;
+  };
+
+  // 大吉/大凶才套用最強烈的光暈框
+  const isExtreme = (type: ElementType, value: string) => {
+    return Math.abs(getElementMeta(type, value).score) >= 3;
+  };
+
+  const getDoorDirection = (value: string): 'positive' | 'negative' | 'neutral' => {
+    const { score } = getElementMeta('door', value);
+    if (score > 0) return 'positive';
+    if (score < 0) return 'negative';
+    return 'neutral';
   };
 
   const cellVariants = {
@@ -131,11 +162,41 @@ const PalaceCell: React.FC<{
         )}
       </AnimatePresence>
 
-      <div className={`absolute top-1 left-1/2 -translate-x-1/2 text-xs sm:text-base font-semibold opacity-30 select-none transition-opacity group-hover:opacity-50 whitespace-nowrap ${isSelected ? 'text-theme-accent opacity-60' : 'text-theme-primary'}`}>
-        {data.name}
-      </div>
+      {/* 用事宮 外層呼吸光環 */}
+      {isMainSelected && isRevealed && (
+        <motion.div
+          aria-hidden
+          className="absolute inset-0 pointer-events-none rounded-[inherit]"
+          initial={{ opacity: 0 }}
+          animate={{
+            boxShadow: [
+              '0 0 0 0 rgba(var(--color-accent-rgb), 0.55), inset 0 0 24px rgba(var(--color-accent-rgb), 0.18)',
+              '0 0 36px 4px rgba(var(--color-accent-rgb), 0.35), inset 0 0 30px rgba(var(--color-accent-rgb), 0.28)',
+              '0 0 0 0 rgba(var(--color-accent-rgb), 0.55), inset 0 0 24px rgba(var(--color-accent-rgb), 0.18)',
+            ],
+            opacity: 1,
+          }}
+          transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      )}
 
-      {isSelected && (
+      {/* 頂部標籤：用事宮時顯示功能徽章，否則顯示宮位名 */}
+      {isMainSelected && isRevealed ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.25, type: 'spring', stiffness: 220 }}
+          className="absolute top-1 left-1/2 -translate-x-1/2 z-40 px-2 py-0.5 rounded-full bg-theme-accent text-theme-bg text-[9px] sm:text-[10px] font-black tracking-widest shadow-[0_0_10px_rgba(var(--color-accent-rgb),0.55)] whitespace-nowrap"
+        >
+          ★ 用事宮
+        </motion.div>
+      ) : (
+        <div className={`absolute top-1 left-1/2 -translate-x-1/2 text-xs sm:text-base font-semibold opacity-30 select-none transition-opacity group-hover:opacity-50 whitespace-nowrap ${isSelected ? 'text-theme-accent opacity-60' : 'text-theme-primary'}`}>
+          {data.name}
+        </div>
+      )}
+
+      {isSelected && !isMainSelected && (
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
@@ -148,21 +209,21 @@ const PalaceCell: React.FC<{
       <div className="w-full flex justify-between items-start px-0.5 mt-1">
         <motion.div
           variants={symbolVariants}
-          animate={(isRevealed && isImportant('god', data.god)) ? { opacity: [0.6, 1, 0.6] } : {}}
+          animate={(isRevealed && isStrong('god', data.god)) ? { opacity: [0.6, 1, 0.6] } : {}}
           transition={{ repeat: Infinity, duration: 2.5 }}
           className={`text-sm sm:text-xl writing-vertical-rl transition-colors ${getStatusColor('god', data.god, 'text-theme-primary/80')} ${!isRevealed && 'blur-sm opacity-10'}`}
           style={{ writingMode: 'vertical-rl' }}
-          aria-label={`奇門遁甲 - ${data.god}(神) - 吉兆指標`}
+          aria-label={`奇門遁甲 - ${data.god}(神) - ${getElementMeta('god', data.god).tierLabel}`}
         >
           {data.god}
         </motion.div>
         <motion.div
           variants={symbolVariants}
-          animate={(isRevealed && isImportant('star', data.star)) ? { opacity: [0.6, 1, 0.6] } : {}}
+          animate={(isRevealed && isStrong('star', data.star)) ? { opacity: [0.6, 1, 0.6] } : {}}
           transition={{ repeat: Infinity, duration: 3 }}
           className={`text-sm sm:text-xl writing-vertical-rl transition-colors ${getStatusColor('star', data.star, 'text-theme-primary/80')} ${!isRevealed && 'blur-sm opacity-10'}`}
           style={{ writingMode: 'vertical-rl' }}
-          aria-label={`奇門遁甲 - ${data.star}(星) - 吉兆指標`}
+          aria-label={`奇門遁甲 - ${data.star}(星) - ${getElementMeta('star', data.star).tierLabel}`}
         >
           {data.star}
         </motion.div>
@@ -179,19 +240,21 @@ const PalaceCell: React.FC<{
         <motion.div
           variants={symbolVariants}
           className={`flex items-center justify-center text-3xl sm:text-5xl font-black leading-none my-1 transition-transform group-hover:scale-105 ${getStatusColor('door', data.door, 'text-cyan-500')}
-            ${isRevealed && getStatusColor('door', data.door, '').includes('text-red-500') ? 'red-indicator-breathing rounded-2xl px-4 py-2' : ''}
-            ${isRevealed && getStatusColor('door', data.door, '').includes('text-green-500') ? 'green-indicator-breathing rounded-2xl px-4 py-2' : ''}
+            ${isRevealed && isExtreme('door', data.door) && getDoorDirection(data.door) === 'positive' ? 'red-indicator-breathing rounded-2xl px-4 py-2' : ''}
+            ${isRevealed && isExtreme('door', data.door) && getDoorDirection(data.door) === 'negative' ? 'green-indicator-breathing rounded-2xl px-4 py-2' : ''}
             ${isSelected ? 'ring-2 ring-theme-accent ring-offset-4 ring-offset-theme-card' : ''}
             ${isMainSelected && isRevealed ? 'scale-110' : ''}
             ${!isRevealed && 'blur-lg opacity-10'}
           `}
-          aria-label={`奇門遁甲 - ${data.door}(門) - 吉兆指標`}
+          aria-label={`奇門遁甲 - ${data.door}(門) - ${getElementMeta('door', data.door).tierLabel}`}
         >
           <motion.span
             className="flex items-center justify-center"
-            animate={(isRevealed && isImportant('door', data.door)) ? {
-              textShadow: ["0 0 4px rgba(239,68,68,0)", "0 0 12px rgba(239,68,68,0.35)", "0 0 4px rgba(239,68,68,0)"]
-            } : {}}
+            animate={(isRevealed && isStrong('door', data.door)) ? (
+              getDoorDirection(data.door) === 'positive'
+                ? { textShadow: ['0 0 4px rgba(239,68,68,0)', '0 0 14px rgba(239,68,68,0.45)', '0 0 4px rgba(239,68,68,0)'] }
+                : { textShadow: ['0 0 4px rgba(34,197,94,0)', '0 0 14px rgba(34,197,94,0.45)', '0 0 4px rgba(34,197,94,0)'] }
+            ) : {}}
             transition={{ repeat: Infinity, duration: 3 }}
           >
             {data.door}

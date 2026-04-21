@@ -1,11 +1,80 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Sparkles, Loader2, ChevronDown, Copy, Check, Image as ImageIcon } from 'lucide-react';
+import { Sparkles, Loader2, ChevronDown, Copy, Check, Image as ImageIcon, Lightbulb } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { fetchMasterAnalysis } from '../services/aiService';
 import { useHistory } from '../context/HistoryContext';
 import { exportElementAsImage } from '../utils/exportImage';
 import { motion } from 'framer-motion';
 import { triggerSuccessHaptic } from '../utils/haptics';
+import TermHelp from './TermHelp';
+
+/** 將 detail 文字中的奇門術語（神/星/門/干、用事宮、宮位得分）自動包上 TermHelp */
+function renderDetailWithTerms(detail: string): React.ReactNode {
+  // 匹配「（X·Y）」其中 X 是 神/星/門/干
+  const TYPE_MAP: Record<string, 'god' | 'star' | 'door' | 'stem'> = {
+    '神': 'god', '星': 'star', '門': 'door', '干': 'stem',
+  };
+  const parts: React.ReactNode[] = [];
+  const regex = /（([神星門干])·([^）]+)）/g;
+  let lastIdx = 0;
+  let match: RegExpExecArray | null;
+  let key = 0;
+  while ((match = regex.exec(detail)) !== null) {
+    if (match.index > lastIdx) parts.push(detail.slice(lastIdx, match.index));
+    const typeChar = match[1];
+    const tierLabel = match[2];
+    parts.push(
+      <span key={`t-${key++}`}>
+        （
+        <TermHelp term={TYPE_MAP[typeChar]} iconSize={10}>
+          <span className="underline decoration-dotted decoration-theme-primary/30 underline-offset-2">{typeChar}</span>
+        </TermHelp>
+        ·{tierLabel}）
+      </span>
+    );
+    lastIdx = regex.lastIndex;
+  }
+  if (lastIdx < detail.length) parts.push(detail.slice(lastIdx));
+
+  // 進一步處理「用事宮 2× 權重」與「宮位得分」關鍵字
+  return parts.map((part, i) => {
+    if (typeof part !== 'string') return <React.Fragment key={i}>{part}</React.Fragment>;
+    const nodes: React.ReactNode[] = [];
+    let rest = part;
+    const patterns: Array<{ text: string; term: 'mainPalace' | 'weightedScore' | 'score' }> = [
+      { text: '用事宮 2× 權重', term: 'weightedScore' },
+      { text: '用事宮',         term: 'mainPalace' },
+      { text: '宮位得分',       term: 'score' },
+    ];
+    let cursor = 0;
+    while (cursor < rest.length) {
+      let matched = false;
+      for (const { text, term } of patterns) {
+        if (rest.startsWith(text, cursor)) {
+          nodes.push(
+            <TermHelp key={`k-${i}-${cursor}`} term={term} iconSize={10}>
+              <span className="underline decoration-dotted decoration-theme-primary/30 underline-offset-2">{text}</span>
+            </TermHelp>
+          );
+          cursor += text.length;
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) {
+        // 累積非關鍵字字元直到下一個關鍵字
+        let nextHit = rest.length;
+        for (const { text } of patterns) {
+          const idx = rest.indexOf(text, cursor);
+          if (idx !== -1 && idx < nextHit) nextHit = idx;
+        }
+        nodes.push(rest.slice(cursor, nextHit));
+        cursor = nextHit;
+      }
+    }
+    return <React.Fragment key={i}>{nodes}</React.Fragment>;
+  });
+}
 
 interface AnalysisCardProps {
   palaceNum: number;
@@ -19,6 +88,10 @@ interface AnalysisCardProps {
   palaceData: any;
   predefinedResult?: string | null;
   isMainPalace?: boolean;
+  /** 一句話白話總結（由 verdictSummary 產生） */
+  summary?: string;
+  /** 建議行動標籤（主動出擊/謹慎行事/保守應對/暫緩等待） */
+  actionTag?: string;
 }
 
 const AnalysisCard: React.FC<AnalysisCardProps> = ({
@@ -32,7 +105,9 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   badgeColorClass,
   palaceData,
   predefinedResult,
-  isMainPalace = false
+  isMainPalace = false,
+  summary,
+  actionTag,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(predefinedResult || null);
@@ -116,20 +191,57 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   return (
     <div className={`p-6 rounded-3xl border transition-all duration-500 hover:shadow-xl flex flex-col ${resultColorClass}`}>
       <div className="flex justify-between items-center mb-5 border-b border-theme-border/30 pb-4">
-        <h3 className="text-xl font-bold tracking-tight">
+        <h3 className="text-xl font-bold tracking-tight flex items-baseline gap-2">
           {palaceName}
-          {isCenter && <span className="text-[10px] opacity-40 ml-2 font-normal">(寄宮)</span>}
+          {isCenter && <span className="text-[10px] opacity-40 font-normal">(寄宮)</span>}
+          {isMainPalace && (
+            <TermHelp term="mainPalace">
+              <span className="text-[11px] font-black tracking-widest whitespace-nowrap inline-flex items-center gap-0.5">
+                <span aria-hidden className="opacity-80">★</span>
+                <span>用事宮</span>
+              </span>
+            </TermHelp>
+          )}
         </h3>
-        <div className={`px-4 py-1.5 rounded-full text-sm font-black tracking-widest shadow-md ${badgeColorClass}`}>
-          {result}
+        <div className="flex flex-col items-end gap-1">
+          <TermHelp term={result as any} placement="end">
+            <div className={`px-4 py-1.5 rounded-full text-sm font-black tracking-widest shadow-md ${badgeColorClass}`}>
+              {result}
+            </div>
+          </TermHelp>
+          {actionTag && (
+            <span className="text-[10px] font-bold text-theme-primary/50 tracking-widest">
+              {actionTag}
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="space-y-4 mb-6 flex-grow">
+      {/* 白話一句話總結（新手最先看到） */}
+      {summary && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-5 p-4 rounded-2xl bg-theme-accent/5 border border-theme-accent/20 flex items-start gap-3"
+        >
+          <Lightbulb size={18} className="text-theme-accent shrink-0 mt-0.5" />
+          <p className="text-sm sm:text-base text-theme-primary font-medium leading-relaxed">
+            {summary}
+          </p>
+        </motion.div>
+      )}
+
+      <div className="space-y-3 mb-6 flex-grow">
+        <div className="text-[10px] font-bold text-theme-primary/40 tracking-widest uppercase flex items-center gap-2">
+          四元素詳細分級
+          <span className="flex-1 h-px bg-theme-border/30"></span>
+          <TermHelp term="redGreen" iconSize={11} />
+        </div>
         {details.map((detail, idx) => (
-          <div key={idx} className="text-base font-serif opacity-80 flex items-start gap-3 leading-relaxed">
+          <div key={idx} className="text-sm sm:text-base font-serif opacity-80 flex items-start gap-3 leading-relaxed">
             <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-current opacity-30 flex-shrink-0"></span>
-            {detail}
+            <span className="flex-1">{renderDetailWithTerms(detail)}</span>
           </div>
         ))}
       </div>

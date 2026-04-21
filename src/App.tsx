@@ -10,6 +10,7 @@ import DatePicker, { registerLocale } from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { zhTW } from 'date-fns/locale/zh-TW';
 import { analyzePalace } from './utils/analysis';
+import { summarizePalace, actionLabel } from './utils/verdictSummary';
 import QuestionInput from './components/QuestionInput';
 import type { QuestionType } from './components/QuestionInput';
 import AnalysisCard from './components/AnalysisCard';
@@ -18,6 +19,10 @@ import ReactMarkdown from 'react-markdown';
 import RitualLoading from './components/RitualLoading';
 import Onboarding from './components/Onboarding';
 import NumberPicker from './components/NumberPicker';
+import MethodSelector from './components/MethodSelector';
+import type { ChartingMethod } from './components/MethodSelector';
+import PhoneInput from './components/PhoneInput';
+import BirthInput from './components/BirthInput';
 import { AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { triggerSuccessHaptic, triggerLightHaptic, triggerWarningHaptic } from './utils/haptics';
@@ -34,7 +39,11 @@ function App() {
   const [userQuestion, setUserQuestion] = useState('');
   const [isCharting, setIsCharting] = useState(false);
   const [isPreCharting, setIsPreCharting] = useState(false);
+  const [isPickingMethod, setIsPickingMethod] = useState(false);
+  const [chartingMethod, setChartingMethod] = useState<ChartingMethod | null>(null);
   const [isPickingNumber, setIsPickingNumber] = useState(false);
+  const [isInputtingPhone, setIsInputtingPhone] = useState(false);
+  const [isInputtingBirth, setIsInputtingBirth] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
   const [mainSelectedNum, setMainSelectedNum] = useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -77,15 +86,6 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleManualClick = () => {
-    setIsAutoMode(false);
-    setTimeout(() => {
-      if (datePickerRef.current) {
-        datePickerRef.current.setOpen(true);
-      }
-    }, 0);
-  };
-
   const handlePalaceClick = (palaceNum: number) => {
     setSelectedPalaces(prev => {
       if (prev.includes(palaceNum)) {
@@ -102,7 +102,11 @@ function App() {
     }
     setUserQuestion(question);
     setIsCharting(true);
-    setIsPickingNumber(true); // Start with number picking
+    setIsPickingMethod(true); // 先選起卦方法
+    setChartingMethod(null);
+    setIsPickingNumber(false);
+    setIsInputtingPhone(false);
+    setIsInputtingBirth(false);
     setIsRevealed(false);
     setMainSelectedNum(null);
     setSelectedPalaces([]);
@@ -112,26 +116,72 @@ function App() {
     setSelectedDate(new Date());
   };
 
-  const handleSelectNumber = (num: number) => {
-    setMainSelectedNum(num);
+  /** 起盤儀式 → 揭封 → 進入解析 */
+  const beginRitual = (mainNum: number | null) => {
+    setIsPickingMethod(false);
     setIsPickingNumber(false);
-    setIsPreCharting(true); // Start ritual Loading
+    setIsInputtingPhone(false);
+    setIsInputtingBirth(false);
+    setMainSelectedNum(mainNum);
+    setIsPreCharting(true);
 
-    // Ritual delay
     setTimeout(() => {
       setIsPreCharting(false);
-      setIsRevealed(true); // Reveal the chart
-      setSelectedPalaces([num]); // Auto select the chosen palace
+      setIsRevealed(true);
+      setSelectedPalaces(mainNum !== null ? [mainNum] : []);
       triggerSuccessHaptic();
-
-      // Scroll to top of chart
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 1200); // Slightly longer ritual for "breaking the seal" feel
+    }, 1200);
+  };
+
+  const handleSelectMethod = (method: ChartingMethod) => {
+    setChartingMethod(method);
+    setIsPickingMethod(false);
+
+    switch (method) {
+      case 'intuition':
+        setIsPickingNumber(true);
+        break;
+      case 'time':
+        // 時間直出：不預設用事宮，讓使用者點盤面後再選
+        beginRitual(null);
+        break;
+      case 'phone':
+        setIsInputtingPhone(true);
+        break;
+      case 'birth':
+        setIsInputtingBirth(true);
+        break;
+    }
+  };
+
+  const handleSelectNumber = (num: number) => {
+    beginRitual(num);
+  };
+
+  const handlePhoneSubmit = (palace: number) => {
+    beginRitual(palace);
+  };
+
+  const handleBirthSubmit = (palace: number) => {
+    beginRitual(palace);
+  };
+
+  const handleBackToMethod = () => {
+    setIsPickingMethod(true);
+    setIsPickingNumber(false);
+    setIsInputtingPhone(false);
+    setIsInputtingBirth(false);
+    setChartingMethod(null);
   };
 
   const handleReset = () => {
     setIsCharting(false);
+    setIsPickingMethod(false);
+    setChartingMethod(null);
     setIsPickingNumber(false);
+    setIsInputtingPhone(false);
+    setIsInputtingBirth(false);
     setIsRevealed(false);
     setMainSelectedNum(null);
     setSelectedPalaces([]);
@@ -162,11 +212,18 @@ function App() {
       const isCenter = num === 5;
       const targetNum = isCenter ? 2 : num;
       const data = qimenData.palaces[targetNum];
-      const analysis = analyzePalace(num, isCenter ? { ...data, name: "中五 (寄坤二)" } : data);
+      const analysis = analyzePalace(
+        num,
+        isCenter ? { ...data, name: "中五 (寄坤二)" } : data,
+        { isMainPalace: num === mainSelectedNum }
+      );
       return {
         ...data,
         name: analysis.palaceName,
-        resultScore: analysis.result
+        resultScore: analysis.verdict,
+        score: analysis.score,
+        weightedScore: analysis.weightedScore,
+        isMainPalace: num === mainSelectedNum,
       };
     });
 
@@ -287,8 +344,14 @@ function App() {
           </div>
         ) : (
           <div id="qimen-main-report" className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-700">
-            {isPickingNumber ? (
+            {isPickingMethod ? (
+              <MethodSelector onSelect={handleSelectMethod} />
+            ) : isPickingNumber ? (
               <NumberPicker onSelect={handleSelectNumber} />
+            ) : isInputtingPhone ? (
+              <PhoneInput onSubmit={handlePhoneSubmit} onBack={handleBackToMethod} />
+            ) : isInputtingBirth ? (
+              <BirthInput onSubmit={handleBirthSubmit} onBack={handleBackToMethod} />
             ) : isPreCharting ? (
               <RitualLoading />
             ) : (
@@ -301,6 +364,14 @@ function App() {
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-theme-accent"></span>
                       </span>
                       正在為您解析
+                      {chartingMethod && (
+                        <span className="text-theme-accent/60 font-medium text-xs border-l border-theme-accent/30 pl-2 ml-1">
+                          {chartingMethod === 'intuition' && '心動感應'}
+                          {chartingMethod === 'time' && '時間直出'}
+                          {chartingMethod === 'phone' && '手機號'}
+                          {chartingMethod === 'birth' && '出生日'}
+                        </span>
+                      )}
                     </div>
                     <h2 className="text-2xl sm:text-4xl font-bold text-theme-primary max-w-2xl leading-relaxed font-serif tracking-wide border-b-2 border-theme-accent/20 pb-4 italic">
                       「{userQuestion}」
@@ -388,33 +459,6 @@ function App() {
                       </div>
                     </div>
 
-                    {!isQuestionMode && (
-                      <div className="flex gap-3 animate-in fade-in duration-500">
-                        <button
-                          onClick={() => {
-                            setIsAutoMode(true);
-                            setSelectedDate(new Date());
-                            setSelectedPalaces([]);
-                          }}
-                          className={`text - xs px - 4 py - 2 rounded - xl transition - all font - bold border ${isAutoMode
-                            ? 'bg-theme-primary text-theme-bg border-theme-primary shadow-lg shadow-theme-primary/10'
-                            : 'bg-theme-bg/50 text-theme-primary/40 border-theme-border hover:text-theme-primary/80 hover:border-theme-primary/30'
-                            } `}
-                        >
-                          現在時間
-                        </button>
-                        <button
-                          onClick={handleManualClick}
-                          className={`text - xs px - 4 py - 2 rounded - xl transition - all font - bold border ${!isAutoMode
-                            ? 'bg-theme-primary text-theme-bg border-theme-primary shadow-lg shadow-theme-primary/10'
-                            : 'bg-theme-bg/50 text-theme-primary/40 border-theme-border hover:text-theme-primary/80 hover:border-theme-primary/30'
-                            } `}
-                        >
-                          調整時間
-                        </button>
-                      </div>
-                    )}
-
                     {isQuestionMode && (
                       <div className="text-[10px] font-bold text-theme-accent/50 uppercase tracking-widest bg-theme-accent/5 px-3 py-1.5 rounded-full border border-theme-accent/10">
                         時間已鎖定至起卦當下
@@ -461,27 +505,42 @@ function App() {
                               if (!data) return null;
 
                               const analysisData = isCenter ? { ...data, name: "中五 (寄坤二)" } : data;
-                              const result = analyzePalace(palaceNum, analysisData);
+                              const result = analyzePalace(palaceNum, analysisData, {
+                                isMainPalace: palaceNum === mainSelectedNum,
+                              });
 
-                              const resultColorClass = result.result === '大凶'
-                                ? 'bg-red-500/5 border-red-500/20 text-red-600 dark:text-red-400'
-                                : result.result === '凶'
-                                  ? 'bg-theme-card border-theme-border text-theme-primary'
-                                  : 'bg-green-500/5 border-green-500/20 text-green-600 dark:text-green-400';
+                              // 六級判定 → 色彩（吉：紅系，凶：綠系）
+                              const resultColorClass = (() => {
+                                switch (result.verdict) {
+                                  case '大吉': return 'bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400';
+                                  case '吉':   return 'bg-red-500/5 border-red-500/20 text-red-600 dark:text-red-400';
+                                  case '平':   return 'bg-theme-card border-theme-border text-theme-primary';
+                                  case '小凶': return 'bg-green-500/5 border-green-500/15 text-green-600 dark:text-green-400';
+                                  case '凶':   return 'bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400';
+                                  case '大凶': return 'bg-green-500/15 border-green-500/50 text-green-600 dark:text-green-400';
+                                }
+                              })();
 
-                              const badgeColorClass = result.result === '大凶'
-                                ? 'bg-red-600 text-white shadow-lg shadow-red-600/20'
-                                : result.result === '凶'
-                                  ? 'bg-slate-500 text-white shadow-sm'
-                                  : 'bg-green-600 text-white shadow-lg shadow-green-600/20';
+                              const badgeColorClass = (() => {
+                                switch (result.verdict) {
+                                  case '大吉': return 'bg-red-700 text-white shadow-lg shadow-red-700/30';
+                                  case '吉':   return 'bg-red-600 text-white shadow-lg shadow-red-600/20';
+                                  case '平':   return 'bg-slate-500 text-white shadow-sm';
+                                  case '小凶': return 'bg-green-500 text-white shadow-sm';
+                                  case '凶':   return 'bg-green-600 text-white shadow-lg shadow-green-600/20';
+                                  case '大凶': return 'bg-green-700 text-white shadow-lg shadow-green-700/30';
+                                }
+                              })();
 
                               return (
                                 <AnalysisCard
                                   key={palaceNum}
                                   palaceNum={palaceNum}
                                   palaceName={result.palaceName}
-                                  result={result.result}
+                                  result={result.verdict}
                                   details={result.details}
+                                  summary={summarizePalace(result)}
+                                  actionTag={actionLabel(result)}
                                   userQuestion={userQuestion}
                                   isCenter={isCenter}
                                   resultColorClass={resultColorClass}
