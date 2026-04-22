@@ -3,6 +3,7 @@ import { Sparkles, Loader2, ChevronDown, Copy, Check, Image as ImageIcon, Lightb
 import ReactMarkdown from 'react-markdown';
 import { fetchMasterAnalysis } from '../services/aiService';
 import { useHistory } from '../context/HistoryContext';
+import { useSituation } from '../context/SituationContext';
 import { exportElementAsImage } from '../utils/exportImage';
 import { motion } from 'framer-motion';
 import { triggerSuccessHaptic } from '../utils/haptics';
@@ -116,6 +117,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   const [isExporting, setIsExporting] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
   const { addHistoryEntry } = useHistory();
+  const { situationKey } = useSituation();
 
   // Sync with predefinedResult when it changes (e.g. on restoration)
   useEffect(() => {
@@ -155,6 +157,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
       const text = await fetchMasterAnalysis({
         question: userQuestion || '',
         palaceData,
+        contextKey: situationKey ?? 'general',
         signal: controller.signal,
       });
       setAiResult(text);

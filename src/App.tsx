@@ -27,11 +27,15 @@ import { AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { triggerSuccessHaptic, triggerLightHaptic, triggerWarningHaptic } from './utils/haptics';
 import './styles/animations.css';
+import { useSituation } from './context/SituationContext';
+import ContextSelector from './features/contexts/ContextSelector';
+import type { SituationKey } from './context/SituationContext';
 
 // Register locale
 registerLocale('zh-TW', zhTW);
 
 function App() {
+  const { situationKey, setSituationKey } = useSituation();
   const [isAutoMode, setIsAutoMode] = useState(false);
   const datePickerRef = useRef<DatePicker>(null);
   const [selectedPalaces, setSelectedPalaces] = useState<number[]>([]);
@@ -189,6 +193,7 @@ function App() {
     setIsAutoMode(false);
     setRestoredEntry(null);
     setComparisonResult(null);
+    setSituationKey(null);
   };
 
   const handleRestoreHistory = (entry: HistoryEntry) => {
@@ -228,7 +233,7 @@ function App() {
     });
 
     try {
-      const text = await fetchMultiPalaceAnalysis(userQuestion, palacesToCompare);
+      const text = await fetchMultiPalaceAnalysis(userQuestion, palacesToCompare, undefined, situationKey ?? 'general');
       setComparisonResult(text);
     } catch (error) {
       console.error(error);
@@ -340,7 +345,21 @@ function App() {
                 <span className="w-8 h-px bg-theme-border"></span>
               </div>
             </header>
-            <QuestionInput onStart={handleStartCharting} />
+            {!situationKey ? (
+              <ContextSelector selected={null} onSelect={(k: Exclude<SituationKey, null>) => setSituationKey(k)} />
+            ) : (
+              <div className="w-full flex flex-col items-center gap-4">
+                <button
+                  onClick={() => setSituationKey(null)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-theme-card border border-theme-border text-theme-primary/50 hover:text-theme-primary text-xs transition-all"
+                >
+                  <ChevronLeft size={12} />
+                  {situationKey === 'love' ? '感情' : situationKey === 'career' ? '事業' : '投資'}
+                  <span className="text-theme-primary/30">· 重選情境</span>
+                </button>
+                <QuestionInput onStart={handleStartCharting} />
+              </div>
+            )}
           </div>
         ) : (
           <div id="qimen-main-report" className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-700">
