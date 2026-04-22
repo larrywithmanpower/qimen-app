@@ -51,6 +51,82 @@
   justify-content: center;
 }
 
+/* ==========================================
+   情境特有動畫（Silent Horizon 美學基調）
+   ========================================== */
+
+/* 感情情境：慢速柔和呼吸（粉桃紫色系） */
+@keyframes love-breathing {
+  0% {
+    opacity: 0.6;
+    box-shadow: 0 0 8px rgba(244, 114, 182, 0.3), 0 0 20px rgba(192, 132, 252, 0.1);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 28px rgba(244, 114, 182, 0.6), 0 0 50px rgba(192, 132, 252, 0.2);
+  }
+  100% {
+    opacity: 0.6;
+    box-shadow: 0 0 8px rgba(244, 114, 182, 0.3), 0 0 20px rgba(192, 132, 252, 0.1);
+  }
+}
+
+/* 事業情境：精準俐落雙色脈衝（深藍金色系） */
+@keyframes career-pulse {
+  0% {
+    opacity: 0.7;
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.4);
+  }
+  35% {
+    opacity: 1;
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.7), 0 0 6px rgba(251, 191, 36, 0.3);
+  }
+  65% {
+    opacity: 1;
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.6), 0 0 4px rgba(59, 130, 246, 0.2);
+  }
+  100% {
+    opacity: 0.7;
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.4);
+  }
+}
+
+/* 投資情境：穩重四段循環（翠綠玉色系） */
+@keyframes invest-cycle {
+  0% {
+    opacity: 0.7;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
+  }
+  25% {
+    opacity: 0.85;
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.5);
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 22px rgba(16, 185, 129, 0.7), 0 0 10px rgba(52, 211, 153, 0.35);
+  }
+  75% {
+    opacity: 0.85;
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.5);
+  }
+  100% {
+    opacity: 0.7;
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
+  }
+}
+
+.context-love-glow {
+  animation: love-breathing 3.5s infinite ease-in-out;
+}
+
+.context-career-glow {
+  animation: career-pulse 1.8s infinite ease-in-out;
+}
+
+.context-invest-glow {
+  animation: invest-cycle 4s infinite ease-in-out;
+}
+
 /* iPhone 滾動優化：平滑滾動與彈性回饋 */
 .ios-smooth-scroll {
   -webkit-overflow-scrolling: touch;

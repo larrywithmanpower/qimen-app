@@ -95,6 +95,54 @@ interface AnalysisCardProps {
   actionTag?: string;
 }
 
+const CONTEXT_STYLES = {
+  love: {
+    glowClass: 'context-love-glow',
+    summaryBg: 'bg-pink-500/5 border-pink-400/25',
+    summaryIcon: 'text-pink-400',
+    resultBorder: 'border-pink-400/15 bg-theme-bg/50',
+    loadingBg: 'bg-pink-500/5 border-pink-400/10',
+    loadingText: 'text-pink-300',
+    loadingBar: 'bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.7)]',
+    buttonBg: 'bg-pink-500/10 border-pink-400/20 text-pink-300 hover:bg-pink-500/20',
+    aiLabel: 'bg-pink-500/5 border-pink-400/10 text-pink-300',
+  },
+  career: {
+    glowClass: 'context-career-glow',
+    summaryBg: 'bg-blue-500/5 border-blue-400/25',
+    summaryIcon: 'text-blue-400',
+    resultBorder: 'border-blue-400/15 bg-theme-bg/50',
+    loadingBg: 'bg-blue-500/5 border-blue-400/10',
+    loadingText: 'text-blue-300',
+    loadingBar: 'bg-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.7)]',
+    buttonBg: 'bg-blue-500/10 border-blue-400/20 text-blue-300 hover:bg-blue-500/20',
+    aiLabel: 'bg-blue-500/5 border-blue-400/10 text-blue-300',
+  },
+  invest: {
+    glowClass: 'context-invest-glow',
+    summaryBg: 'bg-emerald-500/5 border-emerald-400/25',
+    summaryIcon: 'text-emerald-400',
+    resultBorder: 'border-emerald-400/15 bg-theme-bg/50',
+    loadingBg: 'bg-emerald-500/5 border-emerald-400/10',
+    loadingText: 'text-emerald-300',
+    loadingBar: 'bg-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.7)]',
+    buttonBg: 'bg-emerald-500/10 border-emerald-400/20 text-emerald-300 hover:bg-emerald-500/20',
+    aiLabel: 'bg-emerald-500/5 border-emerald-400/10 text-emerald-300',
+  },
+};
+
+const DEFAULT_STYLES = {
+  glowClass: '',
+  summaryBg: 'bg-theme-accent/5 border-theme-accent/20',
+  summaryIcon: 'text-theme-accent',
+  resultBorder: 'border-theme-accent/10 bg-theme-bg/50',
+  loadingBg: 'bg-theme-accent/5 border-theme-accent/10',
+  loadingText: 'text-theme-accent',
+  loadingBar: 'bg-theme-accent shadow-[0_0_10px_#eab308]',
+  buttonBg: 'bg-theme-accent/10 border-theme-accent/20 text-theme-accent hover:bg-theme-accent/20',
+  aiLabel: 'bg-theme-accent/5 border-theme-accent/10 text-theme-accent',
+};
+
 const AnalysisCard: React.FC<AnalysisCardProps> = ({
   palaceNum,
   palaceName,
@@ -119,6 +167,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   const resultRef = useRef<HTMLDivElement>(null);
   const { addHistoryEntry } = useHistory();
   const { situationKey } = useSituation();
+  const ctxStyle = situationKey ? (CONTEXT_STYLES[situationKey] ?? DEFAULT_STYLES) : DEFAULT_STYLES;
 
   // Sync with predefinedResult when it changes (e.g. on restoration)
   useEffect(() => {
@@ -197,7 +246,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   }, [isExpanded, aiResult]);
 
   return (
-    <div className={`p-6 rounded-3xl border transition-all duration-500 hover:shadow-xl flex flex-col ${resultColorClass}`}>
+    <div className={`p-6 rounded-3xl border transition-all duration-500 hover:shadow-xl flex flex-col ${resultColorClass} ${ctxStyle.glowClass}`}>
       <div className="flex justify-between items-center mb-5 border-b border-theme-border/30 pb-4">
         <h3 className="text-xl font-bold tracking-tight flex items-baseline gap-2">
           {palaceName}
@@ -231,9 +280,9 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="mb-5 p-4 rounded-2xl bg-theme-accent/5 border border-theme-accent/20 flex items-start gap-3"
+          className={`mb-5 p-4 rounded-2xl border flex items-start gap-3 ${ctxStyle.summaryBg}`}
         >
-          <Lightbulb size={18} className="text-theme-accent shrink-0 mt-0.5" />
+          <Lightbulb size={18} className={`shrink-0 mt-0.5 ${ctxStyle.summaryIcon}`} />
           <p className="text-sm sm:text-base text-theme-primary font-medium leading-relaxed">
             {summary}
           </p>
@@ -271,43 +320,43 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleAskAI}
-                className="px-5 py-2 rounded-xl bg-theme-accent/10 border border-theme-accent/20 text-theme-accent text-sm font-bold flex items-center gap-2 hover:bg-theme-accent/20 transition-all"
+                className={`px-5 py-2 rounded-xl border text-sm font-bold flex items-center gap-2 transition-all ${ctxStyle.buttonBg}`}
               >
                 <Sparkles size={14} />
                 重新叩問
               </motion.button>
             </motion.div>
           ) : isLoading ? (
-            <div className="flex flex-col items-center gap-4 py-8 bg-theme-accent/5 rounded-2xl border border-theme-accent/10 w-full animate-in fade-in duration-500 mb-4">
+            <div className={`flex flex-col items-center gap-4 py-8 rounded-2xl border w-full animate-in fade-in duration-500 mb-4 ${ctxStyle.loadingBg}`}>
               <div className="relative w-20 h-20">
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 border-2 border-theme-accent/20 rounded-full border-dashed"
+                  className="absolute inset-0 border-2 border-theme-border/30 rounded-full border-dashed"
                 />
                 <motion.div
                   animate={{ rotate: -360 }}
                   transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-2 border border-theme-accent/10 rounded-full"
+                  className="absolute inset-2 border border-theme-border/20 rounded-full"
                 />
-                <div className="absolute inset-0 flex items-center justify-center text-theme-accent">
+                <div className="absolute inset-0 flex items-center justify-center">
                   <motion.div
                     animate={{ scale: [1, 1.1, 1], opacity: [0.5, 1, 0.5] }}
                     transition={{ duration: 2, repeat: Infinity }}
-                    className="text-2xl font-black"
+                    className={`text-2xl font-black ${ctxStyle.loadingText}`}
                   >
                     ☯️
                   </motion.div>
                 </div>
               </div>
               <div className="flex flex-col items-center gap-2">
-                <span className="text-theme-accent font-bold tracking-widest text-sm animate-pulse">大師正在推演天機...</span>
-                <div className="w-48 h-1 bg-theme-accent/10 rounded-full overflow-hidden">
+                <span className={`font-bold tracking-widest text-sm animate-pulse ${ctxStyle.loadingText}`}>大師正在推演天機...</span>
+                <div className="w-48 h-1 bg-theme-border/20 rounded-full overflow-hidden">
                   <motion.div
                     initial={{ x: "-100%" }}
                     animate={{ x: "100%" }}
                     transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="w-full h-full bg-theme-accent shadow-[0_0_10px_#eab308]"
+                    className={`w-full h-full ${ctxStyle.loadingBar}`}
                   />
                 </div>
               </div>
@@ -317,7 +366,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleAskAI}
-              className="w-full py-3 px-4 rounded-xl bg-theme-accent/10 border border-theme-accent/20 text-theme-accent font-bold flex items-center justify-center gap-2 hover:bg-theme-accent/20 transition-all group mb-4"
+              className={`w-full py-3 px-4 rounded-xl border font-bold flex items-center justify-center gap-2 transition-all group mb-4 ${ctxStyle.buttonBg}`}
             >
               <Sparkles size={18} className="group-hover:scale-110 transition-transform" />
               <span>{aiResult?.startsWith('⚠️') ? '✨ 重新詢問大師' : '✨ 詢問大師解析'}</span>
@@ -334,11 +383,11 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
                   onAnimationComplete={() => {
                     if (isExpanded) triggerSuccessHaptic();
                   }}
-                  className="bg-theme-bg/50 rounded-2xl p-5 border border-theme-accent/10 mt-2"
+                  className={`rounded-2xl p-5 border mt-2 ${ctxStyle.resultBorder}`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                    <div className="flex flex-wrap items-center gap-2 text-theme-accent text-sm font-bold">
-                      <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-theme-accent/5 border border-theme-accent/10">
+                    <div className={`flex flex-wrap items-center gap-2 text-sm font-bold ${ctxStyle.loadingText}`}>
+                      <div className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border ${ctxStyle.aiLabel}`}>
                         <Sparkles size={14} />
                         <span>大師智慧解析</span>
                       </div>

@@ -508,11 +508,24 @@ function App() {
                       </section>
 
                       {/* Analysis Results */}
-                      {selectedPalaces.length > 0 && (
+                      {selectedPalaces.length > 0 && (() => {
+                        const ctxMeta: Record<string, { label: string; icon: string; bar: string; badge: string; text: string }> = {
+                          love:   { label: '感情', icon: '🌸', bar: 'bg-pink-400',    badge: 'bg-pink-500/10 border-pink-400/25 text-pink-300',    text: 'text-pink-300' },
+                          career: { label: '事業', icon: '⛰️', bar: 'bg-blue-400',    badge: 'bg-blue-500/10 border-blue-400/25 text-blue-300',    text: 'text-blue-300' },
+                          invest: { label: '投資', icon: '☯️', bar: 'bg-emerald-400', badge: 'bg-emerald-500/10 border-emerald-400/25 text-emerald-300', text: 'text-emerald-300' },
+                        };
+                        const ctx = situationKey ? ctxMeta[situationKey] : null;
+                        return (
                         <section className="grid gap-6 mt-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
                           <div className="flex items-center gap-3 mb-2">
-                            <div className="w-1.5 h-8 bg-theme-accent rounded-full"></div>
+                            <div className={`w-1.5 h-8 rounded-full ${ctx ? ctx.bar : 'bg-theme-accent'}`}></div>
                             <h2 className="text-2xl sm:text-3xl font-bold text-theme-primary tracking-tight">吉凶分析</h2>
+                            {ctx && (
+                              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-bold tracking-widest ${ctx.badge}`}>
+                                <span>{ctx.icon}</span>
+                                <span>{ctx.label}</span>
+                              </span>
+                            )}
                             <span className="text-theme-primary/20 text-sm font-mono ml-auto tracking-widest uppercase">Analysis Report</span>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -579,7 +592,8 @@ function App() {
                             })}
                           </div>
                         </section>
-                      )}
+                        );
+                      })()}
 
                       {/* Master Comparison Section */}
                       {selectedPalaces.length > 1 && (
