@@ -1,13 +1,11 @@
-import { GoogleGenAI } from "@google/genai";
 import { getElementMeta } from "../utils/analysis";
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+// 透過 Cloud Functions proxy 呼叫 Gemini，金鑰只存在後端 Secret Manager
+const PROXY_URL = import.meta.env.VITE_GEMINI_PROXY_URL;
 
-if (!API_KEY) {
-  console.error("找不到 API Key！請檢查 .env 檔案與 VITE_ 前綴是否正確。");
+if (!PROXY_URL) {
+  console.error("找不到 VITE_GEMINI_PROXY_URL！請檢查 .env 檔案與 VITE_ 前綴是否正確。");
 }
-
-const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 /**
  * 將宮位四元素格式化為含「七層分級」的描述字串
@@ -22,16 +20,41 @@ const formatElement = (type: ElementKind, value: string): string => {
   return `${value}（${TYPE_LABEL[type]}·${meta.tierLabel} ${sign}${meta.score}）`;
 };
 
+/**
+ * 統一的 proxy 呼叫點：前端只丟 model + prompt，由 Cloud Function 代呼 Gemini
+ */
+async function callGeminiProxy(
+  model: string,
+  prompt: string,
+  signal?: AbortSignal
+): Promise<string> {
+  if (!PROXY_URL) {
+    throw new Error("請先設定 VITE_GEMINI_PROXY_URL 環境變數");
+  }
+
+  const response = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, prompt }),
+    signal,
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({ error: response.statusText }));
+    throw new Error(payload?.error || `Proxy error: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (!data?.text) throw new Error("大師沈默了（無回應內容）");
+  return data.text;
+}
+
 export const fetchMasterAnalysis = async (
   question: string,
   palaceData: any,
   resultScore: string,
   signal?: AbortSignal
 ): Promise<string> => {
-  if (!API_KEY) {
-    throw new Error("請先設定 VITE_GEMINI_API_KEY 環境變數");
-  }
-
   const { star, door, god, heavenStem, earthStem, name } = palaceData;
 
   // 依七層分級格式化
@@ -123,19 +146,9 @@ export const fetchMasterAnalysis = async (
 
   try {
     console.log("正在生成結構化鑑定報告...");
-
-    // @ts-ignore
-    const response = await (ai.models as any).generateContent({
-      model: "gemini-2.5-flash",
-      contents: [{ role: "user", parts: [{ text: systemPrompt }] }]
-    }, { signal });
-
-    const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) throw new Error("大師沈默了（無回應內容）");
-    return text;
-
+    return await callGeminiProxy("gemini-2.5-flash", systemPrompt, signal);
   } catch (error: any) {
-    if (error.name === 'AbortError') throw new Error("鑑定超時，請重試");
+    if (error?.name === 'AbortError') throw new Error("鑑定超時，請重試");
     throw error;
   }
 };
@@ -148,8 +161,6 @@ export const fetchMultiPalaceAnalysis = async (
   palaces: any[],
   signal?: AbortSignal
 ): Promise<string> => {
-  if (!API_KEY) throw new Error("API Key 未設定");
-
   const palaceDetails = palaces.map(p => {
     const gFmt = formatElement('god',  p.god);
     const sFmt = formatElement('star', p.star);
@@ -199,16 +210,10 @@ ${palaceDetails}
 `;
 
   try {
-    // @ts-ignore
-    const response = await (ai.models as any).generateContent({
-      model: "gemini-2.5-flash",
-      contents: [{ role: "user", parts: [{ text: systemPrompt }] }]
-    }, { signal });
-
-    const text = response.candidates?.[0]?.content?.parts?.[0]?.text;
-    return text || "大師對比失敗";
+    return await callGeminiProxy("gemini-2.5-flash", systemPrompt, signal);
   } catch (error: any) {
     console.error(error);
+    if (error?.name === 'AbortError') throw new Error("鑑定超時，請重試");
     throw new Error("大師對比時分心了，請重新發起請求 (Comparison Error)");
   }
 };

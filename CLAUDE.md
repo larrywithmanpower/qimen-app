@@ -17,8 +17,17 @@ npm run preview   # 預覽 production build
 
 執行前需於根目錄建立 `.env`：
 ```
-VITE_GEMINI_API_KEY=your_api_key_here
+VITE_GEMINI_PROXY_URL=http://localhost:8080
+GEMINI_API_KEY=your_api_key_here
 ```
+
+Gemini 金鑰不再直接進前端 bundle，統一走 `functions/gemini-proxy/` Cloud Function 代呼。本機開發時另開終端跑：
+
+```bash
+cd functions/gemini-proxy && npm install && npm start   # localhost:8080
+```
+
+Production 的 proxy URL 由 GitHub Actions secret `VITE_GEMINI_PROXY_URL` 注入；後端金鑰放 GCP Secret Manager，不寫死在 .env。
 
 ## 架構重點
 
