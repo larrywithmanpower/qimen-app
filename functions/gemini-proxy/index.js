@@ -1,6 +1,5 @@
 import functions from '@google-cloud/functions-framework';
 import { GoogleGenAI } from '@google/genai';
-import { Firestore } from '@google-cloud/firestore';
 
 // TODO: Board 填入 GCP Console - 逗號分隔字串，例如 "https://example.com,http://localhost:5173"
 const allowedOriginsEnv = process.env.ALLOWED_ORIGINS;
@@ -15,46 +14,6 @@ const ALLOWED_MODELS = new Set([
 ]);
 
 const MAX_PROMPT_LENGTH = 20000;
-const RATE_LIMIT_MAX = 10; // 每分鐘同一 IP 最多 10 次
-const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 分鐘
-
-const db = new Firestore();
-
-// 回傳 true 表示已超過限制，false 表示允許（含 Firestore 不可用時的 fallback）
-async function isRateLimited(ip) {
-  const now = Date.now();
-  const docRef = db.collection('rate_limits').doc(ip);
-  try {
-    return await db.runTransaction(async (tx) => {
-      const snap = await tx.get(docRef);
-      if (!snap.exists) {
-        tx.set(docRef, {
-          count: 1,
-          windowStart: now,
-          // TODO: 需在 GCP Console 為 rate_limits collection 設定 Firestore TTL policy（欄位 expireAt）
-          expireAt: new Date(now + RATE_LIMIT_WINDOW_MS),
-        });
-        return false;
-      }
-      const { count, windowStart } = snap.data();
-      if (now - windowStart >= RATE_LIMIT_WINDOW_MS) {
-        tx.set(docRef, {
-          count: 1,
-          windowStart: now,
-          expireAt: new Date(now + RATE_LIMIT_WINDOW_MS),
-        });
-        return false;
-      }
-      if (count >= RATE_LIMIT_MAX) return true;
-      tx.update(docRef, { count: count + 1 });
-      return false;
-    });
-  } catch (err) {
-    // 本機開發無 Firestore 連線時跳過 rate limit，不影響功能
-    console.error('Firestore rate limit unavailable, skipping:', err.message);
-    return false;
-  }
-}
 
 functions.http('geminiProxy', async (req, res) => {
   const origin = req.get('Origin');
@@ -81,16 +40,6 @@ functions.http('geminiProxy', async (req, res) => {
 
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
-    return;
-  }
-
-  // IP Rate Limit（Firestore-based，本機無連線時自動 skip）
-  const ip =
-    (req.headers['x-forwarded-for'] || '').split(',')[0].trim() ||
-    req.ip ||
-    'unknown';
-  if (await isRateLimited(ip)) {
-    res.status(429).json({ error: 'Too many requests' });
     return;
   }
 
