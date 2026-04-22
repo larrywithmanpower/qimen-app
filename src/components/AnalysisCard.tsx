@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Loader2, ChevronDown, Copy, Check, Image as ImageIcon, Lightbulb } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { fetchMasterAnalysis } from '../services/aiService';
+import { fetchMasterAnalysis, AnalysisValidationError } from '../services/aiService';
 import { useHistory } from '../context/HistoryContext';
 import { useSituation } from '../context/SituationContext';
 import { exportElementAsImage } from '../utils/exportImage';
@@ -113,6 +113,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [aiResult, setAiResult] = useState<string | null>(predefinedResult || null);
   const [isExpanded, setIsExpanded] = useState(predefinedResult ? true : false);
+  const [showFallback, setShowFallback] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
@@ -149,6 +150,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
   const handleAskAI = async () => {
     setIsLoading(true);
     setAiResult(null);
+    setShowFallback(false);
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
@@ -165,7 +167,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
 
       // Save to history
       addHistoryEntry({
-        date: palaceData.date || new Date().toISOString(), // Fallback if not provided
+        date: palaceData.date || new Date().toISOString(),
         question: userQuestion || '',
         palaceNum,
         palaceName,
@@ -175,9 +177,13 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
       });
     } catch (error: any) {
       console.error(error);
-      const errorMsg = error.message || "大師目前忙線中，請稍後再試。";
-      setAiResult(`⚠️ ${errorMsg}`);
-      setIsExpanded(true);
+      if (error instanceof AnalysisValidationError) {
+        setShowFallback(true);
+      } else {
+        const errorMsg = error.message || "大師目前忙線中，請稍後再試。";
+        setAiResult(`⚠️ ${errorMsg}`);
+        setIsExpanded(true);
+      }
     } finally {
       clearTimeout(timeoutId);
       setIsLoading(false);
@@ -250,7 +256,28 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
 
       {userQuestion && (
         <div className="mt-auto border-t border-theme-border/30 pt-4">
-          {isLoading ? (
+          {showFallback ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center gap-4 py-8 bg-red-500/5 rounded-2xl border border-red-500/20 w-full mb-4"
+            >
+              <div className="text-3xl">☁️</div>
+              <div className="flex flex-col items-center gap-1 text-center px-4">
+                <p className="text-sm font-bold text-red-400 tracking-wide">解盤遭遇干擾，請重試</p>
+                <p className="text-xs text-theme-primary/40">天機暫時受阻，稍後再叩問大師</p>
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleAskAI}
+                className="px-5 py-2 rounded-xl bg-theme-accent/10 border border-theme-accent/20 text-theme-accent text-sm font-bold flex items-center gap-2 hover:bg-theme-accent/20 transition-all"
+              >
+                <Sparkles size={14} />
+                重新叩問
+              </motion.button>
+            </motion.div>
+          ) : isLoading ? (
             <div className="flex flex-col items-center gap-4 py-8 bg-theme-accent/5 rounded-2xl border border-theme-accent/10 w-full animate-in fade-in duration-500 mb-4">
               <div className="relative w-20 h-20">
                 <motion.div

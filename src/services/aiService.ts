@@ -1,12 +1,19 @@
 import { getElementMeta, scoreToVerdict } from "../utils/analysis";
-import { BASE_PROMPT } from "./prompts/v1/base";
-import { getContextByKey } from "./prompts/v1/registry";
+import { getPrompt, getContextByKey } from "./prompts/v1/registry";
+import { GeminiResponseSchema } from "./prompts/v1/schema";
 
 // 透過 Cloud Functions proxy 呼叫 Gemini，金鑰只存在後端 Secret Manager
 const PROXY_URL = import.meta.env.VITE_GEMINI_PROXY_URL;
 
 if (!PROXY_URL) {
   console.error("找不到 VITE_GEMINI_PROXY_URL！請檢查 .env 檔案與 VITE_ 前綴是否正確。");
+}
+
+export class AnalysisValidationError extends Error {
+  constructor(message = '解盤遭遇干擾，請重試') {
+    super(message);
+    this.name = 'AnalysisValidationError';
+  }
 }
 
 export interface PalaceData {
@@ -29,10 +36,6 @@ export interface FetchMasterAnalysisParams {
   signal?: AbortSignal;
 }
 
-/**
- * 將宮位四元素格式化為含「七層分級」的描述字串
- * e.g. 開門(門·大吉 +3)
- */
 type ElementKind = 'god' | 'star' | 'door' | 'stem';
 const TYPE_LABEL: Record<ElementKind, string> = { god: '神', star: '星', door: '門', stem: '干' };
 
@@ -42,9 +45,6 @@ const formatElement = (type: ElementKind, value: string): string => {
   return `${value}（${TYPE_LABEL[type]}·${meta.tierLabel} ${sign}${meta.score}）`;
 };
 
-/**
- * 統一的 proxy 呼叫點：前端只丟 model + prompt，由 Cloud Function 代呼 Gemini
- */
 async function callGeminiProxy(
   model: string,
   prompt: string,
@@ -68,14 +68,18 @@ async function callGeminiProxy(
   }
 
   const data = await response.json();
-  if (!data?.text) throw new Error("大師沈默了（無回應內容）");
-  return data.text;
+  const parseResult = GeminiResponseSchema.safeParse(data?.text);
+  if (!parseResult.success) {
+    throw new AnalysisValidationError();
+  }
+  return parseResult.data;
 }
 
 function buildSinglePalacePrompt(
   question: string,
   palaceData: PalaceData,
-  contextInjection = ''
+  contextKey = 'general',
+  version = 'v1'
 ): string {
   const { star, door, god, heavenStem, earthStem, name } = palaceData;
 
@@ -92,13 +96,10 @@ function buildSinglePalacePrompt(
 
   const resultScore = scoreToVerdict(rawScore);
   const sign = rawScore >= 0 ? '+' : '';
-  const contextSection = contextInjection
-    ? `\n### 情境補充\n${contextInjection}\n`
-    : '';
+  const systemPromptBase = getPrompt(contextKey, version);
 
   return `
-${BASE_PROMPT}
-${contextSection}
+${systemPromptBase}
 ### 輸出格式補充
 - **宮位總分**：${sign}${rawScore} / ±12 → **${resultScore}**
 
@@ -117,8 +118,7 @@ export const fetchMasterAnalysis = async (
   params: FetchMasterAnalysisParams
 ): Promise<string> => {
   const { question, palaceData, contextKey = 'general', promptVersion = 'v1', signal } = params;
-  const contextInjection = getContextByKey(contextKey);
-  const systemPrompt = buildSinglePalacePrompt(question, palaceData, contextInjection);
+  const systemPrompt = buildSinglePalacePrompt(question, palaceData, contextKey, promptVersion);
 
   try {
     console.log("正在生成結構化鑑定報告...");
@@ -139,8 +139,7 @@ export const fetchContextualAnalysis = async (
   params: Omit<FetchMasterAnalysisParams, 'contextKey'> & { contextKey: string }
 ): Promise<string> => {
   const { question, palaceData, contextKey, promptVersion = 'v1', signal } = params;
-  const contextInjection = getContextByKey(contextKey);
-  const systemPrompt = buildSinglePalacePrompt(question, palaceData, contextInjection);
+  const systemPrompt = buildSinglePalacePrompt(question, palaceData, contextKey, promptVersion);
 
   try {
     return await callGeminiProxy(
@@ -155,13 +154,11 @@ export const fetchContextualAnalysis = async (
   }
 };
 
-/**
- * 進行多宮位方案比對與排序
- */
 export const fetchMultiPalaceAnalysis = async (
   question: string,
   palaces: any[],
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  contextKey?: string
 ): Promise<string> => {
   const palaceDetails = palaces.map(p => {
     const gFmt = formatElement('god',  p.god);
@@ -211,11 +208,22 @@ export const fetchMultiPalaceAnalysis = async (
 ${palaceDetails}
 `;
 
+  const contextInjection = contextKey ? getContextByKey(contextKey) : '';
+  const fullPrompt = contextInjection
+    ? `${systemPrompt}\n### 情境補充\n${contextInjection}`
+    : systemPrompt;
+
   try {
-    return await callGeminiProxy("gemini-2.5-flash", systemPrompt, signal);
+    return await callGeminiProxy(
+      "gemini-2.5-flash",
+      fullPrompt,
+      signal,
+      contextKey && contextKey !== 'general' ? { context: contextKey } : undefined,
+    );
   } catch (error: any) {
     console.error(error);
     if (error?.name === 'AbortError') throw new Error("鑑定超時，請重試");
+    if (error instanceof AnalysisValidationError) throw error;
     throw new Error("大師對比時分心了，請重新發起請求 (Comparison Error)");
   }
 };
