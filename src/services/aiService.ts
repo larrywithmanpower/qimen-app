@@ -1,10 +1,32 @@
-import { getElementMeta } from "../utils/analysis";
+import { getElementMeta, scoreToVerdict } from "../utils/analysis";
+import { BASE_PROMPT } from "./prompts/v1/base";
+import { getContextByKey } from "./prompts/v1/registry";
 
 // 透過 Cloud Functions proxy 呼叫 Gemini，金鑰只存在後端 Secret Manager
 const PROXY_URL = import.meta.env.VITE_GEMINI_PROXY_URL;
 
 if (!PROXY_URL) {
   console.error("找不到 VITE_GEMINI_PROXY_URL！請檢查 .env 檔案與 VITE_ 前綴是否正確。");
+}
+
+export interface PalaceData {
+  star: string;
+  door: string;
+  god: string;
+  heavenStem: string;
+  earthStem: string;
+  name: string;
+  date?: string;
+  [key: string]: unknown;
+}
+
+export interface FetchMasterAnalysisParams {
+  question: string;
+  palaceData: PalaceData;
+  score?: number;
+  contextKey?: string;    // 預設 'general'，保持向後相容
+  promptVersion?: string; // 預設 'v1'
+  signal?: AbortSignal;
 }
 
 /**
@@ -26,7 +48,8 @@ const formatElement = (type: ElementKind, value: string): string => {
 async function callGeminiProxy(
   model: string,
   prompt: string,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  extraPayload?: Record<string, unknown>
 ): Promise<string> {
   if (!PROXY_URL) {
     throw new Error("請先設定 VITE_GEMINI_PROXY_URL 環境變數");
@@ -35,7 +58,7 @@ async function callGeminiProxy(
   const response = await fetch(PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, prompt }),
+    body: JSON.stringify({ model, prompt, ...extraPayload }),
     signal,
   });
 
@@ -49,90 +72,35 @@ async function callGeminiProxy(
   return data.text;
 }
 
-export const fetchMasterAnalysis = async (
+function buildSinglePalacePrompt(
   question: string,
-  palaceData: any,
-  resultScore: string,
-  signal?: AbortSignal
-): Promise<string> => {
+  palaceData: PalaceData,
+  contextInjection = ''
+): string {
   const { star, door, god, heavenStem, earthStem, name } = palaceData;
 
-  // 依七層分級格式化
   const godFormatted  = formatElement('god',  god);
   const starFormatted = formatElement('star', star);
   const doorFormatted = formatElement('door', door);
   const stemFormatted = formatElement('stem', heavenStem);
 
-  // 計算宮位原始分數（與 analyzePalace 一致）
   const rawScore =
     getElementMeta('god', god).score +
     getElementMeta('star', star).score +
     getElementMeta('door', door).score +
     getElementMeta('stem', heavenStem).score;
 
-  const systemPrompt = `
-你是一位精通「九宮奇門」與「現代決策學」的頂級謀略家，專為客戶產出「具體、量化、可執行」的鑑定報告。
+  const resultScore = scoreToVerdict(rawScore);
+  const sign = rawScore >= 0 ? '+' : '';
+  const contextSection = contextInjection
+    ? `\n### 情境補充\n${contextInjection}\n`
+    : '';
 
-### 0. 核心原則（九宮奇門心法）
-- 大道至簡：**紅字＝吉、綠字＝凶**，不用背艱澀名詞，看顏色與分級就能斷吉凶。
-- 四維度同時成立：**天時（九星）、地利（九宮）、人和（八門）、神助（八神）**。
-- **用事宮權重最重**（2× 旁宮），若本次為用事宮，解析深度需更強。
-
-### 1. 七層分級評分系統（必須嚴格使用）
-每個元素依「神/星/門/干」四類，共分為七層：
-- 🔴🔴🔴 大吉（+3）、🔴🔴 吉（+2）、🔴 小吉（+1）、⚪ 中性（0）、🟢 小凶（-1）、🟢🟢 凶（-2）、🟢🟢🟢 大凶（-3）
-- 單宮滿分 ±12，判定區間：
-  - ≥9 **大吉** / 7-8 **吉** / 3-6 **平** / 0-2 **小凶** / -5~-1 **凶** / ≤-6 **大凶**
-
-### 2. 量化輸出（使用 1-5 星表現強度）
-- **🌟 成功機率**：紅吉密度 + 分級強度越高越亮
-- **⚠️ 風險指數**：綠凶密度 + 分級強度越高越亮
-- **🏗️ 執行建議**：[主動出擊 / 謹慎行事 / 保守應對 / 暫緩等待]
-  - 吉多凶少 → 主動出擊
-  - 吉凶各半 → 謹慎行事
-  - 偏凶 → 保守應對
-  - 凶多吉少 → 暫緩等待
-
-### 3. 現代化白話轉譯（禁用古文）
-- **值符 / 六合**：領導力、官方貴人、合作媒合
-- **白虎 / 玄武**：競爭壓迫、市場欺詐、資訊不透明
-- **螣蛇**：波折反覆、變來變去、虛驚
-- **開門 / 生門**：開創機會、財源生機
-- **休門**：休養聚合、感情和諧
-- **死門 / 驚門 / 傷門**：終結停滯、官非意外、破財糾紛
-- **景門**：表面光鮮但虛浮（中性偏凶）
-- **乙 / 丙 / 丁（三奇）**：柔性資源 / 強力貴人 / 情報智慧
-- **庚 / 癸**：阻力競爭 / 陰暗欺騙
-- **天心 / 天輔**：決策貴人 / 文教輔助
-- **天蓬 / 天芮**：混亂爭訟 / 疾病底層困境
-
-### 4. 類別自適應
-- 【事業】：團隊管理、晉升機會、合約風險
-- 【財運】：進場時機、現金流風險、成本控管
-- 【感情】：溝通透明度、關係發展阻礙
-- 【健康】：體能警示、療癒方向
-- 【學業 / 考試】：專注資源、助力貴人
-
-### 5. 輸出格式（嚴格 Markdown）
----
-## 📊 綜合鑑定結果
-- **大師定調**：[一句話精闢判斷局勢]
-- **宮位總分**：${rawScore >= 0 ? '+' : ''}${rawScore} / ±12 → **${resultScore}**
-- **核心指標**：
-  - 🌟 成功機率：[⭐星等]
-  - ⚠️ 風險指數：[⭐星等]
-  - 🏗️ 執行建議：[主動出擊/謹慎行事/保守應對/暫緩等待]
-
-## 📖 符號深層寓意
-[依本次四元素的分級與組合，點出彼此如何交織影響當前局勢。務必引用每個元素的分級（大吉/小吉/中性/小凶/凶/大凶）作為論述根據]
-
-## 🚀 大師行動指南
-1. [具體的第一步行動]
-2. [必須避開的坑點]
-3. [最佳執行時機或轉機條件]
-
-> ✨ **大師贈言**：[一句具備哲思與智慧的格言總結]
----
+  return `
+${BASE_PROMPT}
+${contextSection}
+### 輸出格式補充
+- **宮位總分**：${sign}${rawScore} / ±12 → **${resultScore}**
 
 ### 待解析數據
 - 問題：${question}
@@ -141,12 +109,46 @@ export const fetchMasterAnalysis = async (
 - 九星：${starFormatted}
 - 八門：${doorFormatted}
 - 天干：${stemFormatted}（地盤：${earthStem}）
-- 宮位原始分：${rawScore >= 0 ? '+' : ''}${rawScore} 分 → 判定：**${resultScore}**
+- 宮位原始分：${sign}${rawScore} 分 → 判定：**${resultScore}**
 `;
+}
+
+export const fetchMasterAnalysis = async (
+  params: FetchMasterAnalysisParams
+): Promise<string> => {
+  const { question, palaceData, contextKey = 'general', promptVersion = 'v1', signal } = params;
+  const contextInjection = getContextByKey(contextKey);
+  const systemPrompt = buildSinglePalacePrompt(question, palaceData, contextInjection);
 
   try {
     console.log("正在生成結構化鑑定報告...");
-    return await callGeminiProxy("gemini-2.5-flash", systemPrompt, signal);
+    return await callGeminiProxy(
+      "gemini-2.5-flash",
+      systemPrompt,
+      signal,
+      contextKey !== 'general' ? { context: contextKey, promptVersion } : undefined,
+    );
+  } catch (error: any) {
+    if (error?.name === 'AbortError') throw new Error("鑑定超時，請重試");
+    throw error;
+  }
+};
+
+// 情境化分析：contextKey 為必填，proxy payload 一律帶 context/promptVersion
+export const fetchContextualAnalysis = async (
+  params: Omit<FetchMasterAnalysisParams, 'contextKey'> & { contextKey: string }
+): Promise<string> => {
+  const { question, palaceData, contextKey, promptVersion = 'v1', signal } = params;
+  const contextInjection = getContextByKey(contextKey);
+  const systemPrompt = buildSinglePalacePrompt(question, palaceData, contextInjection);
+
+  try {
+    return await callGeminiProxy(
+      "gemini-2.5-flash",
+      systemPrompt,
+      signal,
+      { context: contextKey, promptVersion },
+    );
   } catch (error: any) {
     if (error?.name === 'AbortError') throw new Error("鑑定超時，請重試");
     throw error;

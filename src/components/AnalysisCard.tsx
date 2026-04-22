@@ -152,12 +152,11 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
     try {
-      const text = await fetchMasterAnalysis(
-        userQuestion || '',
+      const text = await fetchMasterAnalysis({
+        question: userQuestion || '',
         palaceData,
-        result,
-        controller.signal
-      );
+        signal: controller.signal,
+      });
       setAiResult(text);
       setIsExpanded(true);
 
