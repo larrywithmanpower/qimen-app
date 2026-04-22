@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, Loader2, ChevronDown, Copy, Check, Image as ImageIcon, Lightbulb } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { fetchMasterAnalysis, AnalysisValidationError } from '../services/aiService';
+import { fetchContextualAnalysis, AnalysisValidationError } from '../services/aiService';
 import { useHistory } from '../context/HistoryContext';
 import { useSituation } from '../context/SituationContext';
 import { exportElementAsImage } from '../utils/exportImage';
@@ -205,7 +205,7 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
     try {
-      const text = await fetchMasterAnalysis({
+      const text = await fetchContextualAnalysis({
         question: userQuestion || '',
         palaceData,
         contextKey: situationKey ?? 'general',
@@ -222,7 +222,8 @@ const AnalysisCard: React.FC<AnalysisCardProps> = ({
         palaceName,
         aiResult: text,
         palaceData,
-        resultScore: result
+        resultScore: result,
+        contextKey: situationKey ?? 'general',
       });
     } catch (error: any) {
       console.error(error);

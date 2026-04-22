@@ -78,9 +78,16 @@ const HistoryDrawer: React.FC<HistoryDrawerProps> = ({ isOpen, onClose, onRestor
                 </div>
 
                 <div className="mt-3 flex items-center justify-between text-[10px]">
-                  <span className="px-2 py-0.5 rounded-md bg-theme-accent/5 text-theme-accent border border-theme-accent/10">
-                    {entry.palaceName} · {entry.resultScore}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="px-2 py-0.5 rounded-md bg-theme-accent/5 text-theme-accent border border-theme-accent/10">
+                      {entry.palaceName} · {entry.resultScore}
+                    </span>
+                    {entry.contextKey && entry.contextKey !== 'general' && (
+                      <span className="px-2 py-0.5 rounded-md bg-theme-primary/5 text-theme-primary/50 border border-theme-border/30">
+                        {entry.contextKey === 'love' ? '感情' : entry.contextKey === 'career' ? '事業' : '投資'}
+                      </span>
+                    )}
+                  </div>
                   <span className="text-theme-primary/30 font-mono">
                     {format(new Date(entry.date), 'HH:mm')} 排盤
                   </span>

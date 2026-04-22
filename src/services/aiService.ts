@@ -1,6 +1,7 @@
 import { getElementMeta, scoreToVerdict } from "../utils/analysis";
 import { getPrompt, getContextByKey } from "./prompts/v1/registry";
 import { GeminiResponseSchema } from "./prompts/v1/schema";
+import { buildCacheKey, getCached, setCached } from "../utils/cache";
 
 // 透過 Cloud Functions proxy 呼叫 Gemini，金鑰只存在後端 Secret Manager
 const PROXY_URL = import.meta.env.VITE_GEMINI_PROXY_URL;
@@ -139,15 +140,22 @@ export const fetchContextualAnalysis = async (
   params: Omit<FetchMasterAnalysisParams, 'contextKey'> & { contextKey: string }
 ): Promise<string> => {
   const { question, palaceData, contextKey, promptVersion = 'v1', signal } = params;
+
+  const cacheKey = buildCacheKey(question, palaceData, contextKey, promptVersion);
+  const cached = await getCached(cacheKey);
+  if (cached) return cached;
+
   const systemPrompt = buildSinglePalacePrompt(question, palaceData, contextKey, promptVersion);
 
   try {
-    return await callGeminiProxy(
+    const result = await callGeminiProxy(
       "gemini-2.5-flash",
       systemPrompt,
       signal,
       { context: contextKey, promptVersion },
     );
+    await setCached(cacheKey, result);
+    return result;
   } catch (error: any) {
     if (error?.name === 'AbortError') throw new Error("鑑定超時，請重試");
     throw error;

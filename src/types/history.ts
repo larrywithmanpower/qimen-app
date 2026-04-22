@@ -8,4 +8,5 @@ export interface HistoryEntry {
   aiResult: string;
   palaceData: any;
   resultScore: string;
+  contextKey?: string; // 情境標籤（love / career / invest / general）
 }

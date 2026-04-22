@@ -11,7 +11,7 @@ interface HistoryContextType {
 const HistoryContext = createContext<HistoryContextType | undefined>(undefined);
 
 const STORAGE_KEY = 'qimen_history_v1';
-const MAX_HISTORY = 50;
+const MAX_HISTORY = 20;
 
 export const HistoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [history, setHistory] = useState<HistoryEntry[]>(() => {
