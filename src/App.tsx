@@ -16,9 +16,9 @@ import type { SituationKey } from './context/SituationContext';
 
 import ContextSelector from './features/contexts/ContextSelector';
 import HistoryDrawer from './components/HistoryDrawer';
+import QimenChart from './components/QimenChart';
 
 const Onboarding = lazy(() => import('./components/Onboarding'));
-const QimenChart = lazy(() => import('./components/QimenChart'));
 const AnalysisCard = lazy(() => import('./components/AnalysisCard'));
 const MethodSelector = lazy(() => import('./components/MethodSelector'));
 const NumberPicker = lazy(() => import('./components/NumberPicker'));
@@ -448,15 +448,13 @@ function App() {
                       </section>
 
                       <section className="flex justify-center overflow-x-auto py-2">
-                        <Suspense fallback={<div className="w-72 h-72 rounded-2xl bg-theme-card border border-theme-border/30 animate-pulse" />}>
-                          <QimenChart
-                            palaces={qimenData.palaces}
-                            selectedPalaces={selectedPalaces}
-                            onPalaceClick={handlePalaceClick}
-                            isRevealed={isRevealed}
-                            mainSelectedNum={mainSelectedNum}
-                          />
-                        </Suspense>
+                        <QimenChart
+                          palaces={qimenData.palaces}
+                          selectedPalaces={selectedPalaces}
+                          onPalaceClick={handlePalaceClick}
+                          isRevealed={isRevealed}
+                          mainSelectedNum={mainSelectedNum}
+                        />
                       </section>
 
                       {/* Analysis Results */}
