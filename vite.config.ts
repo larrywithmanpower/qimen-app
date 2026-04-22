@@ -47,4 +47,18 @@ export default defineConfig({
     })
   ],
   base: '/qimen-app/',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-framer': ['framer-motion'],
+          'vendor-datepicker': ['react-datepicker', 'date-fns'],
+          'vendor-markdown': ['react-markdown'],
+          'vendor-qimen': ['qimen-dunjia', 'lunar-javascript'],
+          'vendor-ui': ['lucide-react', 'react-helmet-async'],
+        },
+      },
+    },
+  },
 })

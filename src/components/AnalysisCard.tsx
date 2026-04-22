@@ -138,7 +138,7 @@ const DEFAULT_STYLES = {
   resultBorder: 'border-theme-accent/10 bg-theme-bg/50',
   loadingBg: 'bg-theme-accent/5 border-theme-accent/10',
   loadingText: 'text-theme-accent',
-  loadingBar: 'bg-theme-accent shadow-[0_0_10px_#eab308]',
+  loadingBar: 'bg-theme-accent shadow-[0_0_10px_var(--color-accent)]',
   buttonBg: 'bg-theme-accent/10 border-theme-accent/20 text-theme-accent hover:bg-theme-accent/20',
   aiLabel: 'bg-theme-accent/5 border-theme-accent/10 text-theme-accent',
 };

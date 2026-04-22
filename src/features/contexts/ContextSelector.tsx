@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { Heart, Briefcase, TrendingUp } from 'lucide-react';
 import type { SituationKey } from '../../context/SituationContext';
 
@@ -66,7 +65,7 @@ interface ContextSelectorProps {
 
 const ContextSelector: React.FC<ContextSelectorProps> = ({ selected, onSelect }) => {
   return (
-    <div className="w-full max-w-lg animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="w-full max-w-lg">
       <p className="text-center text-theme-primary/40 text-sm font-medium mb-6 tracking-widest uppercase">
         選擇您的問題情境
       </p>
@@ -74,24 +73,18 @@ const ContextSelector: React.FC<ContextSelectorProps> = ({ selected, onSelect })
         {CARDS.map(({ key, label, sub, Icon, palette }) => {
           const isActive = selected === key;
           return (
-            <motion.button
+            <button
               key={key}
               onClick={() => onSelect(key)}
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              animate={isActive ? { scale: 1.04 } : { scale: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 22 }}
-              className={`relative flex flex-col items-center gap-3 p-6 rounded-2xl border bg-theme-card transition-all duration-200 cursor-pointer focus:outline-none ${
+              className={`relative flex flex-col items-center gap-3 p-6 rounded-2xl border bg-theme-card transition-all duration-200 cursor-pointer focus:outline-none hover:scale-[1.03] active:scale-[0.97] ${
                 isActive
-                  ? `${palette.activeBorder} shadow-lg`
+                  ? `${palette.activeBorder} shadow-lg scale-[1.04]`
                   : `${palette.border} hover:border-theme-border`
               }`}
             >
               {isActive && (
-                <motion.div
-                  layoutId="situation-glow"
-                  className="absolute inset-0 rounded-2xl opacity-10 pointer-events-none"
-                  style={{ background: 'currentColor' }}
+                <div
+                  className="absolute inset-0 rounded-2xl opacity-10 pointer-events-none bg-current"
                 />
               )}
               <div className={`p-3 rounded-xl ${palette.iconBg}`}>
@@ -102,15 +95,11 @@ const ContextSelector: React.FC<ContextSelectorProps> = ({ selected, onSelect })
                 <div className="text-theme-primary/40 text-xs mt-1 leading-relaxed">{sub}</div>
               </div>
               {isActive && (
-                <motion.span
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${palette.badge}`}
-                >
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full animate-in fade-in zoom-in-75 duration-200 ${palette.badge}`}>
                   已選擇
-                </motion.span>
+                </span>
               )}
-            </motion.button>
+            </button>
           );
         })}
       </div>

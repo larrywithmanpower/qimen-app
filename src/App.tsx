@@ -1,43 +1,38 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { useQiMen } from './hooks/useQiMen';
-import { Calendar, ChevronLeft, ChevronRight, Sparkles, HelpCircle, History as HistoryIcon, Loader2 } from 'lucide-react';
-import HistoryDrawer from './components/HistoryDrawer';
+import { Calendar, Sparkles, HelpCircle, History as HistoryIcon, Loader2, ChevronLeft } from 'lucide-react';
 import type { HistoryEntry } from './types/history';
-import { format } from 'date-fns';
-import QimenChart from './components/QimenChart';
 import ThemeSwitcher from './components/ThemeSwitcher';
-import DatePicker, { registerLocale } from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
-import { zhTW } from 'date-fns/locale/zh-TW';
 import { analyzePalace } from './utils/analysis';
 import { summarizePalace, actionLabel } from './utils/verdictSummary';
 import QuestionInput from './components/QuestionInput';
 import type { QuestionType } from './components/QuestionInput';
-import AnalysisCard from './components/AnalysisCard';
 import { fetchMultiPalaceAnalysis } from './services/aiService';
-import ReactMarkdown from 'react-markdown';
-import RitualLoading from './components/RitualLoading';
-import Onboarding from './components/Onboarding';
-import NumberPicker from './components/NumberPicker';
-import MethodSelector from './components/MethodSelector';
-import type { ChartingMethod } from './components/MethodSelector';
-import PhoneInput from './components/PhoneInput';
-import BirthInput from './components/BirthInput';
-import { AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { triggerSuccessHaptic, triggerLightHaptic, triggerWarningHaptic } from './utils/haptics';
 import './styles/animations.css';
 import { useSituation } from './context/SituationContext';
-import ContextSelector from './features/contexts/ContextSelector';
 import type { SituationKey } from './context/SituationContext';
 
-// Register locale
-registerLocale('zh-TW', zhTW);
+import ContextSelector from './features/contexts/ContextSelector';
+
+const HistoryDrawer = lazy(() => import('./components/HistoryDrawer'));
+const Onboarding = lazy(() => import('./components/Onboarding'));
+const QimenChart = lazy(() => import('./components/QimenChart'));
+const AnalysisCard = lazy(() => import('./components/AnalysisCard'));
+const MethodSelector = lazy(() => import('./components/MethodSelector'));
+const NumberPicker = lazy(() => import('./components/NumberPicker'));
+const PhoneInput = lazy(() => import('./components/PhoneInput'));
+const BirthInput = lazy(() => import('./components/BirthInput'));
+const RitualLoading = lazy(() => import('./components/RitualLoading'));
+const ComparisonResult = lazy(() => import('./components/ComparisonResult'));
+const DateTimeSection = lazy(() => import('./components/DateTimeSection'));
+
+import type { ChartingMethod } from './components/MethodSelector';
 
 function App() {
   const { situationKey, setSituationKey } = useSituation();
   const [isAutoMode, setIsAutoMode] = useState(false);
-  const datePickerRef = useRef<DatePicker>(null);
   const [selectedPalaces, setSelectedPalaces] = useState<number[]>([]);
 
   const [userQuestion, setUserQuestion] = useState('');
@@ -80,12 +75,6 @@ function App() {
       setScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
-
-    // Onboarding check
-    const hasSeenGuide = localStorage.getItem('hasSeenGuide');
-    if (!hasSeenGuide) {
-      setTimeout(() => setShowOnboarding(true), 1500);
-    }
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -337,7 +326,7 @@ function App() {
 
         {!isCharting ? (
           <div className="w-full flex flex-col items-center py-10 sm:py-20 lg:py-32">
-            <header className="mb-12 text-center w-full max-w-md animate-in fade-in slide-in-from-top-4 duration-1000">
+            <header className="mb-12 text-center w-full max-w-md">
               <h1 className="text-4xl sm:text-5xl font-bold text-theme-primary mb-3 opacity-90 tracking-tight">奇門遁甲</h1>
               <div className="flex items-center justify-center gap-2 text-theme-primary/40 text-sm sm:text-base font-medium">
                 <span className="w-8 h-px bg-theme-border"></span>
@@ -364,15 +353,25 @@ function App() {
         ) : (
           <div id="qimen-main-report" className="w-full max-w-4xl animate-in fade-in slide-in-from-bottom-6 duration-700">
             {isPickingMethod ? (
-              <MethodSelector onSelect={handleSelectMethod} />
+              <Suspense fallback={<div className="h-48 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-theme-accent/20 border-t-theme-accent animate-spin" /></div>}>
+                <MethodSelector onSelect={handleSelectMethod} />
+              </Suspense>
             ) : isPickingNumber ? (
-              <NumberPicker onSelect={handleSelectNumber} />
+              <Suspense fallback={null}>
+                <NumberPicker onSelect={handleSelectNumber} />
+              </Suspense>
             ) : isInputtingPhone ? (
-              <PhoneInput onSubmit={handlePhoneSubmit} onBack={handleBackToMethod} />
+              <Suspense fallback={null}>
+                <PhoneInput onSubmit={handlePhoneSubmit} onBack={handleBackToMethod} />
+              </Suspense>
             ) : isInputtingBirth ? (
-              <BirthInput onSubmit={handleBirthSubmit} onBack={handleBackToMethod} />
+              <Suspense fallback={null}>
+                <BirthInput onSubmit={handleBirthSubmit} onBack={handleBackToMethod} />
+              </Suspense>
             ) : isPreCharting ? (
-              <RitualLoading />
+              <Suspense fallback={null}>
+                <RitualLoading />
+              </Suspense>
             ) : (
               <main className="w-full space-y-8">
                 {isQuestionMode && isRevealed && (
@@ -410,71 +409,22 @@ function App() {
                         <div className="p-2 rounded-lg bg-theme-accent/10 text-theme-accent shadow-inner">
                           <Calendar size={18} />
                         </div>
-                        <div className="relative">
-                          <DatePicker
-                            ref={datePickerRef}
-                            selected={selectedDate}
-                            onChange={(date: Date | null) => {
-                              if (date && !isQuestionMode) {
-                                setIsAutoMode(false);
-                                setSelectedDate(date);
-                                setSelectedPalaces([]);
-                              }
+                        <Suspense fallback={
+                          <span className="font-mono text-xl text-theme-primary font-bold tracking-tight opacity-50">
+                            {selectedDate.toLocaleString('zh-TW')}
+                          </span>
+                        }>
+                          <DateTimeSection
+                            selectedDate={selectedDate}
+                            isQuestionMode={isQuestionMode}
+                            isAutoMode={isAutoMode}
+                            onDateChange={(date) => {
+                              setIsAutoMode(false);
+                              setSelectedDate(date);
+                              setSelectedPalaces([]);
                             }}
-                            showTimeSelect
-                            timeFormat="HH:mm"
-                            timeIntervals={15}
-                            dateFormat="yyyy/MM/dd aa h:mm"
-                            locale="zh-TW"
-                            className={`bg - transparent border - none focus: ring - 0 outline - none font - mono text - xl text - theme - primary font - bold tracking - tight ${isQuestionMode ? 'cursor-not-allowed' : 'cursor-pointer'} `}
-                            readOnly={isAutoMode || isQuestionMode}
-                            disabled={isAutoMode || isQuestionMode}
-                            popperPlacement="bottom"
-                            shouldCloseOnSelect={false}
-                            renderCustomHeader={({
-                              date,
-                              decreaseMonth,
-                              increaseMonth,
-                              prevMonthButtonDisabled,
-                              nextMonthButtonDisabled,
-                            }) => (
-                              <div className="flex items-center justify-between px-4 h-[50px] bg-theme-bg box-border font-sans">
-                                <button
-                                  onClick={decreaseMonth}
-                                  disabled={prevMonthButtonDisabled}
-                                  type="button"
-                                  className="p-2 hover:bg-theme-card rounded-full text-theme-primary transition-colors disabled:opacity-50"
-                                >
-                                  <ChevronLeft size={20} />
-                                </button>
-                                <span className="text-theme-primary font-bold text-lg">
-                                  {format(date, "MMMM yyyy", { locale: zhTW })}
-                                </span>
-                                <button
-                                  onClick={increaseMonth}
-                                  disabled={nextMonthButtonDisabled}
-                                  type="button"
-                                  className="p-2 hover:bg-theme-card rounded-full text-theme-primary transition-colors disabled:opacity-50"
-                                >
-                                  <ChevronRight size={20} />
-                                </button>
-                              </div>
-                            )}
-                          >
-                            <div className="border-t border-theme-border p-2 flex justify-end bg-theme-bg">
-                              <button
-                                onClick={() => {
-                                  if (datePickerRef.current) {
-                                    datePickerRef.current.setOpen(false);
-                                  }
-                                }}
-                                className="bg-theme-primary text-theme-bg px-4 py-1 rounded font-bold hover:opacity-90 transition-colors text-sm"
-                              >
-                                確定
-                              </button>
-                            </div>
-                          </DatePicker>
-                        </div>
+                          />
+                        </Suspense>
                       </div>
                     </div>
 
@@ -498,13 +448,15 @@ function App() {
                       </section>
 
                       <section className="flex justify-center overflow-x-auto py-2">
-                        <QimenChart
-                          palaces={qimenData.palaces}
-                          selectedPalaces={selectedPalaces}
-                          onPalaceClick={handlePalaceClick}
-                          isRevealed={isRevealed}
-                          mainSelectedNum={mainSelectedNum}
-                        />
+                        <Suspense fallback={<div className="w-72 h-72 rounded-2xl bg-theme-card border border-theme-border/30 animate-pulse" />}>
+                          <QimenChart
+                            palaces={qimenData.palaces}
+                            selectedPalaces={selectedPalaces}
+                            onPalaceClick={handlePalaceClick}
+                            isRevealed={isRevealed}
+                            mainSelectedNum={mainSelectedNum}
+                          />
+                        </Suspense>
                       </section>
 
                       {/* Analysis Results */}
@@ -528,69 +480,70 @@ function App() {
                             )}
                             <span className="text-theme-primary/20 text-sm font-mono ml-auto tracking-widest uppercase">Analysis Report</span>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {selectedPalaces.map(palaceNum => {
-                              const isCenter = palaceNum === 5;
-                              const targetPalaceNum = isCenter ? 2 : palaceNum;
-                              const data = qimenData.palaces[targetPalaceNum];
+                          <Suspense fallback={<div className="col-span-2 h-48 rounded-2xl bg-theme-card border border-theme-border/30 animate-pulse" />}>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                              {selectedPalaces.map(palaceNum => {
+                                const isCenter = palaceNum === 5;
+                                const targetPalaceNum = isCenter ? 2 : palaceNum;
+                                const data = qimenData.palaces[targetPalaceNum];
 
-                              if (!data) return null;
+                                if (!data) return null;
 
-                              const analysisData = isCenter ? { ...data, name: "中五 (寄坤二)" } : data;
-                              const result = analyzePalace(palaceNum, analysisData, {
-                                isMainPalace: palaceNum === mainSelectedNum,
-                              });
+                                const analysisData = isCenter ? { ...data, name: "中五 (寄坤二)" } : data;
+                                const result = analyzePalace(palaceNum, analysisData, {
+                                  isMainPalace: palaceNum === mainSelectedNum,
+                                });
 
-                              // 六級判定 → 色彩（吉：紅系，凶：綠系）
-                              const resultColorClass = (() => {
-                                switch (result.verdict) {
-                                  case '大吉': return 'bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400';
-                                  case '吉':   return 'bg-red-500/5 border-red-500/20 text-red-600 dark:text-red-400';
-                                  case '平':   return 'bg-theme-card border-theme-border text-theme-primary';
-                                  case '小凶': return 'bg-green-500/5 border-green-500/15 text-green-600 dark:text-green-400';
-                                  case '凶':   return 'bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400';
-                                  case '大凶': return 'bg-green-500/15 border-green-500/50 text-green-600 dark:text-green-400';
-                                }
-                              })();
-
-                              const badgeColorClass = (() => {
-                                switch (result.verdict) {
-                                  case '大吉': return 'bg-red-700 text-white shadow-lg shadow-red-700/30';
-                                  case '吉':   return 'bg-red-600 text-white shadow-lg shadow-red-600/20';
-                                  case '平':   return 'bg-slate-500 text-white shadow-sm';
-                                  case '小凶': return 'bg-green-500 text-white shadow-sm';
-                                  case '凶':   return 'bg-green-600 text-white shadow-lg shadow-green-600/20';
-                                  case '大凶': return 'bg-green-700 text-white shadow-lg shadow-green-700/30';
-                                }
-                              })();
-
-                              return (
-                                <AnalysisCard
-                                  key={palaceNum}
-                                  palaceNum={palaceNum}
-                                  palaceName={result.palaceName}
-                                  result={result.verdict}
-                                  details={result.details}
-                                  summary={summarizePalace(result)}
-                                  actionTag={actionLabel(result)}
-                                  userQuestion={userQuestion}
-                                  isCenter={isCenter}
-                                  resultColorClass={resultColorClass}
-                                  badgeColorClass={badgeColorClass}
-                                  palaceData={analysisData}
-                                  predefinedResult={
-                                    restoredEntry &&
-                                      restoredEntry.palaceNum === palaceNum &&
-                                      restoredEntry.question === userQuestion &&
-                                      new Date(restoredEntry.date).getTime() === selectedDate.getTime()
-                                      ? restoredEntry.aiResult
-                                      : null
+                                const resultColorClass = (() => {
+                                  switch (result.verdict) {
+                                    case '大吉': return 'bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400';
+                                    case '吉':   return 'bg-red-500/5 border-red-500/20 text-red-600 dark:text-red-400';
+                                    case '平':   return 'bg-theme-card border-theme-border text-theme-primary';
+                                    case '小凶': return 'bg-green-500/5 border-green-500/15 text-green-600 dark:text-green-400';
+                                    case '凶':   return 'bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400';
+                                    case '大凶': return 'bg-green-500/15 border-green-500/50 text-green-600 dark:text-green-400';
                                   }
-                                  isMainPalace={palaceNum === mainSelectedNum}
-                                />
-                              );
-                            })}
-                          </div>
+                                })();
+
+                                const badgeColorClass = (() => {
+                                  switch (result.verdict) {
+                                    case '大吉': return 'bg-red-700 text-white shadow-lg shadow-red-700/30';
+                                    case '吉':   return 'bg-red-600 text-white shadow-lg shadow-red-600/20';
+                                    case '平':   return 'bg-slate-500 text-white shadow-sm';
+                                    case '小凶': return 'bg-green-500 text-white shadow-sm';
+                                    case '凶':   return 'bg-green-600 text-white shadow-lg shadow-green-600/20';
+                                    case '大凶': return 'bg-green-700 text-white shadow-lg shadow-green-700/30';
+                                  }
+                                })();
+
+                                return (
+                                  <AnalysisCard
+                                    key={palaceNum}
+                                    palaceNum={palaceNum}
+                                    palaceName={result.palaceName}
+                                    result={result.verdict}
+                                    details={result.details}
+                                    summary={summarizePalace(result)}
+                                    actionTag={actionLabel(result)}
+                                    userQuestion={userQuestion}
+                                    isCenter={isCenter}
+                                    resultColorClass={resultColorClass}
+                                    badgeColorClass={badgeColorClass}
+                                    palaceData={analysisData}
+                                    predefinedResult={
+                                      restoredEntry &&
+                                        restoredEntry.palaceNum === palaceNum &&
+                                        restoredEntry.question === userQuestion &&
+                                        new Date(restoredEntry.date).getTime() === selectedDate.getTime()
+                                        ? restoredEntry.aiResult
+                                        : null
+                                    }
+                                    isMainPalace={palaceNum === mainSelectedNum}
+                                  />
+                                );
+                              })}
+                            </div>
+                          </Suspense>
                         </section>
                         );
                       })()}
@@ -617,32 +570,12 @@ function App() {
                               )}
                             </button>
                           ) : (
-                            <div className="bg-theme-card/30 rounded-3xl border border-theme-accent/20 p-6 sm:p-8">
-                              <div className="flex items-center gap-3 mb-6">
-                                <div className="p-2 rounded-lg bg-theme-accent/10 text-theme-accent">
-                                  <Sparkles size={20} />
-                                </div>
-                                <h3 className="text-xl font-bold">大師綜合比對建議</h3>
-                                <button
-                                  onClick={() => setComparisonResult(null)}
-                                  className="ml-auto text-xs text-theme-primary/30 hover:text-theme-primary"
-                                >
-                                  重新比對
-                                </button>
-                              </div>
-                              <div className="prose prose-invert max-w-none text-theme-primary/90 font-serif leading-relaxed ios-smooth-scroll no-scrollbar overflow-y-auto max-h-[60vh]">
-                                <ReactMarkdown
-                                  components={{
-                                    strong: ({ node, ...props }) => <span className="text-theme-accent font-bold" {...props} />,
-                                    h3: ({ node, ...props }) => <h3 className="text-xl font-bold text-theme-primary mt-6 mb-3 border-b border-theme-border/30 pb-2" {...props} />,
-                                    ul: ({ node, ...props }) => <ul className="list-disc pl-5 space-y-2 my-4" {...props} />,
-                                    p: ({ node, ...props }) => <p className="mb-4" {...props} />,
-                                  }}
-                                >
-                                  {comparisonResult}
-                                </ReactMarkdown>
-                              </div>
-                            </div>
+                            <Suspense fallback={null}>
+                              <ComparisonResult
+                                result={comparisonResult}
+                                onReset={() => setComparisonResult(null)}
+                              />
+                            </Suspense>
                           )}
                         </section>
                       )}
@@ -658,17 +591,21 @@ function App() {
             )}
           </div>
         )}
-        <HistoryDrawer
-          isOpen={isHistoryOpen}
-          onClose={() => setIsHistoryOpen(false)}
-          onRestore={handleRestoreHistory}
-        />
+        {isHistoryOpen && (
+          <Suspense fallback={null}>
+            <HistoryDrawer
+              isOpen={isHistoryOpen}
+              onClose={() => setIsHistoryOpen(false)}
+              onRestore={handleRestoreHistory}
+            />
+          </Suspense>
+        )}
 
-        <AnimatePresence>
-          {showOnboarding && (
+        {showOnboarding && (
+          <Suspense fallback={null}>
             <Onboarding onClose={() => setShowOnboarding(false)} />
-          )}
-        </AnimatePresence>
+          </Suspense>
+        )}
       </div>
     </div>
   );
