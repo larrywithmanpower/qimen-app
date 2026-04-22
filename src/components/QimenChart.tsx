@@ -135,6 +135,7 @@ const PalaceCell: React.FC<{
 
   return (
     <motion.button
+      data-testid="palace-cell"
       variants={cellVariants}
       onClick={onClick}
       className={`palace-cell-btn relative min-h-[125px] sm:min-h-[200px] p-2 sm:p-5 flex flex-col items-center justify-between transition-all w-full outline-none group overflow-hidden

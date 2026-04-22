@@ -22,9 +22,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # E2E gate：必須全綠才能部署
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+
   # Build job
   build:
     runs-on: ubuntu-latest
+    needs: e2e
     steps:
       - name: Checkout
         uses: actions/checkout@v4
