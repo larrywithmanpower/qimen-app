@@ -15,8 +15,8 @@ import { useSituation } from './context/SituationContext';
 import type { SituationKey } from './context/SituationContext';
 
 import ContextSelector from './features/contexts/ContextSelector';
+import HistoryDrawer from './components/HistoryDrawer';
 
-const HistoryDrawer = lazy(() => import('./components/HistoryDrawer'));
 const Onboarding = lazy(() => import('./components/Onboarding'));
 const QimenChart = lazy(() => import('./components/QimenChart'));
 const AnalysisCard = lazy(() => import('./components/AnalysisCard'));
@@ -592,13 +592,11 @@ function App() {
           </div>
         )}
         {isHistoryOpen && (
-          <Suspense fallback={null}>
-            <HistoryDrawer
-              isOpen={isHistoryOpen}
-              onClose={() => setIsHistoryOpen(false)}
-              onRestore={handleRestoreHistory}
-            />
-          </Suspense>
+          <HistoryDrawer
+            isOpen={isHistoryOpen}
+            onClose={() => setIsHistoryOpen(false)}
+            onRestore={handleRestoreHistory}
+          />
         )}
 
         {showOnboarding && (
