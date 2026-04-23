@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Info } from 'lucide-react';
 
@@ -91,7 +92,7 @@ const TermHelp: React.FC<TermHelpProps> = ({ term, children, iconSize = 12, clas
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<{ left: number; top: number; width: number }>({ left: 0, top: 0, width: 0 });
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const tooltipRef = useRef<HTMLSpanElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
   const entry = TERMS[term];
 
   // 點外側關閉（含 tooltip 本身，這樣內部可點）
@@ -155,32 +156,35 @@ const TermHelp: React.FC<TermHelpProps> = ({ term, children, iconSize = 12, clas
         <Info size={iconSize} />
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.span
-            ref={tooltipRef}
-            role="tooltip"
-            initial={{ opacity: 0, y: -4, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            style={{
-              position: 'fixed',
-              left: `${pos.left}px`,
-              top: `${pos.top}px`,
-              width: `${pos.width}px`,
-            }}
-            className="z-[100] bg-theme-bg/95 backdrop-blur-md border-2 border-theme-accent/50 rounded-xl shadow-2xl shadow-black/40 p-3.5 text-left block"
-          >
-            <div className="text-theme-accent text-xs font-black tracking-wider mb-1">
-              {entry.title}
-            </div>
-            <div className="text-theme-primary/85 text-xs leading-relaxed font-sans">
-              {entry.body}
-            </div>
-          </motion.span>
-        )}
-      </AnimatePresence>
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              ref={tooltipRef}
+              role="tooltip"
+              initial={{ opacity: 0, y: -4, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.95 }}
+              transition={{ duration: 0.15 }}
+              style={{
+                position: 'fixed',
+                left: `${pos.left}px`,
+                top: `${pos.top}px`,
+                width: `${pos.width}px`,
+              }}
+              className="z-[100] bg-theme-bg/95 backdrop-blur-md border-2 border-theme-accent/50 rounded-xl shadow-2xl shadow-black/40 p-3.5 text-left"
+            >
+              <div className="text-theme-accent text-xs font-black tracking-wider mb-1">
+                {entry.title}
+              </div>
+              <div className="text-theme-primary/85 text-xs leading-relaxed font-sans">
+                {entry.body}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </span>
   );
 };
