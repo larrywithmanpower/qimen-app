@@ -15,25 +15,25 @@ interface OnboardingProps {
 const steps = [
   {
     title: "歡迎使用「奇門大師」",
-    content: "這是一套融合「奇門遁甲」古老智慧與「現代 AI」深度邏輯的決策輔助系統。我們將引導您如何透過時空規律，洞察先機。",
+    content: "融合「奇門遁甲」古老智慧與「現代 AI」深度邏輯的決策輔助系統。\n三步完成精準鑑定：選情境 → 默想問題 → 起卦解盤。",
     image: welcomeImg,
     color: "from-theme-accent/20 to-transparent"
   },
   {
-    title: "理解「吉凶燈號」",
-    content: "盤面中的符號帶有視覺標記：\n🔴 吉：代表天時地利，宜取。 \n🟢 凶：代表阻礙與風險，宜避。 \n⚫ 中性：代表變動或待機。",
+    title: "第一步：選擇「情境」定基調",
+    content: "🌸 感情 · 愛情運勢、桃花、婚姻\n⛰️ 事業 · 職場貴人、升遷、求職\n☯️ 投資 · 財運、風險評估、時機\n\n情境決定 AI 解析的語言、重點與建議方向。",
     image: indicatorsImg,
     color: "from-red-500/10 to-transparent"
   },
   {
-    title: "宮位與「中五寄宮」",
-    content: "排盤包含九個宮位。若遇到「中五宮」，我們會自動「寄於坤二宮」（右上角），這是奇門中處理中心能量的專業法則，您只需專注於分析即可。",
+    title: "第二步：默想問題，起卦「四法」",
+    content: "輸入心中默念的問題，或點擊情境範例題。接著選擇起卦方式：\n✨ 心動感應 · 憑直覺選 1-9\n🕑 時間直出 · 當下時空為盤\n📱 手機號 · 取尾數定宮\n🎂 出生日 · 依生日取宮",
     image: gridLogicImg,
     color: "from-sky-500/10 to-transparent"
   },
   {
-    title: "大師級「量化鑑定」",
-    content: "選取宮位後，點擊「詢問大師」。AI 會為您轉譯複雜古文，並輸出「成功率、風險、難度」等量化數據，助您精準決策。",
+    title: "第三步：看盤，請大師「量化鑑定」",
+    content: "🔴 紅為吉、🟢 綠為凶 · 看顏色秒判吉凶。\n中五宮自動寄於坤二宮（右上），無需手動處理。\n\n點選宮位後召喚大師 AI，輸出「成功機率 · 風險指數 · 執行建議」量化報告。",
     image: aiInsightImg,
     color: "from-theme-accent/20 to-transparent"
   }
