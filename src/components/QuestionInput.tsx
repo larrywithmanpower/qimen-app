@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Sparkles, Briefcase, Coins, Heart, MessageSquare, ArrowRight } from 'lucide-react';
+import { Sparkles, MessageSquare, ArrowRight } from 'lucide-react';
+import { useSituation } from '../context/SituationContext';
 
 export type QuestionType = 'career' | 'wealth' | 'love' | 'general';
 
@@ -7,19 +8,53 @@ interface QuestionInputProps {
   onStart: (question: string, type: QuestionType) => void;
 }
 
+// 情境對應的 placeholder 範例
+const PLACEHOLDER_BY_SITUATION: Record<'love' | 'career' | 'invest', string> = {
+  love: '例如：我最近的感情運勢如何？',
+  career: '例如：我最近的事業發展如何？',
+  invest: '例如：近期的投資時機是否成熟？',
+};
+
+// 情境專屬範例題（點擊後填入輸入框，使用者可再編輯）
+const EXAMPLES_BY_SITUATION: Record<'love' | 'career' | 'invest', string[]> = {
+  love: [
+    '我的桃花運如何？',
+    '這段關係能否走到最後？',
+    '對方對我的心意如何？',
+  ],
+  career: [
+    '這次升遷機會大嗎？',
+    '該不該換工作？',
+    '目前的職場貴人在哪？',
+  ],
+  invest: [
+    '近期進場時機合適嗎？',
+    '這項投資風險如何？',
+    '我的財運走勢如何？',
+  ],
+};
+
+// situationKey 對應的 QuestionType（讓 onStart 收到正確的類型，而非統一 general）
+const TYPE_BY_SITUATION: Record<'love' | 'career' | 'invest', QuestionType> = {
+  love: 'love',
+  career: 'career',
+  invest: 'wealth',
+};
+
 const QuestionInput: React.FC<QuestionInputProps> = ({ onStart }) => {
   const [question, setQuestion] = useState('');
+  const { situationKey } = useSituation();
 
-  const quickTypes = [
-    { id: 'wealth', label: '求財', icon: <Coins size={20} />, preset: '我想問財運發展', color: 'text-amber-500' },
-    { id: 'career', label: '事業', icon: <Briefcase size={20} />, preset: '我想問事業前程', color: 'text-blue-500' },
-    { id: 'love', label: '感情', icon: <Heart size={20} />, preset: '我想問感情緣分', color: 'text-red-500' },
-  ] as const;
+  // 理論上進到此元件時 situationKey 必定已選，保底 fallback 為 career
+  const sk = situationKey ?? 'career';
+  const placeholder = PLACEHOLDER_BY_SITUATION[sk];
+  const examples = EXAMPLES_BY_SITUATION[sk];
+  const questionType = TYPE_BY_SITUATION[sk];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (question.trim()) {
-      onStart(question, 'general');
+      onStart(question, questionType);
     }
   };
 
@@ -39,7 +74,7 @@ const QuestionInput: React.FC<QuestionInputProps> = ({ onStart }) => {
             <textarea
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              placeholder="例如：我最近的事業發展如何？"
+              placeholder={placeholder}
               className="w-full h-44 p-6 bg-transparent text-theme-primary text-xl sm:text-2xl resize-none outline-none placeholder:text-theme-primary/10 leading-relaxed font-serif"
               autoFocus
             />
@@ -55,36 +90,33 @@ const QuestionInput: React.FC<QuestionInputProps> = ({ onStart }) => {
           </button>
         </form>
 
-        <div className="flex justify-center flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-4">
           <span className="text-xs uppercase tracking-[0.3em] text-theme-primary/30 font-black">
-            快速詢問或直接排盤
+            參考範例
           </span>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full">
-            {quickTypes.map((type) => (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full">
+            {examples.map((example) => (
               <button
-                key={type.id}
+                key={example}
                 type="button"
-                onClick={() => onStart(type.preset, type.id)}
-                className="group flex flex-col items-center gap-3 p-5 rounded-2xl border border-theme-border bg-theme-card hover:border-theme-accent/50 hover:bg-theme-accent/5 transition-all duration-300 shadow-lg hover:shadow-theme-accent/5"
+                onClick={() => setQuestion(example)}
+                className="group text-left px-4 py-3 rounded-xl border border-theme-border bg-theme-card/50 hover:border-theme-accent/40 hover:bg-theme-accent/5 transition-all duration-300 shadow-sm"
               >
-                <div className={`p-3 rounded-xl bg-theme-bg group-hover:scale-110 transition-transform ${type.color}`}>
-                  {type.icon}
-                </div>
-                <span className="font-bold text-theme-primary/70 group-hover:text-theme-primary transition-colors">{type.label}</span>
+                <span className="text-sm text-theme-primary/70 group-hover:text-theme-primary transition-colors font-medium leading-snug">
+                  {example}
+                </span>
               </button>
             ))}
-
-            <button
-              type="button"
-              onClick={() => onStart('', 'general')}
-              className="group flex flex-col items-center gap-3 p-5 rounded-2xl border border-dashed border-theme-border bg-transparent hover:border-theme-primary/50 hover:bg-theme-card transition-all duration-300"
-            >
-              <div className="p-3 rounded-xl bg-theme-card text-theme-primary/40 group-hover:rotate-12 transition-transform">
-                <MessageSquare size={20} />
-              </div>
-              <span className="font-bold text-theme-primary/40 group-hover:text-theme-primary/80 transition-colors">其他/手動</span>
-            </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => onStart('', 'general')}
+            className="group inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm text-theme-primary/40 hover:text-theme-primary/80 transition-all"
+          >
+            <MessageSquare size={14} className="group-hover:rotate-12 transition-transform" />
+            <span>無特定問題，直接排盤</span>
+          </button>
         </div>
       </div>
     </div>
