@@ -78,25 +78,51 @@ async function callGeminiProxy(
 
 // 模型備援鏈：依序嘗試，前一個失敗就換下一個。需與 proxy 的 ALLOWED_MODELS 保持同步。
 const MODEL_CHAIN = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'] as const;
+type ModelId = typeof MODEL_CHAIN[number];
 
-/** 依 MODEL_CHAIN 順序嘗試，除使用者主動取消外皆 fallback */
+// 失敗模型的冷卻期：短時間內不再嘗試，讓使用者感受不到延遲
+const MODEL_COOLDOWN_MS = 5 * 60 * 1000;
+
+// 模組級狀態：每個模型的「冷卻結束時間」，Map 在同一分頁生命週期內共享
+const modelCooldown = new Map<ModelId, number>();
+
+function isModelAvailable(model: ModelId): boolean {
+  const until = modelCooldown.get(model);
+  if (!until) return true;
+  if (Date.now() >= until) {
+    modelCooldown.delete(model);
+    return true;
+  }
+  return false;
+}
+
+function markModelFailed(model: ModelId): void {
+  modelCooldown.set(model, Date.now() + MODEL_COOLDOWN_MS);
+}
+
+/** 依 MODEL_CHAIN 順序嘗試，跳過冷卻中的模型；除使用者主動取消外皆 fallback */
 async function callWithFallback(
   prompt: string,
   signal?: AbortSignal,
   extraPayload?: Record<string, unknown>
 ): Promise<string> {
+  // 優先只試「非冷卻」的模型；若全部冷卻則整鏈再試一次（避免完全無可用）
+  let candidates: ModelId[] = MODEL_CHAIN.filter(isModelAvailable);
+  if (candidates.length === 0) candidates = [...MODEL_CHAIN];
+
   let lastError: unknown = null;
-  for (let i = 0; i < MODEL_CHAIN.length; i++) {
-    const model = MODEL_CHAIN[i];
+  for (let i = 0; i < candidates.length; i++) {
+    const model = candidates[i];
     try {
       return await callGeminiProxy(model, prompt, signal, extraPayload);
     } catch (error: unknown) {
-      // 使用者主動取消：立即終止整條鏈，不 fallback
+      // 使用者主動取消：立即終止整條鏈，不 fallback 也不標記失敗
       if (error instanceof Error && error.name === 'AbortError') throw error;
+      markModelFailed(model);
       lastError = error;
-      if (i < MODEL_CHAIN.length - 1) {
+      if (i < candidates.length - 1) {
         const msg = error instanceof Error ? error.message : String(error);
-        console.warn(`[AI Fallback] ${model} 失敗，改試下一個模型：`, msg);
+        console.warn(`[AI Fallback] ${model} 失敗，冷卻 ${MODEL_COOLDOWN_MS / 60000} 分鐘，改用下一個模型：`, msg);
       }
     }
   }
