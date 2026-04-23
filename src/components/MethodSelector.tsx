@@ -98,8 +98,10 @@ const MethodSelector: React.FC<MethodSelectorProps> = ({ onSelect }) => {
             variants={card}
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 24, mass: 0.6 }}
             onClick={() => handleClick(id)}
-            className={`relative group text-left p-5 sm:p-6 rounded-2xl border transition-all shadow-xl overflow-hidden
+            style={{ willChange: 'transform' }}
+            className={`relative group text-left p-5 sm:p-6 rounded-2xl border shadow-xl overflow-hidden transition-[background-color,border-color,box-shadow] duration-300 ease-out
               ${featured
                 ? 'bg-theme-accent/10 border-theme-accent/40 hover:border-theme-accent hover:shadow-[0_0_24px_rgba(var(--color-accent-rgb),0.25)]'
                 : 'bg-theme-card border-theme-border/50 hover:border-theme-accent/50 hover:bg-theme-card/90'
