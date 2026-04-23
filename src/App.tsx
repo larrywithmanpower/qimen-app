@@ -476,7 +476,7 @@ function App() {
                                 <span>{ctx.label}</span>
                               </span>
                             )}
-                            <span className="text-theme-primary/20 text-sm font-mono ml-auto tracking-widest uppercase">Analysis Report</span>
+                            <span className="text-theme-primary/20 text-sm ml-auto tracking-widest">解析報告</span>
                           </div>
                           <Suspense fallback={<div className="col-span-2 h-48 rounded-2xl bg-theme-card border border-theme-border/30 animate-pulse" />}>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

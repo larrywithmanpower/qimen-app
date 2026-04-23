@@ -59,7 +59,7 @@ export const exportElementAsImage = async (elementId: string, fileName: string =
           reportHeader.style.borderBottom = '4px double var(--theme-accent, #0ea5e9)';
 
           reportHeader.innerHTML = `
-            <div style="font-size: 14px; color: var(--theme-accent); letter-spacing: 0.5em; margin-bottom: 10px;">QI MEN DUN JIA</div>
+            <div style="font-size: 14px; color: var(--theme-accent); letter-spacing: 0.5em; margin-bottom: 10px;">· 天機鑑定 ·</div>
             <h1 style="font-size: 56px; font-weight: 900; margin-bottom: 15px; color: var(--theme-primary); font-family: serif; letter-spacing: 0.1em;">奇門遁甲 · 專家盤面鑑定報告</h1>
             <p style="font-size: 18px; opacity: 0.7; font-style: italic;">本報告由奇門大師 AI 生成，僅供參考決策</p>
           `;
