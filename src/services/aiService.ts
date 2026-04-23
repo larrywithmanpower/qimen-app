@@ -76,6 +76,33 @@ async function callGeminiProxy(
   return parseResult.data;
 }
 
+// 模型備援鏈：依序嘗試，前一個失敗就換下一個。需與 proxy 的 ALLOWED_MODELS 保持同步。
+const MODEL_CHAIN = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'] as const;
+
+/** 依 MODEL_CHAIN 順序嘗試，除使用者主動取消外皆 fallback */
+async function callWithFallback(
+  prompt: string,
+  signal?: AbortSignal,
+  extraPayload?: Record<string, unknown>
+): Promise<string> {
+  let lastError: unknown = null;
+  for (let i = 0; i < MODEL_CHAIN.length; i++) {
+    const model = MODEL_CHAIN[i];
+    try {
+      return await callGeminiProxy(model, prompt, signal, extraPayload);
+    } catch (error: unknown) {
+      // 使用者主動取消：立即終止整條鏈，不 fallback
+      if (error instanceof Error && error.name === 'AbortError') throw error;
+      lastError = error;
+      if (i < MODEL_CHAIN.length - 1) {
+        const msg = error instanceof Error ? error.message : String(error);
+        console.warn(`[AI Fallback] ${model} 失敗，改試下一個模型：`, msg);
+      }
+    }
+  }
+  throw lastError;
+}
+
 function buildSinglePalacePrompt(
   question: string,
   palaceData: PalaceData,
@@ -123,14 +150,13 @@ export const fetchMasterAnalysis = async (
 
   try {
     console.log("正在生成結構化鑑定報告...");
-    return await callGeminiProxy(
-      "gemini-2.5-flash",
+    return await callWithFallback(
       systemPrompt,
       signal,
       contextKey !== 'general' ? { context: contextKey, promptVersion } : undefined,
     );
-  } catch (error: any) {
-    if (error?.name === 'AbortError') throw new Error("鑑定超時，請重試");
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'AbortError') throw new Error("鑑定超時，請重試");
     throw error;
   }
 };
@@ -148,23 +174,29 @@ export const fetchContextualAnalysis = async (
   const systemPrompt = buildSinglePalacePrompt(question, palaceData, contextKey, promptVersion);
 
   try {
-    const result = await callGeminiProxy(
-      "gemini-2.5-flash",
+    const result = await callWithFallback(
       systemPrompt,
       signal,
       { context: contextKey, promptVersion },
     );
     await setCached(cacheKey, result);
     return result;
-  } catch (error: any) {
-    if (error?.name === 'AbortError') throw new Error("鑑定超時，請重試");
+  } catch (error: unknown) {
+    if (error instanceof Error && error.name === 'AbortError') throw new Error("鑑定超時，請重試");
     throw error;
   }
 };
 
+export interface MultiPalaceInput extends PalaceData {
+  score?: number;
+  weightedScore?: number;
+  resultScore?: string;
+  isMainPalace?: boolean;
+}
+
 export const fetchMultiPalaceAnalysis = async (
   question: string,
-  palaces: any[],
+  palaces: MultiPalaceInput[],
   signal?: AbortSignal,
   contextKey?: string
 ): Promise<string> => {
@@ -222,16 +254,15 @@ ${palaceDetails}
     : systemPrompt;
 
   try {
-    return await callGeminiProxy(
-      "gemini-2.5-flash",
+    return await callWithFallback(
       fullPrompt,
       signal,
       contextKey && contextKey !== 'general' ? { context: contextKey } : undefined,
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
-    if (error?.name === 'AbortError') throw new Error("鑑定超時，請重試");
+    if (error instanceof Error && error.name === 'AbortError') throw new Error("鑑定超時，請重試");
     if (error instanceof AnalysisValidationError) throw error;
-    throw new Error("大師對比時分心了，請重新發起請求 (Comparison Error)");
+    throw new Error("大師對比時分心了，請重新發起請求");
   }
 };
