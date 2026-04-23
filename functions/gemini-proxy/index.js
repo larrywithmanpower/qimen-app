@@ -7,10 +7,11 @@ const ALLOWED_ORIGINS = allowedOriginsEnv
   ? new Set(allowedOriginsEnv.split(',').map(o => o.trim()).filter(Boolean))
   : new Set(); // 未設定時空集合，等同全拒
 
+// 免費額度模型，gemini-2.0-flash 已於 2026/03 退役不再列入
 const ALLOWED_MODELS = new Set([
   'gemini-2.5-flash',
+  'gemini-2.5-flash-lite',
   'gemini-2.5-pro',
-  'gemini-2.0-flash',
 ]);
 
 const MAX_PROMPT_LENGTH = 20000;

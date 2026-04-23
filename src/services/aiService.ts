@@ -77,7 +77,9 @@ async function callGeminiProxy(
 }
 
 // 模型備援鏈：依序嘗試，前一個失敗就換下一個。需與 proxy 的 ALLOWED_MODELS 保持同步。
-const MODEL_CHAIN = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'] as const;
+// 排序原則：品質與限額平衡優先（flash 15 RPM/1000 RPD），其次是限額最寬鬆的 flash-lite，
+// 最後才是限額最嚴的 pro（5 RPM/100 RPD）。gemini-2.0-flash 已於 2026/03 退役。
+const MODEL_CHAIN = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-2.5-pro'] as const;
 type ModelId = typeof MODEL_CHAIN[number];
 
 // 失敗模型的冷卻期：短時間內不再嘗試，讓使用者感受不到延遲
