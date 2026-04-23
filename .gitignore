@@ -29,3 +29,7 @@ test-results
 *.sln
 *.sw?
 .env
+
+# env backups
+.env.bak*
+.env.local
