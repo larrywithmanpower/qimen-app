@@ -55,76 +55,62 @@
    情境特有動畫（Silent Horizon 美學基調）
    ========================================== */
 
-/* 感情情境：慢速柔和呼吸（粉桃紫色系） */
+/* 感情情境：慢速柔和呼吸（粉桃紫色系）
+   只動 box-shadow，不動 opacity，避免卡片內容忽明忽暗影響閱讀 */
 @keyframes love-breathing {
-  0% {
-    opacity: 0.6;
-    box-shadow: 0 0 8px rgba(244, 114, 182, 0.3), 0 0 20px rgba(192, 132, 252, 0.1);
+  0%, 100% {
+    box-shadow: 0 0 8px rgba(244, 114, 182, 0.25), 0 0 20px rgba(192, 132, 252, 0.08);
   }
   50% {
-    opacity: 1;
-    box-shadow: 0 0 28px rgba(244, 114, 182, 0.6), 0 0 50px rgba(192, 132, 252, 0.2);
-  }
-  100% {
-    opacity: 0.6;
-    box-shadow: 0 0 8px rgba(244, 114, 182, 0.3), 0 0 20px rgba(192, 132, 252, 0.1);
+    box-shadow: 0 0 24px rgba(244, 114, 182, 0.45), 0 0 44px rgba(192, 132, 252, 0.15);
   }
 }
 
 /* 事業情境：精準俐落雙色脈衝（深藍金色系） */
 @keyframes career-pulse {
-  0% {
-    opacity: 0.7;
-    box-shadow: 0 0 5px rgba(59, 130, 246, 0.4);
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.3);
   }
   35% {
-    opacity: 1;
-    box-shadow: 0 0 18px rgba(59, 130, 246, 0.7), 0 0 6px rgba(251, 191, 36, 0.3);
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.55), 0 0 6px rgba(251, 191, 36, 0.22);
   }
   65% {
-    opacity: 1;
-    box-shadow: 0 0 10px rgba(251, 191, 36, 0.6), 0 0 4px rgba(59, 130, 246, 0.2);
-  }
-  100% {
-    opacity: 0.7;
-    box-shadow: 0 0 5px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.45), 0 0 4px rgba(59, 130, 246, 0.18);
   }
 }
 
 /* 投資情境：穩重四段循環（翠綠玉色系） */
 @keyframes invest-cycle {
-  0% {
-    opacity: 0.7;
-    box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(16, 185, 129, 0.25);
   }
-  25% {
-    opacity: 0.85;
-    box-shadow: 0 0 14px rgba(16, 185, 129, 0.5);
+  25%, 75% {
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
   }
   50% {
-    opacity: 1;
-    box-shadow: 0 0 22px rgba(16, 185, 129, 0.7), 0 0 10px rgba(52, 211, 153, 0.35);
-  }
-  75% {
-    opacity: 0.85;
-    box-shadow: 0 0 14px rgba(16, 185, 129, 0.5);
-  }
-  100% {
-    opacity: 0.7;
-    box-shadow: 0 0 6px rgba(16, 185, 129, 0.3);
+    box-shadow: 0 0 22px rgba(16, 185, 129, 0.55), 0 0 10px rgba(52, 211, 153, 0.28);
   }
 }
 
 .context-love-glow {
-  animation: love-breathing 3.5s infinite ease-in-out;
+  animation: love-breathing 4.5s infinite ease-in-out;
 }
 
 .context-career-glow {
-  animation: career-pulse 1.8s infinite ease-in-out;
+  animation: career-pulse 3.5s infinite ease-in-out;
 }
 
 .context-invest-glow {
-  animation: invest-cycle 4s infinite ease-in-out;
+  animation: invest-cycle 4.5s infinite ease-in-out;
+}
+
+/* 使用者偏好減少動畫時，全面停用呼吸光暈（無障礙） */
+@media (prefers-reduced-motion: reduce) {
+  .context-love-glow,
+  .context-career-glow,
+  .context-invest-glow {
+    animation: none;
+  }
 }
 
 /* iPhone 滾動優化：平滑滾動與彈性回饋 */
