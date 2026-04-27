@@ -12,6 +12,7 @@ registerSW({ immediate: true })
 import { ThemeProvider } from './context/ThemeContext.tsx'
 import { HistoryProvider } from './context/HistoryContext.tsx'
 import { SituationProvider } from './context/SituationContext.tsx'
+import { PhrasesProvider } from './context/PhrasesContext.tsx'
 import { HelmetProvider } from 'react-helmet-async';
 
 createRoot(document.getElementById('root')!).render(
@@ -20,7 +21,9 @@ createRoot(document.getElementById('root')!).render(
       <ThemeProvider>
         <SituationProvider>
           <HistoryProvider>
-            <App />
+            <PhrasesProvider>
+              <App />
+            </PhrasesProvider>
           </HistoryProvider>
         </SituationProvider>
       </ThemeProvider>

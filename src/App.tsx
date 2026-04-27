@@ -30,6 +30,13 @@ const DateTimeSection = lazy(() => import('./components/DateTimeSection'));
 
 import type { ChartingMethod } from './components/MethodSelector';
 
+const SITUATION_LABEL: Record<Exclude<SituationKey, null>, string> = {
+  love: '感情',
+  career: '事業',
+  invest: '投資',
+  weather: '氣象',
+};
+
 function App() {
   const { situationKey, setSituationKey } = useSituation();
   const [isAutoMode, setIsAutoMode] = useState(false);
@@ -343,7 +350,7 @@ function App() {
                   className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-theme-card border border-theme-border text-theme-primary/50 hover:text-theme-primary text-xs transition-all"
                 >
                   <ChevronLeft size={12} />
-                  {situationKey === 'love' ? '感情' : situationKey === 'career' ? '事業' : '投資'}
+                  {SITUATION_LABEL[situationKey]}
                   <span className="text-theme-primary/30">· 重選情境</span>
                 </button>
                 <QuestionInput onStart={handleStartCharting} />
@@ -460,9 +467,10 @@ function App() {
                       {/* Analysis Results */}
                       {selectedPalaces.length > 0 && (() => {
                         const ctxMeta: Record<string, { label: string; icon: string; bar: string; badge: string; text: string }> = {
-                          love:   { label: '感情', icon: '🌸', bar: 'bg-pink-400',    badge: 'bg-pink-500/10 border-pink-400/25 text-pink-300',    text: 'text-pink-300' },
-                          career: { label: '事業', icon: '⛰️', bar: 'bg-blue-400',    badge: 'bg-blue-500/10 border-blue-400/25 text-blue-300',    text: 'text-blue-300' },
-                          invest: { label: '投資', icon: '☯️', bar: 'bg-emerald-400', badge: 'bg-emerald-500/10 border-emerald-400/25 text-emerald-300', text: 'text-emerald-300' },
+                          love:    { label: '感情', icon: '🌸', bar: 'bg-pink-400',    badge: 'bg-pink-500/10 border-pink-400/25 text-pink-300',       text: 'text-pink-300' },
+                          career:  { label: '事業', icon: '⛰️', bar: 'bg-blue-400',    badge: 'bg-blue-500/10 border-blue-400/25 text-blue-300',       text: 'text-blue-300' },
+                          invest:  { label: '投資', icon: '☯️', bar: 'bg-emerald-400', badge: 'bg-emerald-500/10 border-emerald-400/25 text-emerald-300', text: 'text-emerald-300' },
+                          weather: { label: '氣象', icon: '☁️', bar: 'bg-sky-400',     badge: 'bg-sky-500/10 border-sky-400/25 text-sky-300',           text: 'text-sky-300' },
                         };
                         const ctx = situationKey ? ctxMeta[situationKey] : null;
                         return (

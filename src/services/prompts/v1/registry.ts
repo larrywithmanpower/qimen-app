@@ -2,12 +2,14 @@ import { BASE_PROMPT } from './base';
 import { LOVE_CONTEXT } from './contexts/love';
 import { CAREER_CONTEXT } from './contexts/career';
 import { INVEST_CONTEXT } from './contexts/invest';
+import { WEATHER_CONTEXT } from './contexts/weather';
 
 const CONTEXT_MAP: Record<string, Record<string, string>> = {
   v1: {
     love: LOVE_CONTEXT,
     career: CAREER_CONTEXT,
     invest: INVEST_CONTEXT,
+    weather: WEATHER_CONTEXT,
   },
 };
 

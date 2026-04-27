@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 
-export type SituationKey = 'love' | 'career' | 'invest' | null;
+export type SituationKey = 'love' | 'career' | 'invest' | 'weather' | null;
 
 interface SituationContextValue {
   situationKey: SituationKey;

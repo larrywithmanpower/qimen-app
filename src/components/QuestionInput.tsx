@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Sparkles, MessageSquare, ArrowRight } from 'lucide-react';
+import { Sparkles, MessageSquare, ArrowRight, ChevronDown, X, Plus } from 'lucide-react';
 import { useSituation } from '../context/SituationContext';
+import { usePhrases } from '../context/PhrasesContext';
+import type { PhraseKey } from '../context/PhrasesContext';
 
 export type QuestionType = 'career' | 'wealth' | 'love' | 'general';
 
@@ -8,15 +10,16 @@ interface QuestionInputProps {
   onStart: (question: string, type: QuestionType) => void;
 }
 
-// 情境對應的 placeholder 範例
-const PLACEHOLDER_BY_SITUATION: Record<'love' | 'career' | 'invest', string> = {
+type SituationSlug = 'love' | 'career' | 'invest' | 'weather';
+
+const PLACEHOLDER_BY_SITUATION: Record<SituationSlug, string> = {
   love: '例如：我最近的感情運勢如何？',
   career: '例如：我最近的事業發展如何？',
   invest: '例如：近期的投資時機是否成熟？',
+  weather: '例如：今日天候如何？適合出行嗎？',
 };
 
-// 情境專屬範例題（點擊後填入輸入框，使用者可再編輯）
-const EXAMPLES_BY_SITUATION: Record<'love' | 'career' | 'invest', string[]> = {
+const EXAMPLES_BY_SITUATION: Record<SituationSlug, string[]> = {
   love: [
     '我的桃花運如何？',
     '這段關係能否走到最後？',
@@ -32,24 +35,42 @@ const EXAMPLES_BY_SITUATION: Record<'love' | 'career' | 'invest', string[]> = {
     '這項投資風險如何？',
     '我的財運走勢如何？',
   ],
+  weather: [
+    '今日天候如何？',
+    '近日是否會有大雨？',
+    '週末適合戶外活動嗎？',
+  ],
 };
 
-// situationKey 對應的 QuestionType（讓 onStart 收到正確的類型，而非統一 general）
-const TYPE_BY_SITUATION: Record<'love' | 'career' | 'invest', QuestionType> = {
+const TYPE_BY_SITUATION: Record<SituationSlug, QuestionType> = {
   love: 'love',
   career: 'career',
   invest: 'wealth',
+  weather: 'general',
+};
+
+const LABEL_BY_SITUATION: Record<SituationSlug, string> = {
+  love: '感情',
+  career: '事業',
+  invest: '投資',
+  weather: '氣象',
 };
 
 const QuestionInput: React.FC<QuestionInputProps> = ({ onStart }) => {
   const [question, setQuestion] = useState('');
+  const [isPhrasesOpen, setIsPhrasesOpen] = useState(false);
+  const [newPhrase, setNewPhrase] = useState('');
   const { situationKey } = useSituation();
+  const { phrases, addPhrase, deletePhrase } = usePhrases();
 
-  // 理論上進到此元件時 situationKey 必定已選，保底 fallback 為 career
   const sk = situationKey ?? 'career';
   const placeholder = PLACEHOLDER_BY_SITUATION[sk];
   const examples = EXAMPLES_BY_SITUATION[sk];
   const questionType = TYPE_BY_SITUATION[sk];
+
+  // 合併當前情境 + 全域自訂話語
+  const situationPhrases = phrases[sk as PhraseKey] ?? [];
+  const globalPhrases = phrases.global ?? [];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,6 +78,21 @@ const QuestionInput: React.FC<QuestionInputProps> = ({ onStart }) => {
       onStart(question, questionType);
     }
   };
+
+  const handleAddPhrase = () => {
+    if (!newPhrase.trim()) return;
+    addPhrase(sk as PhraseKey, newPhrase);
+    setNewPhrase('');
+  };
+
+  const handleAddPhraseKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddPhrase();
+    }
+  };
+
+  const hasPhrases = situationPhrases.length > 0 || globalPhrases.length > 0;
 
   return (
     <div className="w-full max-w-2xl mx-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -90,6 +126,7 @@ const QuestionInput: React.FC<QuestionInputProps> = ({ onStart }) => {
           </button>
         </form>
 
+        {/* 系統範例 */}
         <div className="flex flex-col items-center gap-4">
           <span className="text-xs uppercase tracking-[0.3em] text-theme-primary/30 font-black">
             參考範例
@@ -108,7 +145,129 @@ const QuestionInput: React.FC<QuestionInputProps> = ({ onStart }) => {
               </button>
             ))}
           </div>
+        </div>
 
+        {/* 我的常用話語 */}
+        <div className="border border-theme-border rounded-2xl overflow-hidden bg-theme-card/30">
+          <button
+            type="button"
+            onClick={() => setIsPhrasesOpen(prev => !prev)}
+            className="w-full flex items-center justify-between px-5 py-4 text-theme-primary/60 hover:text-theme-primary transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <MessageSquare size={15} />
+              <span className="text-sm font-semibold tracking-wide">我的常用話語</span>
+              {hasPhrases && (
+                <span className="text-[10px] bg-theme-accent/15 text-theme-accent px-1.5 py-0.5 rounded-full font-bold">
+                  {situationPhrases.length + globalPhrases.length}
+                </span>
+              )}
+            </div>
+            <ChevronDown
+              size={16}
+              className={`transition-transform duration-200 ${isPhrasesOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {isPhrasesOpen && (
+            <div className="px-5 pb-5 space-y-4">
+              {/* 新增輸入 */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newPhrase}
+                  onChange={(e) => setNewPhrase(e.target.value)}
+                  onKeyDown={handleAddPhraseKeyDown}
+                  placeholder="輸入新話語..."
+                  className="flex-1 min-w-0 px-4 py-2.5 rounded-xl border border-theme-border bg-theme-bg text-theme-primary text-sm placeholder:text-theme-primary/25 outline-none focus:ring-2 ring-theme-accent/30 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddPhrase}
+                  disabled={!newPhrase.trim()}
+                  className="shrink-0 flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-theme-accent text-theme-bg text-sm font-bold disabled:opacity-30 hover:opacity-90 transition-opacity"
+                >
+                  <Plus size={14} />
+                  確認
+                </button>
+              </div>
+
+              {/* 當前情境話語 */}
+              {situationPhrases.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-widest text-theme-primary/30 font-bold">
+                    {LABEL_BY_SITUATION[sk]} · 我的
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {situationPhrases.map((phrase, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 group"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setQuestion(phrase)}
+                          className="flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg border border-theme-border bg-theme-card/60 hover:border-theme-accent/50 hover:bg-theme-accent/5 transition-all text-sm text-theme-primary/80 hover:text-theme-primary"
+                        >
+                          <span className="text-[9px] bg-theme-accent/20 text-theme-accent px-1 py-0.5 rounded font-bold leading-none">我的</span>
+                          <span className="leading-snug">{phrase}</span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => { e.stopPropagation(); deletePhrase(sk as PhraseKey, idx); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); deletePhrase(sk as PhraseKey, idx); } }}
+                            className="ml-0.5 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all rounded p-0.5"
+                          >
+                            <X size={11} />
+                          </span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 全域話語 */}
+              {globalPhrases.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-[10px] uppercase tracking-widest text-theme-primary/30 font-bold">全域 · 我的</p>
+                  <div className="flex flex-wrap gap-2">
+                    {globalPhrases.map((phrase, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-1.5 group"
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setQuestion(phrase)}
+                          className="flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg border border-theme-border bg-theme-card/60 hover:border-theme-accent/50 hover:bg-theme-accent/5 transition-all text-sm text-theme-primary/80 hover:text-theme-primary"
+                        >
+                          <span className="text-[9px] bg-theme-primary/10 text-theme-primary/50 px-1 py-0.5 rounded font-bold leading-none">我的</span>
+                          <span className="leading-snug">{phrase}</span>
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => { e.stopPropagation(); deletePhrase('global', idx); }}
+                            onKeyDown={(e) => { if (e.key === 'Enter') { e.stopPropagation(); deletePhrase('global', idx); } }}
+                            className="ml-0.5 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all rounded p-0.5"
+                          >
+                            <X size={11} />
+                          </span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!hasPhrases && (
+                <p className="text-xs text-theme-primary/30 text-center py-2">尚未新增常用話語，輸入後點確認即可儲存</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-center">
           <button
             type="button"
             onClick={() => onStart('', 'general')}

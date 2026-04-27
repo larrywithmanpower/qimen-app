@@ -129,6 +129,17 @@ const CONTEXT_STYLES = {
     buttonBg: 'bg-emerald-500/10 border-emerald-400/20 text-emerald-300 hover:bg-emerald-500/20',
     aiLabel: 'bg-emerald-500/5 border-emerald-400/10 text-emerald-300',
   },
+  weather: {
+    glowClass: 'context-weather-glow',
+    summaryBg: 'bg-sky-500/5 border-sky-400/25',
+    summaryIcon: 'text-sky-400',
+    resultBorder: 'border-sky-400/15 bg-theme-bg/50',
+    loadingBg: 'bg-sky-500/5 border-sky-400/10',
+    loadingText: 'text-sky-300',
+    loadingBar: 'bg-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.7)]',
+    buttonBg: 'bg-sky-500/10 border-sky-400/20 text-sky-300 hover:bg-sky-500/20',
+    aiLabel: 'bg-sky-500/5 border-sky-400/10 text-sky-300',
+  },
 };
 
 const DEFAULT_STYLES = {

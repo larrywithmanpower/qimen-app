@@ -92,6 +92,16 @@
   }
 }
 
+/* 氣象情境：晴空舒展（天藍色系） */
+@keyframes weather-drift {
+  0%, 100% {
+    box-shadow: 0 0 6px rgba(56, 189, 248, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 22px rgba(56, 189, 248, 0.55), 0 0 10px rgba(125, 211, 252, 0.28);
+  }
+}
+
 .context-love-glow {
   animation: love-breathing 4.5s infinite ease-in-out;
 }
@@ -104,11 +114,16 @@
   animation: invest-cycle 4.5s infinite ease-in-out;
 }
 
+.context-weather-glow {
+  animation: weather-drift 5s infinite ease-in-out;
+}
+
 /* 使用者偏好減少動畫時，全面停用呼吸光暈（無障礙） */
 @media (prefers-reduced-motion: reduce) {
   .context-love-glow,
   .context-career-glow,
-  .context-invest-glow {
+  .context-invest-glow,
+  .context-weather-glow {
     animation: none;
   }
 }
