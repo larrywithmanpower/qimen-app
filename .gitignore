@@ -33,3 +33,6 @@ test-results
 # env backups
 .env.bak*
 .env.local
+
+# QA reports（ultrareview 產出，不入版控）
+qa-reports/
