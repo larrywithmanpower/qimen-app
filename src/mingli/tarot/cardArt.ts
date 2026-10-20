@@ -1,6 +1,6 @@
 // 塔羅牌面 SVG：viewBox 0 0 100 160，顏色全由 cardArt.css 的 class 決定
 import './cardArt.css'
-import { CARDS } from './cards'
+import { CARDS, type Suit } from './cards'
 
 const L = 'class="ml-tc-line"'
 const F = 'class="ml-tc-fill"'
@@ -87,9 +87,47 @@ const MOTIFS: string[] = [
     }).join('') + `<path ${L} d="M50 44L56 52L50 60L44 52Z"/>`,
 ]
 
-// 只有圖騰那一段，測試用來檢查 22 張各不相同
+// 小牌花色符號：畫在原點附近 ±10 的單位格，再用 transform 擺位與縮放（過渡用，之後換圖片）
+const SUIT_SYMBOLS: Record<Suit, string> = {
+  wands: `<path ${L} d="M0 10V-9M0 -2L-5 -7M0 3L5 -2"/>`,
+  cups: `<path ${L} d="M-7 -8H7L5 1Q0 5 -5 1ZM0 4V9M-4 9H4"/>`,
+  swords: `<path ${L} d="M0 -9V5M-5 5H5M0 5V10"/><path ${F} d="M0 -11L-2 -6H2Z"/>`,
+  pentacles: `<circle ${L} cx="0" cy="0" r="8"/>` + pentagram(0, 0.5, 5.5, false),
+}
+
+// 數字牌 1～10 的符號位置（圖騰區 x20～80、y28～76）
+const PIP_LAYOUT: [number, number][][] = [
+  [[50, 52]],
+  [[50, 38], [50, 66]],
+  [[50, 34], [50, 52], [50, 70]],
+  [[38, 40], [62, 40], [38, 64], [62, 64]],
+  [[38, 40], [62, 40], [50, 52], [38, 64], [62, 64]],
+  [[38, 36], [62, 36], [38, 52], [62, 52], [38, 68], [62, 68]],
+  [[38, 36], [62, 36], [50, 44], [38, 52], [62, 52], [38, 68], [62, 68]],
+  [[38, 36], [62, 36], [50, 44], [38, 52], [62, 52], [50, 60], [38, 68], [62, 68]],
+  [[38, 34], [62, 34], [38, 46], [62, 46], [50, 52], [38, 58], [62, 58], [38, 70], [62, 70]],
+  [[38, 34], [62, 34], [50, 40], [38, 46], [62, 46], [38, 58], [62, 58], [50, 64], [38, 70], [62, 70]],
+]
+
+const minorMotif = (index: number): string => {
+  const c = CARDS[index]
+  const sym = SUIT_SYMBOLS[c.suit!]
+  const rank = (index - 22) % 14
+  const put = (x: number, y: number, scale: number) =>
+    `<g transform="translate(${x} ${y}) scale(${scale})">${sym}</g>`
+  // 王牌～十：依點數擺符號；侍者／騎士／皇后／國王：一個大符號，下方用小點標階級
+  if (rank < 10) {
+    const scale = rank === 0 ? 2.4 : rank < 6 ? 1 : 0.8
+    return PIP_LAYOUT[rank].map(([x, y]) => put(x, y, scale)).join('')
+  }
+  const dots = Array.from({ length: rank - 9 }, (_, k) =>
+    `<circle ${F} cx="${(50 + (k - (rank - 10) / 2) * 8).toFixed(1)}" cy="80" r="1.6"/>`).join('')
+  return put(50, 52, 2.2) + dots
+}
+
+// 只有圖騰那一段，測試用來檢查 22 張大牌各不相同
 export function motifSVG(index: number): string {
-  return `<g class="ml-tc-motif">${MOTIFS[index]}</g>`
+  return `<g class="ml-tc-motif">${index < MOTIFS.length ? MOTIFS[index] : minorMotif(index)}</g>`
 }
 
 export function faceSVG(index: number): string {

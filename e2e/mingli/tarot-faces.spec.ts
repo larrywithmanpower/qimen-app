@@ -2,16 +2,16 @@ import { test, expect } from './checks'
 import { mkdirSync } from 'node:fs'
 import { BASE } from './checks'
 
-// 22 張大牌牌面都畫得出來：在 App 裡把 22 張 faceSVG 排成一頁截圖存檔，並檢查每張都有圖騰線條
-test('22 張牌面截圖存檔', async ({ page }) => {
-  await page.setViewportSize({ width: 1200, height: 900 })
+// 78 張牌面都畫得出來：在 App 裡把 78 張 faceSVG 排成一頁截圖存檔，並檢查每張都有圖騰線條
+test('78 張牌面截圖存檔', async ({ page }) => {
+  await page.setViewportSize({ width: 1200, height: 1100 })
   await page.goto(BASE + '#/tarot?seed=4271')
   await expect(page.getByTestId('ml-tarot')).toBeVisible()
   const count = await page.evaluate(async () => {
     const mod = await import('/qimen-app/src/mingli/tarot/cardArt.ts')
     const grid = document.createElement('div')
-    grid.style.cssText = 'position:fixed;inset:0;z-index:99;display:grid;grid-template-columns:repeat(11,1fr);gap:8px;padding:12px;background:var(--ml-ground)'
-    for (let i = 0; i < 22; i++) {
+    grid.style.cssText = 'position:fixed;inset:0;z-index:99;display:grid;grid-template-columns:repeat(13,1fr);gap:6px;padding:8px;background:var(--ml-ground)'
+    for (let i = 0; i < 78; i++) {
       const card = document.createElement('div')
       card.className = 'ml-face'
       card.style.cssText = 'position:relative;aspect-ratio:5/8;transform:none;backface-visibility:visible'
@@ -25,7 +25,7 @@ test('22 張牌面截圖存檔', async ({ page }) => {
       return shapes.some(s => { const b = (s as SVGGraphicsElement).getBBox(); return b.width > 0 || b.height > 0 })
     }).length
   })
-  expect(count).toBe(22)
+  expect(count).toBe(78)
   mkdirSync('qa-reports/mingli-v2/tarot-faces', { recursive: true })
-  await page.screenshot({ path: 'qa-reports/mingli-v2/tarot-faces/22-major-arcana.png' })
+  await page.screenshot({ path: 'qa-reports/mingli-v2/tarot-faces/78-cards.png' })
 })

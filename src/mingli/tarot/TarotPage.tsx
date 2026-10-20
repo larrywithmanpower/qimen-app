@@ -12,6 +12,9 @@ const SLOT_LABELS = [['過去', 'Past'], ['現在', 'Present'], ['接下來', 'F
 // 每個牌位的進度：空 → 飛行中 → 蓋著 → 翻面 → 牌面揭露
 type Phase = 'empty' | 'flying' | 'back' | 'flipped' | 'revealed'
 
+// 牌堆每捲 STEP px 轉過一張牌
+const STEP = 18
+
 const pad = (seed: number) => String(seed).padStart(5, '0')
 
 // 用問題＋現在時間產生新的牌序編號（放在元件外，事件裡呼叫）
@@ -29,8 +32,11 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
   const [phases, setPhases] = useState<Phase[]>(['empty', 'empty', 'empty'])
   const [read, setRead] = useState(false)
   const [busy, setBusy] = useState(false)
+  // 目前浮起、等第二次點擊確認的牌位 index
+  const [lifted, setLifted] = useState<number | null>(null)
   const deck = useMemo(() => shuffle(seed), [seed])
   const fanRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
   const wellRefs = useRef<(HTMLDivElement | null)[]>([])
   const picksRef = useRef<number[]>([])
   const timers = useRef<number[]>([])
@@ -54,6 +60,24 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     return clearAll
   }, [])
 
+  // 捲動量換成轉過幾張牌，直接寫進舞台的 CSS 變數（不走 state，避免每個捲動事件都重繪）
+  const syncOffset = () => {
+    const fan = fanRef.current
+    stageRef.current?.style.setProperty('--ml-off', String(fan ? fan.scrollLeft / STEP : 0))
+  }
+  // 捲到正中間：中間那張牌正好在最上方
+  const centerFan = () => {
+    const fan = fanRef.current
+    if (!fan) return
+    fan.scrollLeft = (fan.scrollWidth - fan.clientWidth) / 2
+    syncOffset()
+  }
+  // 初始與抽完收起再重抽時都要重新置中
+  useEffect(() => {
+    if (!read) centerFan()
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- centerFan 只讀 ref，不需要當依賴
+  }, [read])
+
   const setPhase = (slot: number, phase: Phase) =>
     setPhases((cur) => cur.map((p, i) => (i === slot ? phase : p)))
 
@@ -64,7 +88,19 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     setPhases(['empty', 'empty', 'empty'])
     setRead(false)
     setBusy(false)
+    setLifted(null)
     setSeed(nextSeedValue)
+  }
+
+  // 兩步驟：第一次點只浮起，再點同一張才確認抽出
+  const tapCard = (pos: number, btn: HTMLElement) => {
+    if (picksRef.current.length >= 3 || picksRef.current.includes(pos) || busy) return
+    if (lifted !== pos) {
+      setLifted(pos)
+      return
+    }
+    setLifted(null)
+    pick(pos, btn)
   }
 
   const pick = (pos: number, btn: HTMLElement) => {
@@ -118,8 +154,9 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     if (busy) return
     if (picks.length) return reset(freshSeed(question))
     const reduce = prefersReduced()
-    const cards = [...(fanRef.current?.children ?? [])] as HTMLElement[]
+    const cards = [...(fanRef.current?.querySelectorAll<HTMLElement>('.ml-fan-card') ?? [])]
     setBusy(true)
+    setLifted(null)
     cards.forEach((b, k) => {
       const base = getComputedStyle(b).transform
       b.animate(
@@ -135,6 +172,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     later(() => {
       setSeed(nextSeed(seed))
       setBusy(false)
+      centerFan()
     }, reduce ? 0 : 720 + cards.length * 12)
   }
 
@@ -159,8 +197,6 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
 
   const drawn = read && picks.length === 3 ? drawThree(seed, [picks[0], picks[1], picks[2]]) : null
   const reading = drawn ? templateReading(drawn) : null
-  const n = deck.length
-  const spread = Math.min(4.6, 110 / n)
 
   return (
     <section className="ml-view ml-tarot" data-testid="ml-tarot" data-read={read}>
@@ -210,28 +246,36 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
           )}
           <span className="ml-seed" data-testid="ml-seed">牌序 No. {pad(seed)}</span>
         </div>
-        {!read && <p className="ml-tarot-hint">{picks.length === 0 ? '點牌堆任一張，抽三張' : `再抽 ${3 - picks.length} 張・點牌堆任一張`}</p>}
+        {!read && <p className="ml-tarot-hint">{lifted !== null ? `再點一次確定抽這張・還要抽 ${3 - picks.length} 張` : picks.length === 0 ? '點牌堆任一張，抽三張' : `再抽 ${3 - picks.length} 張・點牌堆任一張`}</p>}
         <div
           className={`ml-fan${picks.length >= 3 || busy ? ' ml-locked' : ''}`}
           data-testid="ml-fan"
           ref={fanRef}
+          onScroll={syncOffset}
+          style={{ '--ml-step': `${STEP}px`, '--ml-n': deck.length - 1 } as CSSProperties}
           hidden={read}
           role="group"
-          aria-label="牌堆，點一張抽出"
+          aria-label="牌堆，點一張浮起，再點一次抽出"
         >
-          {deck.map((_, k) => (
-            <button
-              key={`${seed}-${k}`}
-              type="button"
-              className="ml-fan-card"
-              data-testid="ml-fan-card"
-              aria-label={`第 ${k + 1} 張牌`}
-              style={{ '--ml-a': `${(k - (n - 1) / 2) * spread}deg`, visibility: picks.includes(k) ? 'hidden' : 'visible' } as CSSProperties}
-              onClick={(e) => pick(k, e.currentTarget)}
-            >
-              <span className="ml-cb" dangerouslySetInnerHTML={{ __html: backSVG() }} />
-            </button>
-          ))}
+          <div className="ml-fan-span">
+            <div className="ml-fan-stage" ref={stageRef}>
+              {deck.map((_, k) => (
+                <button
+                  key={`${seed}-${k}`}
+                  type="button"
+                  className="ml-fan-card"
+                  data-testid="ml-fan-card"
+                  aria-label={`第 ${k + 1} 張牌`}
+                  data-lifted={lifted === k}
+                  aria-pressed={lifted === k}
+                  style={{ '--ml-i': k, visibility: picks.includes(k) ? 'hidden' : 'visible' } as CSSProperties}
+                  onClick={(e) => tapCard(k, e.currentTarget)}
+                >
+                  <span className="ml-cb" dangerouslySetInnerHTML={{ __html: backSVG() }} />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
       {reading && (

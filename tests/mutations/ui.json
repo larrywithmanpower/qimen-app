@@ -41,5 +41,13 @@
   "find": ".ml-cta:disabled {",
   "replace": ".back, .ml-cta:disabled {",
   "test": "src/mingli/__tests__"
+ },
+ {
+  "id": "U6",
+  "desc": "捲動牌堆不再帶動扇形轉動（78 張只轉得到中間幾張的坑）",
+  "file": "src/mingli/tarot/TarotPage.tsx",
+  "find": "String(fan ? fan.scrollLeft / STEP : 0)",
+  "replace": "String(38.5)",
+  "test": "e2e/mingli/tarot.spec.ts"
  }
 ]

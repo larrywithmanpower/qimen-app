@@ -56,17 +56,31 @@
 .ml-seed { font-family: var(--ml-font-west); font-size: var(--ml-fs-body-sm); color: var(--ml-ink-faint); letter-spacing: .06em; }
 .ml-tarot-hint { margin: 0; text-align: center; font-size: var(--ml-fs-body-sm); color: var(--ml-ink-muted); letter-spacing: .1em; }
 
-/* 扇形牌堆：整排裁在自己的框裡，邊緣的牌不會撐出橫向捲動 */
-.ml-fan { position: relative; height: calc(var(--ml-cw) * 2.9); margin-top: 6px; overflow: clip; touch-action: manipulation; }
+/* 扇形牌堆：.ml-fan 是橫向捲動容器（捲軸隱藏），捲動量轉成扇子的轉角；舞台釘在原地不跟著捲 */
+.ml-fan {
+  --ml-raise: 34px; --ml-deg: 3.2deg;
+  position: relative; height: calc(var(--ml-cw) * 2.9); margin-top: 6px; container-type: inline-size;
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
+}
+.ml-fan::-webkit-scrollbar { display: none; }
+.ml-fan[hidden] { display: none; }
+/* 撐出捲動範圍：容器寬 + (張數 - 1) 個步距 */
+.ml-fan-span { width: calc(100% + var(--ml-n) * var(--ml-step)); height: 100%; }
+.ml-fan-stage { position: sticky; left: 0; width: 100cqw; height: 100%; overflow: clip; }
 .ml-fan-card {
+  --ml-a: calc((var(--ml-i) - var(--ml-off, 38.5)) * var(--ml-deg));
   position: absolute; left: 50%; bottom: 0; width: var(--ml-cw); aspect-ratio: 5 / 8; margin-left: calc(var(--ml-cw) / -2);
   border-radius: var(--ml-space-2); transform-origin: 50% 340%;
   transform: rotate(var(--ml-a)) translateY(var(--ml-lift, 0px)); transition: transform .35s cubic-bezier(.2,.7,.2,1);
   cursor: pointer; padding: 0; border: 0; background: none;
 }
 .ml-fan-card .ml-cb { position: absolute; inset: 0; border-radius: var(--ml-space-2); }
-.ml-fan-card:hover, .ml-fan-card:focus-visible { --ml-lift: -18px; }
+.ml-fan-card[data-lifted="true"] { --ml-lift: calc(-1 * var(--ml-raise)); z-index: 2; }
+.ml-fan-card:focus-visible { outline: 2px solid var(--ml-accent); outline-offset: 2px; z-index: 2; }
 .ml-fan.ml-locked .ml-fan-card { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .ml-fan-card { transition: none; }
+}
 
 /* 解讀 */
 .ml-reading { display: flex; flex-direction: column; gap: var(--ml-space-4); max-width: 680px; width: 100%; margin: 6px auto 0; min-width: 0; }
@@ -115,6 +129,7 @@
 /* 平板直式：置中，三段解讀並排 */
 @media (min-width: 720px) {
   .ml-tarot { --ml-cw: 74px; }
+  .ml-fan { --ml-deg: 2.8deg; }
   .ml-tarot-head { align-items: center; text-align: center; }
   .ml-slots { gap: var(--ml-space-6); max-width: 640px; }
   .ml-reading { max-width: none; }

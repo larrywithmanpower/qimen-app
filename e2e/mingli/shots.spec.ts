@@ -12,9 +12,10 @@ const OUT = 'qa-reports/mingli-v2'
 
 type Step = (page: Page) => Promise<void>
 
-// 抽三張：用固定牌序，點扇形牌堆的第 0、5、10 張
+// 抽三張：用固定牌序，點牌堆的第 0、5、10 張（各點兩下：浮起再確認）
 const drawThree: Step = async (page) => {
   for (const k of [0, 5, 10]) {
+    await page.getByTestId('ml-fan-card').nth(k).dispatchEvent('click')
     await page.getByTestId('ml-fan-card').nth(k).dispatchEvent('click')
     await page.waitForTimeout(150)
   }

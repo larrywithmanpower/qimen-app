@@ -130,8 +130,10 @@ export async function checkLayout(page: Page): Promise<LayoutIssue[]> {
       // 貼底元素不可被安全區域蓋住
       let n: Element | null = el;
       while (n && n !== document.body) {
-        const pos = getComputedStyle(n).position;
-        if (pos === 'fixed' || pos === 'sticky') {
+        const cs = getComputedStyle(n);
+        const pos = cs.position;
+        // sticky 只有設了 bottom 才算貼底（只左右黏住的不算）
+        if (pos === 'fixed' || (pos === 'sticky' && cs.bottom !== 'auto')) {
           if (r.bottom > vh - safe + 0.5 && r.top < vh) {
             issues.push({ kind: '被安全區域蓋住', detail: `${label(el)} bottom ${Math.round(r.bottom)} > ${vh - safe}` });
           }

@@ -64,10 +64,10 @@ export function shuffle(seed: number): DeckSlot[] {
   return deck
 }
 
-// picks 是使用者在扇形牌堆點的三個位置（0～21，不重複），依序是 過去／現在／接下來
+// picks 是使用者在扇形牌堆點的三個位置（0～77，不重複），依序是 過去／現在／接下來
 export function drawThree(seed: number, picks: [number, number, number]): [DrawnCard, DrawnCard, DrawnCard] {
   if (new Set(picks).size !== 3 || picks.some((p) => !Number.isInteger(p) || p < 0 || p >= CARDS.length)) {
-    throw new Error('picks 必須是 0～21 之間三個不重複的整數')
+    throw new Error(`picks 必須是 0～${CARDS.length - 1} 之間三個不重複的整數`)
   }
   const deck = shuffle(seed)
   const one = (pos: number): DrawnCard => ({ ...deck[pos], card: CARDS[deck[pos].index] })

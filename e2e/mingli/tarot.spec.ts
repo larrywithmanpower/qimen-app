@@ -17,8 +17,12 @@ async function open(page: Page) {
   await expect(page.getByTestId('ml-tarot')).toBeVisible()
 }
 
-// 牌堆的牌互相疊著，直接對該張送點擊事件
-const pick = (page: Page, pos: number) => page.getByTestId('ml-fan-card').nth(pos).dispatchEvent('click')
+// 牌堆的牌互相疊著，直接對該張送點擊事件；抽牌要點兩下（第一下浮起、第二下確認）
+const tap = (page: Page, pos: number) => page.getByTestId('ml-fan-card').nth(pos).dispatchEvent('click')
+const pick = async (page: Page, pos: number) => {
+  await tap(page, pos)
+  await tap(page, pos)
+}
 
 async function pickAll(page: Page) {
   for (const p of PICKS) await pick(page, p)
@@ -30,8 +34,40 @@ const slotNames = (page: Page) => page.getByTestId('ml-slot').evaluateAll((els) 
 test('牌序編號與牌堆張數', async ({ page }) => {
   await open(page)
   await expect(page.getByTestId('ml-seed')).toHaveText('牌序 No. 04271')
-  await expect(page.getByTestId('ml-fan-card')).toHaveCount(22)
+  await expect(page.getByTestId('ml-fan-card')).toHaveCount(78)
   await expect(page.getByTestId('ml-slot')).toHaveCount(3)
+})
+
+test('滑動牌堆會轉動扇形：捲到最左，第 1 張轉到正上方且真的點得到', async ({ page }) => {
+  await open(page)
+  const cards = page.getByTestId('ml-fan-card')
+  const centerX = (await page.viewportSize())!.width / 2
+  const midX = async (i: number) => { const b = (await cards.nth(i).boundingBox())!; return b.x + b.width / 2 }
+  // 初始置中：中間那張在正上方，第 1 張偏在左邊外面
+  expect(Math.abs((await midX(38)) - centerX)).toBeLessThan(30)
+  expect(Math.abs((await midX(0)) - centerX)).toBeGreaterThan(100)
+  await page.locator('.ml-fan').evaluate((el) => { el.scrollLeft = 0; el.dispatchEvent(new Event('scroll')) })
+  await expect.poll(async () => Math.abs((await midX(0)) - centerX)).toBeLessThan(30)
+  // 用真的滑鼠點第 1 張露出的左上角（不是 dispatchEvent），要浮起
+  const box = (await cards.nth(0).boundingBox())!
+  await page.mouse.click(box.x + 6, box.y + 14)
+  await expect(cards.nth(0)).toHaveAttribute('data-lifted', 'true')
+})
+
+test('兩步驟抽牌：點 A 浮起，點 B 後 A 放下 B 浮起，再點 B 才算抽到', async ({ page }) => {
+  await open(page)
+  const cards = page.getByTestId('ml-fan-card')
+  const [a, b] = [PICKS[0], PICKS[1]]
+  await tap(page, a)
+  await expect(cards.nth(a)).toHaveAttribute('data-lifted', 'true')
+  await expect(page.locator('.ml-tarot-hint')).toContainText('再點一次確定抽這張')
+  await tap(page, b)
+  await expect(cards.nth(a)).toHaveAttribute('data-lifted', 'false')
+  await expect(cards.nth(b)).toHaveAttribute('data-lifted', 'true')
+  expect(await slotNames(page)).toEqual(['', '', ''])
+  await tap(page, b)
+  await expect(page.getByTestId('ml-slot').first()).toHaveAttribute('data-card', drawThree(SEED, [b, 0, 1])[0].card.zh, { timeout: 5000 })
+  await expect(cards.nth(b)).toHaveCSS('visibility', 'hidden')
 })
 
 test('三個牌位的牌名等於引擎抽出的牌，重新整理後相同', async ({ page }) => {
