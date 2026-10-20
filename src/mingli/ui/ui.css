@@ -51,9 +51,11 @@ body:has(.ml-app) {
 .ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua[data-on="true"] { opacity: .5; }
 @media (min-width: 1100px) {
   .ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua {
-    left: calc(50% - 375px); right: auto; top: 565px; width: 560px; height: 560px; margin: -280px 0 0 -280px;
+    /* 縮到卦象區內：整圈轉到哪裡都碰不到右邊的卦名欄與解讀文字 */
+    left: calc(50% - 435px); right: auto; top: 525px; width: 400px; height: 400px; margin: -200px 0 0 -200px;
   }
   .ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua[data-on="true"] { opacity: .5; }
+  .ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua-name { display: none; }
 }
 
 /* 紫微頁：八卦不壓表單、宮格、說明文字。縮到右上角並變淡；電腦版輸入頁移到右邊空白處 */

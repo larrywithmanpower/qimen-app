@@ -14,9 +14,12 @@ type Phase = 'empty' | 'flying' | 'back' | 'flipped' | 'revealed'
 
 const pad = (seed: number) => String(seed).padStart(5, '0')
 
+// 用問題＋現在時間產生新的牌序編號（放在元件外，事件裡呼叫）
+const freshSeed = (question: string) => seedFrom(question, Date.now())
+
 function initialSeed(param: string | null, question: string) {
   const n = param === null || param === '' ? NaN : Number(param)
-  return Number.isInteger(n) && n >= 0 && n < SEED_RANGE ? n : seedFrom(question, Date.now())
+  return Number.isInteger(n) && n >= 0 && n < SEED_RANGE ? n : freshSeed(question)
 }
 
 export default function TarotPage({ seedParam }: { seedParam: string | null }) {
@@ -113,7 +116,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
 
   const shuffleDeck = () => {
     if (busy) return
-    if (picks.length) return reset(seedFrom(question, Date.now()))
+    if (picks.length) return reset(freshSeed(question))
     const reduce = prefersReduced()
     const cards = [...(fanRef.current?.children ?? [])] as HTMLElement[]
     setBusy(true)
@@ -201,7 +204,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
         </div>
         <div className="ml-tools">
           {read ? (
-            <button type="button" className="ml-ghost" data-testid="ml-again" onClick={() => reset(seedFrom(question, Date.now()))}>重新抽</button>
+            <button type="button" className="ml-ghost" data-testid="ml-again" onClick={() => reset(freshSeed(question))}>重新抽</button>
           ) : (
             <button type="button" className="ml-ghost" data-testid="ml-shuffle" onClick={shuffleDeck}>洗牌</button>
           )}

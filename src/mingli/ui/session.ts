@@ -7,3 +7,8 @@ export const session: { question: string; method: Method } = {
   question: '',
   method: 'tarot',
 }
+
+// 更新首頁帶過去的問題與算法（元件裡不直接改匯入的物件）
+export function updateSession(patch: Partial<typeof session>) {
+  Object.assign(session, patch)
+}

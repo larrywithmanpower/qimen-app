@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { burstAt, expandTaiji, prefersReduced, setRealm, setTaijiSide } from './fx'
 import { goTo } from './route'
-import { SAMPLE_QUESTION, session, type Method } from './session'
+import { SAMPLE_QUESTION, session, updateSession, type Method } from './session'
 
 const TITLE_SEGS = ['心裡有事，', '就問。']
 const TITLE = TITLE_SEGS.join('')
@@ -27,14 +27,13 @@ export default function Home() {
 
   const pick = (id: Method, el: Element) => {
     setMethod(id)
-    session.method = id
+    updateSession({ method: id })
     setTaijiSide(id === 'tarot' ? 1 : -1)
     burstAt(el)
   }
 
   const start = (el: Element) => {
-    session.question = question.trim() || SAMPLE_QUESTION
-    session.method = method
+    updateSession({ question: question.trim() || SAMPLE_QUESTION, method })
     burstAt(el)
     // 太極擴散：選中的那半邊吞掉整個畫面，再進入該頁
     expandTaiji(method === 'tarot' ? 1 : -1)
