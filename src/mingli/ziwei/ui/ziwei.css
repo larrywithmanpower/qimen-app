@@ -6,6 +6,7 @@
 .ml-z-sub { font-family: var(--ml-font-serif); font-weight: 700; font-size: var(--ml-fs-body-sm); letter-spacing: .08em; color: var(--ml-cinnabar); }
 .ml-z-title { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-title); font-weight: 900; letter-spacing: .1em; }
 .ml-z-hint { margin: 0; font-size: var(--ml-fs-label); color: var(--ml-ink-muted); line-height: 1.7; }
+.ml-z-hint-top { display: none; }
 .ml-z-local { flex: 0 0 auto; padding-top: var(--ml-space-1); font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); }
 
 /* 共用按鈕列與主按鈕 */
@@ -111,5 +112,7 @@
 @media (min-width: 1100px) {
   .ml-zchart-wrap { display: grid; grid-template-columns: minmax(0, 680px) minmax(0, 1fr); gap: var(--ml-space-6); align-items: center; }
   .ml-zside { max-width: 480px; }
+  .ml-z-local, .ml-z-hint-bottom { display: none; }
+  .ml-z-hint-top { display: block; }
   .ml-chart { grid-auto-rows: minmax(150px, auto); }
 }

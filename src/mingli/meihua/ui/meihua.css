@@ -119,3 +119,6 @@
   .ml-meihua[data-read="true"] .ml-mreading { margin: 0; max-width: 560px; }
   .ml-meihua[data-read="true"] .ml-mparas { display: flex; flex-direction: column; gap: var(--ml-space-4); }
 }
+
+/* 體用的兩段各自不換行，放不下就整段換到下一行 */
+.ml-nb { white-space: nowrap; }

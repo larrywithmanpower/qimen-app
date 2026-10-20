@@ -302,11 +302,12 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
                 <span className="ml-z-sub">紫微斗數・命盤{birth.timeIndex === null && picked !== null ? `・假設${TIMES[picked][0]}時` : ''}</span>
                 <h1 className="ml-z-title">十二宮</h1>
               </div>
-              <span className="ml-z-local">資料只存這支手機</span>
+              <span className="ml-z-local">資料只存這台裝置</span>
             </div>
             <Chart facts={facts} gender={birth.gender} sel={sel} onSel={setSel} />
           </div>
           <div className="ml-zside">
+            <p className="ml-z-hint ml-z-hint-top">資料只存這台裝置・點任一宮看說明</p>
             {detail && (
               <div className="ml-pdetail" data-testid="ml-palace-detail" data-branch={sel}>
                 <div className="ml-pdetail-head">
@@ -320,7 +321,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
                 <p className="ml-znote">範例說明，正式版由 AI 依星曜規則卡撰寫</p>
               </div>
             )}
-            <p className="ml-z-hint">點任一宮看說明</p>
+            <p className="ml-z-hint ml-z-hint-bottom">點任一宮看說明</p>
             <div className="ml-zactions ml-zactions-start">
               {birth.timeIndex === null && (
                 <button type="button" className="ml-ghost" data-testid="ml-back-candidates" onClick={() => setPicked(null)}>回到候選清單</button>

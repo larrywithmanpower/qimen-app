@@ -44,6 +44,30 @@ body:has(.ml-app) {
 .ml-bagua-name { fill: var(--ml-paper); font-family: var(--ml-font-serif); font-size: 9px; font-weight: 700; text-anchor: middle; opacity: .16; transition: opacity 1.2s, fill 1.2s; }
 .ml-bagua-name.ml-lit { fill: var(--ml-cinnabar); opacity: .9; }
 
+/* 梅花解讀頁：八卦只放在卦象後面，不壓到解讀文字。手機與平板縮到右上角並變淡 */
+.ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua {
+  left: auto; right: -110px; top: -40px; width: 320px; height: 320px; margin: 0;
+}
+.ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua[data-on="true"] { opacity: .5; }
+@media (min-width: 1100px) {
+  .ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua {
+    left: calc(50% - 375px); right: auto; top: 565px; width: 560px; height: 560px; margin: -280px 0 0 -280px;
+  }
+  .ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua[data-on="true"] { opacity: .5; }
+}
+
+/* 紫微頁：八卦不壓表單、宮格、說明文字。縮到右上角並變淡；電腦版輸入頁移到右邊空白處 */
+.ml-app:has(:is([data-testid="ml-ziwei"], [data-testid="ml-me"])) .ml-bagua {
+  left: auto; right: -110px; top: -40px; width: 320px; height: 320px; margin: 0;
+}
+.ml-app:has(:is([data-testid="ml-ziwei"], [data-testid="ml-me"])) .ml-bagua[data-on="true"] { opacity: .3; }
+@media (min-width: 1100px) {
+  .ml-app:has(:is([data-testid="ml-ziwei"], [data-testid="ml-me"])[data-phase="form"]) .ml-bagua {
+    left: calc(50% + 280px); right: auto; top: 50%; width: 560px; height: 560px; margin: -280px 0 0 -280px;
+  }
+  .ml-app:has(:is([data-testid="ml-ziwei"], [data-testid="ml-me"])[data-phase="form"]) .ml-bagua[data-on="true"] { opacity: .8; }
+}
+
 /* 頂部列 */
 .ml-header {
   position: relative; z-index: 2;

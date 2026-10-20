@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import type { ReactNode } from 'react'
 import { Solar } from 'lunar-javascript'
 import './meihua.css'
 import { burstAt, lightTrigrams, prefersReduced, setRealm } from '../../ui/fx'
@@ -123,13 +124,18 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
   const instant = prefersReduced()
   const complete = shown >= ROW_KEYS.length
 
-  const rows: [string, string][] = res && reading
+  const rows: [string, ReactNode][] = res && reading
     ? [
         ['本卦', res.name],
         ['互卦', res.mutual.name],
         ['動爻', `${YAO_NAMES[res.moving - 1]}爻`],
         ['變卦', res.changed.name],
-        ['體用', `體${res.ti}${res.tiElement}・用${res.yong}${res.yongElement}　${reading.paragraphs[1].basis.replace('體用 ', '')}`],
+        ['體用', (
+          <>
+            <span className="ml-nb">{`體${res.ti}${res.tiElement}・用${res.yong}${res.yongElement}`}</span>{' '}
+            <span className="ml-nb">{reading.paragraphs[1].basis.replace('體用 ', '')}</span>
+          </>
+        )],
       ]
     : []
 

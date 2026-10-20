@@ -1,4 +1,45 @@
 [
- { "id": "U1", "desc": "useEffect 改回不加大括號（新版 Chrome 白屏）— 靜態檢查", "file": "src/mingli/MingliApp.tsx", "find": "useEffect(() => { window.scrollTo(0, 0) }, [route.hash])", "replace": "useEffect(() => window.scrollTo(0, 0), [route.hash])", "test": "src/mingli/__tests__" },
- { "id": "U2", "desc": "useEffect 改回不加大括號（新版 Chrome 白屏）— 模擬新版 Chrome 畫面測試", "file": "src/mingli/MingliApp.tsx", "find": "useEffect(() => { window.scrollTo(0, 0) }, [route.hash])", "replace": "useEffect(() => window.scrollTo(0, 0), [route.hash])", "test": "e2e/mingli/modern-chrome.spec.ts", "runner": "playwright" }
+ {
+  "id": "U1",
+  "desc": "useEffect 改回不加大括號（新版 Chrome 白屏）— 靜態檢查",
+  "file": "src/mingli/MingliApp.tsx",
+  "find": "useEffect(() => { window.scrollTo(0, 0) }, [route.hash])",
+  "replace": "useEffect(() => window.scrollTo(0, 0), [route.hash])",
+  "test": "src/mingli/__tests__"
+ },
+ {
+  "id": "U2",
+  "desc": "useEffect 改回不加大括號（新版 Chrome 白屏）— 模擬新版 Chrome 畫面測試",
+  "file": "src/mingli/MingliApp.tsx",
+  "find": "useEffect(() => { window.scrollTo(0, 0) }, [route.hash])",
+  "replace": "useEffect(() => window.scrollTo(0, 0), [route.hash])",
+  "test": "e2e/mingli/modern-chrome.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "U3",
+  "desc": "毛筆濾鏡拿掉 userSpaceOnUse、改回預設範圍（細線被裁掉的坑）",
+  "file": "src/mingli/ui/Bagua.tsx",
+  "find": "<filter id=\"ml-brush\" filterUnits=\"userSpaceOnUse\" x=\"-40\" y=\"-40\" width=\"380\" height=\"410\">",
+  "replace": "<filter id=\"ml-brush\" x=\"-10%\" y=\"-10%\" width=\"120%\" height=\"120%\">",
+  "test": "e2e/mingli/meihua.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "U4",
+  "desc": "抽完三張不收牌堆（牌堆壓到解讀的坑）",
+  "file": "src/mingli/tarot/TarotPage.tsx",
+  "find": "hidden={read}",
+  "replace": "hidden={false}",
+  "test": "e2e/mingli/tarot.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "U5",
+  "desc": "梅花樣式加一個不帶 ml- 前綴的 class（撞名的坑）",
+  "file": "src/mingli/meihua/ui/meihua.css",
+  "find": ".ml-cta:disabled {",
+  "replace": ".back, .ml-cta:disabled {",
+  "test": "src/mingli/__tests__"
+ }
 ]
