@@ -1,0 +1,219 @@
+[
+  {
+    "id": "T01",
+    "note": "上卦餘0",
+    "type": "time",
+    "gregorian": "2022-11-20T20:30:00",
+    "lunar": {
+      "yearZhi": 3,
+      "month": 10,
+      "day": 27,
+      "hourZhi": 11,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2022c.txt"
+  },
+  {
+    "id": "T02",
+    "note": "下卦餘0",
+    "type": "time",
+    "gregorian": "2021-07-11T10:30:00",
+    "lunar": {
+      "yearZhi": 2,
+      "month": 6,
+      "day": 2,
+      "hourZhi": 6,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2021c.txt"
+  },
+  {
+    "id": "T03",
+    "note": "動爻餘0",
+    "type": "time",
+    "gregorian": "2021-07-08T10:30:00",
+    "lunar": {
+      "yearZhi": 2,
+      "month": 5,
+      "day": 29,
+      "hourZhi": 6,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2021c.txt"
+  },
+  {
+    "id": "T04",
+    "note": "23點晚子時",
+    "type": "time",
+    "gregorian": "2024-03-15T23:30:00",
+    "lunar": {
+      "yearZhi": 5,
+      "month": 2,
+      "day": 7,
+      "hourZhi": 1,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2024c.txt"
+  },
+  {
+    "id": "T05",
+    "note": "23點晚子時且隔天是正月初一(年支換)",
+    "type": "time",
+    "gregorian": "2024-02-09T23:30:00",
+    "lunar": {
+      "yearZhi": 5,
+      "month": 1,
+      "day": 1,
+      "hourZhi": 1,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2024c.txt"
+  },
+  {
+    "id": "T06",
+    "note": "閏四月",
+    "type": "time",
+    "gregorian": "2020-06-20T10:30:00",
+    "lunar": {
+      "yearZhi": 1,
+      "month": 4,
+      "day": 29,
+      "hourZhi": 6,
+      "isLeap": true
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2020c.txt"
+  },
+  {
+    "id": "T07",
+    "note": "閏二月",
+    "type": "time",
+    "gregorian": "2023-04-10T15:30:00",
+    "lunar": {
+      "yearZhi": 4,
+      "month": 2,
+      "day": 20,
+      "hourZhi": 9,
+      "isLeap": true
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2023c.txt"
+  },
+  {
+    "id": "T08",
+    "note": "除夕(癸卯年)",
+    "type": "time",
+    "gregorian": "2024-02-09T14:30:00",
+    "lunar": {
+      "yearZhi": 4,
+      "month": 12,
+      "day": 30,
+      "hourZhi": 8,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2024c.txt"
+  },
+  {
+    "id": "T09",
+    "note": "正月初一(甲辰年)",
+    "type": "time",
+    "gregorian": "2024-02-10T09:30:00",
+    "lunar": {
+      "yearZhi": 5,
+      "month": 1,
+      "day": 1,
+      "hourZhi": 6,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2024c.txt"
+  },
+  {
+    "id": "T10",
+    "note": "0點早子時且正月初一",
+    "type": "time",
+    "gregorian": "2025-01-29T00:30:00",
+    "lunar": {
+      "yearZhi": 6,
+      "month": 1,
+      "day": 1,
+      "hourZhi": 1,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2025c.txt"
+  },
+  {
+    "id": "T11",
+    "note": "一般案例",
+    "type": "time",
+    "gregorian": "2026-10-20T15:30:00",
+    "lunar": {
+      "yearZhi": 7,
+      "month": 9,
+      "day": 11,
+      "hourZhi": 9,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2026c.txt"
+  },
+  {
+    "id": "T12",
+    "note": "一般案例",
+    "type": "time",
+    "gregorian": "2022-11-18T20:30:00",
+    "lunar": {
+      "yearZhi": 3,
+      "month": 10,
+      "day": 25,
+      "hourZhi": 11,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2022c.txt"
+  },
+  {
+    "id": "T13",
+    "note": "一般案例",
+    "type": "time",
+    "gregorian": "2021-07-07T10:30:00",
+    "lunar": {
+      "yearZhi": 2,
+      "month": 5,
+      "day": 28,
+      "hourZhi": 6,
+      "isLeap": false
+    },
+    "source": "https://www.hko.gov.hk/tc/gts/time/calendar/text/files/T2021c.txt"
+  },
+  {
+    "id": "N01",
+    "note": "一般報數",
+    "type": "numbers",
+    "a": 3,
+    "b": 5
+  },
+  {
+    "id": "N02",
+    "note": "上數是8的倍數",
+    "type": "numbers",
+    "a": 16,
+    "b": 5
+  },
+  {
+    "id": "N03",
+    "note": "下數是8的倍數",
+    "type": "numbers",
+    "a": 9,
+    "b": 24
+  },
+  {
+    "id": "N04",
+    "note": "兩數和是6的倍數",
+    "type": "numbers",
+    "a": 4,
+    "b": 8
+  },
+  {
+    "id": "N05",
+    "note": "大數字",
+    "type": "numbers",
+    "a": 100,
+    "b": 37
+  }
+]

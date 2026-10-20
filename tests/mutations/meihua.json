@@ -1,0 +1,12 @@
+[
+  { "id": "M1", "desc": "先天數表對調乾與兌", "file": "src/mingli/meihua/engine.ts", "find": "const TRIGRAM_BY_NUM: Trigram[] = ['乾', '兌',", "replace": "const TRIGRAM_BY_NUM: Trigram[] = ['兌', '乾',", "test": "src/mingli/meihua" },
+  { "id": "M2", "desc": "報數起卦預設就加時支", "file": "src/mingli/meihua/engine.ts", "find": "(opts.addHour ? (opts.hourZhi ?? 0) : 0)", "replace": "(opts.hourZhi ?? 9)", "test": "src/mingli/meihua" },
+  { "id": "M3", "desc": "下互卦取錯爻（改取 1、2、3 爻）", "file": "src/mingli/meihua/engine.ts", "find": "lines.slice(1, 4)", "replace": "lines.slice(0, 3)", "test": "src/mingli/meihua" },
+  { "id": "M4", "desc": "23 點不換日", "file": "src/mingli/meihua/engine.ts", "find": "if (hour >= 23) base.setDate(base.getDate() + 1)", "replace": "if (hour >= 24) base.setDate(base.getDate() + 1)", "test": "src/mingli/meihua" },
+  { "id": "M5", "desc": "餘數 0 不當 6 / 8", "file": "src/mingli/meihua/engine.ts", "find": "=> n % k || k", "replace": "=> n % k", "test": "src/mingli/meihua" },
+  { "id": "M6", "desc": "動爻 3 爻誤判為上卦動", "file": "src/mingli/meihua/engine.ts", "find": "const yongIsLower = moving <= 3", "replace": "const yongIsLower = moving < 3", "test": "src/mingli/meihua" },
+  { "id": "M7", "desc": "閏月不取絕對值", "file": "src/mingli/meihua/engine.ts", "find": "month: Math.abs(rawMonth),", "replace": "month: rawMonth,", "test": "src/mingli/meihua" },
+  { "id": "M8", "desc": "體剋用誤標成用剋體", "file": "src/mingli/meihua/engine.ts", "find": "return '體剋用'", "replace": "return '用剋體'", "test": "src/mingli/meihua" },
+  { "id": "M9", "desc": "體生用的吉凶改成吉", "file": "src/mingli/meihua/engine.ts", "find": "體生用: { tone: '平', level: '小凶' }", "replace": "體生用: { tone: '吉', level: '小凶' }", "test": "src/mingli/meihua" },
+  { "id": "M10", "desc": "23 點的時支誤成亥", "file": "src/mingli/meihua/engine.ts", "find": "hour >= 23 ? 1 :", "replace": "hour >= 23 ? 12 :", "test": "src/mingli/meihua" }
+]
