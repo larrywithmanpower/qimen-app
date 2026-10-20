@@ -11,7 +11,12 @@
     "smoke": "node tests/smoke.mjs",
     "test:methods": "node tests/method-flows.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "test:unit": "vitest run",
+    "test:ui": "playwright test -c playwright.mingli.config.ts",
+    "test:mutation": "node tests/mutation.mjs",
+    "test": "npm run test:unit && npm run test:ui",
+    "dev:mingli": "vite --port 5180 --strictPort"
   },
   "dependencies": {
     "@google/genai": "^1.40.0",
@@ -20,6 +25,7 @@
     "framer-motion": "^12.34.0",
     "html2canvas": "^1.4.1",
     "idb-keyval": "^6.2.2",
+    "iztro": "^2.6.3",
     "lucide-react": "^0.475.0",
     "lunar-javascript": "^1.6.43",
     "qimen-dunjia": "^2.1.0",
@@ -49,6 +55,7 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.4",
     "vite": "^7.3.2",
-    "vite-plugin-pwa": "^1.2.0"
+    "vite-plugin-pwa": "^1.2.0",
+    "vitest": "^3.2.7"
   }
 }

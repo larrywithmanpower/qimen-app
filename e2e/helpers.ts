@@ -1,6 +1,7 @@
 import type { Page } from 'playwright/test';
 
-export const APP_BASE = '/qimen-app/';
+// 奇門舊畫面改走 #/qimen，首頁換成命理 App
+export const APP_BASE = '/qimen-app/#/qimen';
 
 // 長度 > 50 chars，符合 GeminiResponseSchema z.string().min(50) 驗證
 export const MOCK_AI_RESPONSE =

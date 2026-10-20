@@ -6,6 +6,7 @@ const testPort = isCI ? 4173 : 5174;
 
 export default defineConfig({
   testDir: './e2e',
+  testIgnore: 'mingli/**',
   fullyParallel: true,
   forbidOnly: isCI,
   retries: isCI ? 2 : 0,

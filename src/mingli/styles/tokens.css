@@ -1,0 +1,117 @@
+/* 命理 App 設計 token：整個 src/mingli 只有這個檔案可以寫色碼
+   來源：jarvis docs/drafts/mingli-app/design-system/tokens.json＋動態版 demo 的半透明與特效色 */
+:root {
+  /* 底色與表面 */
+  --ml-ground: #111014;
+  --ml-ground-deep: #0B0A0D;
+  --ml-surface: #1C1A1F;
+  --ml-surface-glass: rgba(24, 23, 27, .72);
+  --ml-surface-sunk: #141317;
+  --ml-surface-chart: #17151B;
+  --ml-nav: #15141A;
+  --ml-nav-glass: rgba(11, 10, 13, .72);
+  --ml-veil: rgba(11, 10, 13, .5);
+  --ml-line: #2E2B30;
+  --ml-line-strong: #6E675A;
+  --ml-line-soft: rgba(110, 103, 90, .35);
+  --ml-track: #2A2730;
+
+  /* 文字 */
+  --ml-ink: #EDE6D6;
+  --ml-ink-body: #DDD5C3;
+  --ml-ink-soft: #C9C1AF;
+  --ml-ink-muted: #A69E8C;
+  --ml-ink-faint: #8F887A;
+  --ml-shadow-text: rgba(0, 0, 0, .7);
+
+  /* 語意色 */
+  --ml-jade: #8FC9A8;
+  --ml-paper: #E9E1CF;
+  --ml-paper-soft: rgba(233, 225, 207, .08);
+  --ml-paper-glow: rgba(233, 225, 207, .25);
+  --ml-on-paper: #141317;
+  --ml-cinnabar: #C23B2A;
+  --ml-cinnabar-soft: rgba(194, 59, 42, .10);
+  --ml-cinnabar-line: rgba(194, 59, 42, .45);
+  --ml-cinnabar-text: #E7B3A8;
+  --ml-seal-ink: #F6EEDC;
+  --ml-seal-rim: rgba(246, 238, 220, .2);
+  --ml-silver: #C9D3E6;
+  --ml-silver-soft: rgba(201, 211, 230, .10);
+  --ml-silver-line: rgba(201, 211, 230, .25);
+  --ml-star: #9FB4E8;
+  --ml-star-line: rgba(159, 180, 232, .35);
+  --ml-night-blue: #0E1022;
+  --ml-night-glass: rgba(14, 16, 34, .78);
+  --ml-ink-glass: rgba(20, 19, 23, .82);
+
+  /* 塔羅牌面（金色只用在牌框細線） */
+  --ml-frame-gold: #C8A85A;
+  --ml-frame-gold-dim: rgba(200, 168, 90, .6);
+  --ml-frame-gold-faint: rgba(200, 168, 90, .35);
+  --ml-frame-gold-strong: rgba(200, 168, 90, .8);
+  --ml-card-back-hi: #1B2140;
+  --ml-card-face-a: #1A1F36;
+  --ml-card-face-b: #0D0F1E;
+  --ml-card-face-c: #121527;
+  --ml-card-motif: #D9E0EE;
+  --ml-card-sub: #A9B2C6;
+  --ml-foil-hi: rgba(225, 232, 250, .32);
+  --ml-foil-blue: rgba(159, 180, 232, .20);
+  --ml-foil-white: rgba(255, 255, 255, .16);
+  --ml-foil-violet: rgba(201, 160, 220, .16);
+  --ml-card-shadow: rgba(0, 0, 0, .55);
+  --ml-card-glow: rgba(159, 180, 232, .12);
+
+  /* 字體 */
+  --ml-font-serif: "Noto Serif TC", "Songti TC", serif;
+  --ml-font-sans: "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+  --ml-font-west: "Cormorant Garamond", "Times New Roman", serif;
+
+  /* 字級（rem，跟著使用者字體大小放大） */
+  --ml-fs-display: 2.75rem;
+  --ml-fs-title: 1.75rem;
+  --ml-fs-heading: 1.25rem;
+  --ml-fs-card-title: 1.125rem;
+  --ml-fs-body: 1rem;
+  --ml-fs-body-sm: .875rem;
+  --ml-fs-label: .8125rem;
+  --ml-fs-caption: .75rem;
+  --ml-fs-tab: .6875rem;
+
+  /* 間距 */
+  --ml-space-1: 4px;
+  --ml-space-2: 8px;
+  --ml-space-3: 12px;
+  --ml-space-4: 16px;
+  --ml-gutter: 22px;
+  --ml-space-6: 32px;
+
+  /* 圓角 */
+  --ml-radius-tag: 8px;
+  --ml-radius-control: 14px;
+  --ml-radius-card: 18px;
+  --ml-radius-pill: 999px;
+
+  /* iPhone 安全區域；測試可用 --ml-safe-bottom 覆寫 */
+  --ml-safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  /* 著色器用的主色（0～1 的 RGB，由 Background 讀進 WebGL） */
+  --ml-gl-paper: .91 .88 .81;
+  --ml-gl-ink: .043 .040 .052;
+  --ml-gl-sky: .02 .025 .06;
+  --ml-gl-sky-hi: .10 .08 .24;
+  --ml-gl-star: .75 .82 1;
+}
+
+/* 各頁強調色：首頁與東方頁用宣紙白，塔羅用月光銀 */
+[data-ml-realm="home"], [data-ml-realm="east"] {
+  --ml-accent: var(--ml-paper);
+  --ml-on-accent: var(--ml-on-paper);
+  --ml-accent-soft: var(--ml-paper-soft);
+}
+[data-ml-realm="west"] {
+  --ml-accent: var(--ml-silver);
+  --ml-on-accent: var(--ml-night-blue);
+  --ml-accent-soft: var(--ml-silver-soft);
+}
