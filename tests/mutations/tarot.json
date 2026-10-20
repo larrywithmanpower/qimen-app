@@ -1,0 +1,5 @@
+[
+  { "id": "T1", "desc": "逆位機率 0.35 改 0.5", "file": "src/mingli/tarot/engine.ts", "find": "REVERSED_RATE = 0.35", "replace": "REVERSED_RATE = 0.5", "test": "src/mingli/tarot" },
+  { "id": "T2", "desc": "洗牌改用 Math.random", "file": "src/mingli/tarot/engine.ts", "find": "const j = Math.floor(r() * (k + 1))", "replace": "const j = Math.floor(Math.random() * (k + 1))", "test": "src/mingli/tarot" },
+  { "id": "T3", "desc": "交換 drawThree 的位置順序", "file": "src/mingli/tarot/engine.ts", "find": "return [one(picks[0]), one(picks[1]), one(picks[2])]", "replace": "return [one(picks[2]), one(picks[1]), one(picks[0])]", "test": "src/mingli/tarot" }
+]
