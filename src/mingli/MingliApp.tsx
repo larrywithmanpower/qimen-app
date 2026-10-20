@@ -18,9 +18,10 @@ const TABS = [
   { path: '/me', label: '我的', icon: 'M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM5 20c0-4 3-6 7-6s7 2 7 6' },
 ] as const
 
-// 首頁分頁在首頁與三個算法頁都亮
-const tabOf = (path: string) => (['/records', '/accuracy', '/me'].includes(path) ? path : '/')
-const isMethodPage = (path: string) => ['/tarot', '/meihua', '/ziwei'].includes(path)
+// 紫微頁跟「我的」是同一頁，亮「我的」；塔羅、梅花亮首頁
+const tabOf = (path: string) => (path === '/ziwei' ? '/me' : ['/records', '/accuracy', '/me'].includes(path) ? path : '/')
+// 塔羅、梅花右上角放回首頁鈕；紫微照設計稿放日期
+const isMethodPage = (path: string) => ['/tarot', '/meihua'].includes(path)
 
 function today() {
   const d = new Date()
@@ -32,7 +33,8 @@ export default function MingliApp() {
   const realm = useRealm()
   const active = tabOf(route.path)
 
-  useEffect(() => window.scrollTo(0, 0), [route.hash])
+  // effect 不可有回傳值：新版 Chrome 的 scrollTo 會回傳 Promise，被 React 當成 cleanup 會整棵卸掉
+  useEffect(() => { window.scrollTo(0, 0) }, [route.hash])
 
   let page
   switch (route.path) {

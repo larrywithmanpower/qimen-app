@@ -19,5 +19,12 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // effect 的箭頭函式不加大括號會把回傳值當 cleanup（例如新版 Chrome 的 scrollTo 回傳 Promise → 整棵卸掉白屏）
+      'no-restricted-syntax': ['error', {
+        selector: "CallExpression[callee.name=/^use(Layout|Insertion)?Effect$/] > ArrowFunctionExpression[expression=true]",
+        message: 'useEffect 的箭頭函式要加大括號，不可直接回傳值',
+      }],
+    },
   },
 ])

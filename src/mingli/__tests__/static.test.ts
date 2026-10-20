@@ -73,3 +73,16 @@ describe('class 名稱帶 ml- 前綴', () => {
     expect(bad).toEqual([]);
   });
 });
+
+describe('effect 不可有回傳值', () => {
+  it('useEffect／useLayoutEffect 的箭頭函式都有大括號', () => {
+    const bad: string[] = [];
+    for (const f of files.filter(f => /\.tsx?$/.test(f))) {
+      const src = readFileSync(f, 'utf8');
+      for (const m of src.matchAll(/use(?:Layout|Insertion)?Effect\(\s*(?:async\s*)?\([^)]*\)\s*=>(?!\s*\{)/g)) {
+        bad.push(`${rel(f)}:${src.slice(0, m.index).split('\n').length}`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+});

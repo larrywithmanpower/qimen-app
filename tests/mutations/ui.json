@@ -1,0 +1,4 @@
+[
+ { "id": "U1", "desc": "useEffect 改回不加大括號（新版 Chrome 白屏）— 靜態檢查", "file": "src/mingli/MingliApp.tsx", "find": "useEffect(() => { window.scrollTo(0, 0) }, [route.hash])", "replace": "useEffect(() => window.scrollTo(0, 0), [route.hash])", "test": "src/mingli/__tests__" },
+ { "id": "U2", "desc": "useEffect 改回不加大括號（新版 Chrome 白屏）— 模擬新版 Chrome 畫面測試", "file": "src/mingli/MingliApp.tsx", "find": "useEffect(() => { window.scrollTo(0, 0) }, [route.hash])", "replace": "useEffect(() => window.scrollTo(0, 0), [route.hash])", "test": "e2e/mingli/modern-chrome.spec.ts", "runner": "playwright" }
+]

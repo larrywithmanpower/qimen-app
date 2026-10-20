@@ -1,4 +1,17 @@
+import { test as base, expect } from 'playwright/test';
 import type { Page } from 'playwright/test';
+
+// 所有命理畫面測試共用：頁面 console 出現 error 或 pageerror 就判失敗
+export const test = base.extend<{ consoleGuard: void }>({
+  consoleGuard: [async ({ page }, use) => {
+    const errors: string[] = [];
+    page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+    page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
+    await use();
+    expect(errors, '頁面 console 不可有 error').toEqual([]);
+  }, { auto: true }],
+});
+export { expect };
 
 // 命理 App 畫面共用檢查：橫向捲動、文字重疊／裁切、點擊區大小、安全區域
 

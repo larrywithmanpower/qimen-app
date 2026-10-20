@@ -1,4 +1,4 @@
-import { test, expect } from 'playwright/test'
+import { test, expect } from './checks'
 import type { Page } from 'playwright/test'
 import { mkdirSync } from 'node:fs'
 import { BASE, SIZES, checkLayout, prepare } from './checks'

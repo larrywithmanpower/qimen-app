@@ -1,4 +1,4 @@
-import { test, expect } from 'playwright/test'
+import { test, expect } from './checks'
 import { BASE } from './checks'
 
 // 背景動畫效能：手機寬 390、CPU 降速 4 倍，量 5 秒內背景實際畫了幾格
