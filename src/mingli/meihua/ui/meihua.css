@@ -1,0 +1,121 @@
+/* 梅花易數頁（東方：墨、宣紙白、朱砂）。顏色一律走 tokens */
+.ml-meihua { gap: 22px; padding-top: var(--ml-space-2); }
+.ml-mboard { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.ml-mhead { display: flex; flex-direction: column; gap: 6px; }
+.ml-mh-sub { font-family: var(--ml-font-serif); font-weight: 700; font-size: var(--ml-fs-body-sm); letter-spacing: .08em; color: var(--ml-cinnabar); }
+.ml-mh-question { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-heading); font-weight: 700; letter-spacing: .04em; line-height: 1.45; }
+
+/* 起卦方式膠囊 */
+.ml-how { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--ml-space-2); }
+.ml-chip {
+  min-height: 44px; min-width: 44px; padding: 0 18px; border-radius: var(--ml-radius-pill);
+  border: 1px solid var(--ml-line-strong); background: var(--ml-veil); color: var(--ml-ink-muted);
+  font: inherit; font-size: var(--ml-fs-body-sm); cursor: pointer;
+}
+.ml-chip[aria-pressed="true"] { border-color: var(--ml-paper); background: var(--ml-paper-soft); color: var(--ml-paper); font-weight: 700; }
+
+/* 報數輸入 */
+.ml-nums { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ml-space-3); max-width: 420px; width: 100%; margin: 0 auto; }
+.ml-num { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ml-num-k { font-size: var(--ml-fs-label); color: var(--ml-ink-muted); letter-spacing: .1em; }
+.ml-num input {
+  display: block; width: 100%; min-height: 48px; padding: 0 var(--ml-space-3); box-sizing: border-box;
+  border: 1px solid var(--ml-line-strong); border-radius: var(--ml-radius-control); background: var(--ml-veil);
+  color: var(--ml-ink); font-family: var(--ml-font-serif); font-size: var(--ml-fs-heading);
+}
+.ml-num input::placeholder { color: var(--ml-ink-faint); font-size: var(--ml-fs-body-sm); }
+.ml-num-msg { grid-column: 1 / -1; margin: 0; font-size: var(--ml-fs-label); color: var(--ml-cinnabar-text); }
+
+/* 卦象與右側資訊 */
+.ml-hexwrap { display: grid; grid-template-columns: 42% minmax(0, 1fr); gap: 14px; align-items: center; padding-block: var(--ml-space-2); }
+.ml-hex { min-width: 0; }
+.ml-hex svg { width: 100%; height: auto; display: block; overflow: visible; }
+.ml-yao { fill: none; stroke: var(--ml-paper); stroke-width: 15; stroke-linecap: round; filter: url(#ml-brush); stroke-dasharray: 260; stroke-dashoffset: 260; }
+.ml-yao.ml-moving { stroke: var(--ml-cinnabar); }
+.ml-yao.ml-draw { animation: ml-stroke .7s cubic-bezier(.5, 0, .2, 1) forwards; }
+@keyframes ml-stroke { to { stroke-dashoffset: 0; } }
+.ml-yao-ghost { fill: none; stroke: var(--ml-line-soft); stroke-width: 6; stroke-linecap: round; stroke-dasharray: 2 16; }
+
+.ml-gua { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ml-gua-hint { margin: 0; font-size: var(--ml-fs-body-sm); line-height: 1.8; color: var(--ml-ink-muted); }
+.ml-gua-row { display: flex; align-items: center; gap: var(--ml-space-3); opacity: 0; transform: translateY(6px); transition: opacity .8s, transform .8s; }
+.ml-gua-row[data-on="true"] { opacity: 1; transform: none; }
+.ml-gua-k { flex: 0 0 3em; font-size: var(--ml-fs-label); color: var(--ml-ink-muted); letter-spacing: .1em; }
+.ml-gua-v { min-width: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 900; letter-spacing: .08em; line-height: 1.35; }
+.ml-gua-v-mid { font-size: var(--ml-fs-body); }
+.ml-gua-v-sm { font-size: var(--ml-fs-body-sm); letter-spacing: .04em; }
+.ml-seal {
+  display: inline-grid; place-items: center; width: 54px; height: 54px; border-radius: 6px;
+  background: var(--ml-cinnabar); color: var(--ml-seal-ink); box-shadow: inset 0 0 0 3px var(--ml-seal-rim);
+  font-family: var(--ml-font-serif); font-weight: 900; font-size: var(--ml-fs-title); filter: url(#ml-rough); transform: rotate(-5deg);
+}
+.ml-gua-row .ml-seal { opacity: 0; }
+.ml-gua-row[data-on="true"] .ml-seal { animation: ml-stamp .55s cubic-bezier(.3, 1.6, .5, 1) forwards; }
+@keyframes ml-stamp { from { opacity: 0; transform: rotate(-5deg) scale(1.9); } to { opacity: 1; transform: rotate(-5deg) scale(1); } }
+.ml-seal-sm { width: 44px; height: 44px; font-size: var(--ml-fs-heading); flex: 0 0 auto; }
+
+.ml-cast-info { margin: 0; text-align: center; font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); letter-spacing: .06em; }
+.ml-mtools { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--ml-space-3); }
+.ml-cta {
+  min-height: 54px; padding: 0 36px; border-radius: var(--ml-radius-pill); border: 1px solid var(--ml-paper); background: var(--ml-veil);
+  color: var(--ml-paper); font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 900; letter-spacing: .4em;
+  cursor: pointer;
+}
+.ml-cta:disabled { opacity: .4; cursor: not-allowed; }
+
+/* 解讀 */
+.ml-mreading { display: flex; flex-direction: column; gap: var(--ml-space-4); max-width: 680px; width: 100%; margin: 0 auto; min-width: 0; }
+.ml-back-hex { align-self: flex-start; }
+.ml-read-head { display: flex; align-items: center; gap: var(--ml-space-4); }
+.ml-minihex { flex: 0 0 56px; width: 56px; height: auto; }
+.ml-minihex-line { fill: none; stroke: var(--ml-paper); stroke-width: 4; stroke-linecap: round; }
+.ml-minihex-line.ml-moving { stroke: var(--ml-cinnabar); }
+.ml-read-head-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ml-read-gua { font-size: var(--ml-fs-label); color: var(--ml-cinnabar-text); letter-spacing: .06em; }
+.ml-read-q { font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 700; line-height: 1.4; }
+.ml-mverdict {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--ml-space-3);
+  padding: 20px 22px; border-radius: var(--ml-radius-card); border: 1px solid var(--ml-accent);
+  background: var(--ml-ink-glass); backdrop-filter: blur(8px);
+}
+.ml-mverdict-k { font-size: var(--ml-fs-caption); letter-spacing: .3em; color: var(--ml-accent); }
+.ml-mverdict-v { margin-top: 6px; font-family: var(--ml-font-serif); font-size: var(--ml-fs-heading); font-weight: 900; letter-spacing: .06em; line-height: 1.5; }
+.ml-mparas { display: flex; flex-direction: column; gap: var(--ml-space-4); }
+.ml-mpara { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ml-space-2); padding: 0 var(--ml-space-1) 14px; border-bottom: 1px solid var(--ml-line); animation: ml-view-in .8s both; }
+.ml-mpara-title { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 700; }
+.ml-mpara-text { margin: 0; font-size: var(--ml-fs-body); line-height: 1.85; color: var(--ml-ink-body); }
+.ml-mbasis {
+  display: inline-block; padding: 3px 10px; border-radius: var(--ml-radius-tag); border: 1px solid var(--ml-cinnabar-line);
+  background: var(--ml-cinnabar-soft); color: var(--ml-cinnabar-text); font-size: var(--ml-fs-caption);
+}
+.ml-mnote { margin: 0; font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); }
+
+/* 手機：解讀是另一個畫面，卦象收起來，用「返回卦象」回去 */
+@media (max-width: 719px) {
+  .ml-meihua[data-read="true"] .ml-mboard { display: none; }
+}
+
+/* 平板以上：卦象與解讀同頁，不需要返回鈕與小卦象 */
+@media (min-width: 720px) {
+  .ml-mboard { max-width: 720px; width: 100%; margin: 0 auto; }
+  .ml-mhead { align-items: center; text-align: center; }
+  .ml-hexwrap { grid-template-columns: 260px minmax(0, 1fr); gap: var(--ml-space-6); max-width: 620px; margin: 0 auto; width: 100%; }
+  .ml-gua-v { font-size: var(--ml-fs-heading); }
+  .ml-gua-v-mid { font-size: var(--ml-fs-card-title); }
+  .ml-gua-v-sm { font-size: var(--ml-fs-body); }
+  .ml-back-hex, .ml-read-head { display: none; }
+  .ml-mreading { max-width: none; }
+  .ml-mparas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ml-space-6); align-items: start; }
+}
+
+/* 電腦：左卦象右解讀 */
+@media (min-width: 1100px) {
+  .ml-meihua[data-read="true"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--ml-space-6); align-items: center; }
+  .ml-meihua[data-read="true"] .ml-mboard { margin: 0; max-width: none; }
+  .ml-meihua[data-read="true"] .ml-mhead { align-items: flex-start; text-align: left; }
+  .ml-meihua[data-read="true"] .ml-how, .ml-meihua[data-read="true"] .ml-mtools { justify-content: flex-start; }
+  .ml-meihua[data-read="true"] .ml-hexwrap { margin: 0; }
+  .ml-meihua[data-read="true"] .ml-cast-info { text-align: left; }
+  .ml-meihua[data-read="true"] .ml-mreading { margin: 0; max-width: 560px; }
+  .ml-meihua[data-read="true"] .ml-mparas { display: flex; flex-direction: column; gap: var(--ml-space-4); }
+}

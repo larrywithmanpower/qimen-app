@@ -25,6 +25,26 @@ export const PAGES: { name: string; hash: string; step?: Step }[] = [
   { name: 'home', hash: '#/' },
   { name: 'tarot-draw', hash: '#/tarot?seed=4271' },
   { name: 'tarot-read', hash: '#/tarot?seed=4271', step: drawThree },
+  { name: 'meihua-cast', hash: '#/meihua?t=2024-03-15T23:30', step: async (page) => {
+    await page.getByTestId('ml-cast').click()
+    await expect(page.getByTestId('ml-to-reading')).toBeVisible({ timeout: 10_000 })
+  } },
+  { name: 'meihua-read', hash: '#/meihua?t=2024-03-15T23:30', step: async (page) => {
+    await page.getByTestId('ml-cast').click()
+    await page.getByTestId('ml-to-reading').click()
+    await expect(page.getByTestId('ml-reading')).toBeVisible({ timeout: 10_000 })
+  } },
+  { name: 'ziwei-input', hash: '#/ziwei', step: async (page) => {
+    await page.evaluate(() => new Promise((done) => {
+      const q = indexedDB.deleteDatabase('keyval-store')
+      q.onsuccess = q.onerror = q.onblocked = () => done(null)
+    }))
+    await page.reload()
+    await expect(page.getByTestId('ml-birth-form')).toBeVisible()
+  } },
+  { name: 'ziwei-chart', hash: '#/ziwei?d=1990-07-05&t=4&g=男', step: async (page) => {
+    await expect(page.getByTestId('ml-chart')).toBeVisible()
+  } },
 ]
 
 const wanted = (process.env.SHOTS ?? '').split(',')

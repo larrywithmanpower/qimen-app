@@ -4,10 +4,12 @@ import './ui/ui.css'
 import Background from './ui/Background'
 import { Bagua, BrushFilters } from './ui/Bagua'
 import Home from './ui/Home'
-import { PlaceholderPage, SoonPage } from './ui/Pages'
+import { SoonPage } from './ui/Pages'
 import { useRealm } from './ui/fx'
 import { useRoute } from './ui/route'
 import TarotPage from './tarot/TarotPage'
+import MeihuaPage from './meihua/ui/MeihuaPage'
+import ZiweiPage from './ziwei/ui/ZiweiPage'
 
 const TABS = [
   { path: '/', label: '首頁', icon: 'M4 11l8-7 8 7M6 10v9h12v-9M10 19v-5h4v5' },
@@ -38,10 +40,10 @@ export default function MingliApp() {
       page = <TarotPage seedParam={route.params.get('seed')} />
       break
     case '/meihua':
-      page = <PlaceholderPage testid="ml-meihua" title="梅花易數" line="這一頁下一批開放。" showQuestion />
+      page = <MeihuaPage params={route.params} />
       break
     case '/ziwei':
-      page = <PlaceholderPage testid="ml-ziwei" title="紫微斗數" line="這一頁下一批開放。" showQuestion />
+      page = <ZiweiPage params={route.params} />
       break
     case '/records':
       page = <SoonPage testid="ml-records" title="紀錄" line="問過的事和當時的判斷，會收在這裡。" />
@@ -50,7 +52,7 @@ export default function MingliApp() {
       page = <SoonPage testid="ml-accuracy" title="準度" line="對答案之後，這裡會算出每種算法準不準。" />
       break
     case '/me':
-      page = <PlaceholderPage testid="ml-me" title="我的" line="生辰與設定，下一批開放。" />
+      page = <ZiweiPage params={route.params} testid="ml-me" />
       break
     default:
       page = <Home />

@@ -47,6 +47,19 @@ describe('class 名稱帶 ml- 前綴', () => {
     expect(bad).toEqual([]);
   });
 
+  it('同一個 class 只在一個 CSS 檔裡定義（防不同元件撞名）', () => {
+    const owner = new Map<string, Set<string>>()
+    for (const f of files.filter(f => f.endsWith('.css'))) {
+      const selectors = readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\{[^{}]*\}/g, '\n')
+      for (const m of selectors.matchAll(/\.(ml-[\w-]+)/g)) {
+        if (!owner.has(m[1])) owner.set(m[1], new Set())
+        owner.get(m[1])!.add(rel(f))
+      }
+    }
+    const dup = [...owner].filter(([, fs]) => fs.size > 1).map(([c, fs]) => `${c}: ${[...fs].join(', ')}`)
+    expect(dup).toEqual([])
+  })
+
   it('TSX／TS 裡的 className 都以 ml- 開頭', () => {
     const bad: string[] = [];
     for (const f of files.filter(f => /\.tsx?$/.test(f))) {

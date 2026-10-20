@@ -99,6 +99,7 @@ body:has(.ml-app) {
   border-radius: var(--ml-radius-pill); border: 1px solid var(--ml-line-strong); background: var(--ml-veil);
   color: var(--ml-ink); font: inherit; font-size: var(--ml-fs-body-sm); cursor: pointer;
 }
+.ml-ghost:disabled { opacity: .4; cursor: not-allowed; }
 .ml-soon-pill {
   display: inline-flex; align-items: center; padding: var(--ml-space-1) var(--ml-space-3);
   border-radius: var(--ml-radius-pill); border: 1px dashed var(--ml-line-strong);
