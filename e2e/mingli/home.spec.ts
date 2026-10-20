@@ -37,3 +37,40 @@ test('背景有在畫格', async ({ page }) => {
   const a = await page.evaluate(() => window.__mlFrames ?? 0)
   await expect.poll(() => page.evaluate(() => window.__mlFrames ?? 0)).toBeGreaterThan(a)
 })
+
+test('減少動態：標題立刻完整清楚', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.reload()
+  await expect(page.getByTestId('ml-home')).toBeVisible()
+  await page.waitForTimeout(200)
+  const states = await page.locator('.ml-home-title-seg span').evaluateAll((els) =>
+    els.map((e) => ({ o: getComputedStyle(e).opacity, f: getComputedStyle(e).filter })))
+  expect(states).toHaveLength(8)
+  states.forEach((s) => {
+    expect(s.o).toBe('1')
+    expect(['none', 'blur(0px)']).toContain(s.f)
+  })
+})
+
+test('標題兩段各自不換行', async ({ page }) => {
+  const tops = await page.locator('.ml-home-title-seg').evaluateAll((els) => els.map((e) => e.getClientRects().length))
+  expect(tops).toEqual([1, 1])
+})
+
+for (const size of [{ width: 390, height: 844 }, { width: 820, height: 1180 }]) {
+  test(`${size.width}×${size.height} 不捲動就看得到開始鈕`, async ({ page }) => {
+    await page.setViewportSize(size)
+    await page.reload()
+    await expect(page.getByTestId('ml-home')).toBeVisible()
+    await page.waitForTimeout(300)
+    const r = await page.evaluate(() => {
+      const b = document.querySelector('[data-testid="ml-start"]')!.getBoundingClientRect()
+      const bar = document.querySelector('.ml-tabbar')!
+      const barTop = getComputedStyle(bar).display === 'none' ? innerHeight : bar.getBoundingClientRect().top
+      return { top: b.top, bottom: b.bottom, barTop, vh: innerHeight }
+    })
+    expect(r.top).toBeGreaterThanOrEqual(0)
+    expect(r.bottom).toBeLessThanOrEqual(r.vh)
+    expect(r.bottom).toBeLessThanOrEqual(r.barTop)
+  })
+}

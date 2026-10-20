@@ -3,7 +3,8 @@ import { burstAt, expandTaiji, prefersReduced, setRealm, setTaijiSide } from './
 import { goTo } from './route'
 import { SAMPLE_QUESTION, session, type Method } from './session'
 
-const TITLE = '心裡有事，就問。'
+const TITLE_SEGS = ['心裡有事，', '就問。']
+const TITLE = TITLE_SEGS.join('')
 
 const METHODS: { id: Method; tag: string; name: string; sub: string }[] = [
   { id: 'tarot', tag: 'Tarot', name: '塔羅', sub: '看清自己現在的心' },
@@ -43,8 +44,13 @@ export default function Home() {
   return (
     <section className="ml-view ml-home" data-testid="ml-home">
       <h1 className="ml-home-title" aria-label={TITLE}>
-        {[...TITLE].map((ch, i) => (
-          <span key={i} aria-hidden="true" style={{ animationDelay: `${0.15 + i * 0.12}s` }}>{ch}</span>
+        {TITLE_SEGS.map((seg, si) => (
+          <span key={si} className="ml-home-title-seg" aria-hidden="true">
+            {[...seg].map((ch, i) => {
+              const n = TITLE_SEGS.slice(0, si).join('').length + i
+              return <span key={i} style={{ animationDelay: `${0.15 + n * 0.12}s` }}>{ch}</span>
+            })}
+          </span>
         ))}
       </h1>
       <p className="ml-home-lead">寫下一件具體的事，選一種算法。每次解讀都附上依據，並留一句之後能對答案的判斷。</p>

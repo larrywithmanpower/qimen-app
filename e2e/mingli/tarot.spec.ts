@@ -85,3 +85,16 @@ test('抽牌中與解讀後版面檢查沒有問題', async ({ page }) => {
   await page.waitForTimeout(1500)
   expect(await checkLayout(page)).toEqual([])
 })
+
+test('解讀範例標示捲到底看得到，不被分頁列蓋住', async ({ page }) => {
+  await open(page)
+  await pickAll(page)
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+  await page.waitForTimeout(300)
+  const gap = await page.evaluate(() => {
+    const note = document.querySelector('.ml-note')!.getBoundingClientRect()
+    const bar = document.querySelector('.ml-tabbar')!.getBoundingClientRect()
+    return bar.top - note.bottom
+  })
+  expect(gap).toBeGreaterThanOrEqual(0)
+})

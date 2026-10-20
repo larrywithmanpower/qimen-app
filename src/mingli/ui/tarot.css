@@ -86,6 +86,18 @@
 }
 .ml-note { margin: 0; font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); }
 
+/* 手機：牌堆往下延伸到分頁列後面，只露出上半截 */
+@media (max-width: 719px) {
+  .ml-tarot { --ml-bar: calc(56px + var(--ml-safe-bottom)); }
+  .ml-tarot[data-read="false"] .ml-tarot-board { flex: 1 1 auto; }
+  .ml-tarot-board .ml-fan {
+    margin-top: auto;
+    height: calc(var(--ml-cw) * 2.9 + var(--ml-bar) - 23px);
+    margin-bottom: calc(-1 * (var(--ml-space-6) + var(--ml-bar)));
+  }
+  .ml-tarot-board .ml-fan-card { bottom: calc(var(--ml-bar) - 23px); }
+}
+
 /* 手機抽完：三張牌縮成一排，問題放右邊，解讀緊接在下 */
 @media (max-width: 719px) {
   .ml-tarot[data-read="true"] .ml-tarot-board {

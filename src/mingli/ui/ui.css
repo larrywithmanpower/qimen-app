@@ -106,13 +106,16 @@ body:has(.ml-app) {
 }
 
 /* 首頁 */
-.ml-home { justify-content: flex-end; gap: 28px; padding-block: 6vh var(--ml-space-4); }
+.ml-home { justify-content: flex-start; gap: 14px; padding-block: 178px var(--ml-space-4); }
+.ml-home .ml-home-ask { gap: 14px; }
+.ml-home .ml-method { min-height: 80px; padding-block: var(--ml-space-3); gap: 4px; }
 .ml-home-title {
   margin: 0; font-family: var(--ml-font-serif); font-weight: 900;
   font-size: clamp(var(--ml-fs-display), 11vw, 6rem); line-height: 1.12; letter-spacing: .08em; text-wrap: balance;
   text-shadow: 0 2px 24px var(--ml-shadow-text);
 }
-.ml-home-title span { display: inline-block; opacity: 0; filter: blur(14px); transform: translateY(8px); animation: ml-ink-in 1.6s cubic-bezier(.2,.7,.2,1) forwards; }
+.ml-home-title-seg { display: inline-block; white-space: nowrap; }
+.ml-home-title span span { display: inline-block; opacity: 0; filter: blur(14px); transform: translateY(8px); animation: ml-ink-in 1.6s cubic-bezier(.2,.7,.2,1) forwards; }
 @keyframes ml-ink-in { 60% { opacity: .9; filter: blur(2px); } to { opacity: 1; filter: blur(0); transform: none; } }
 .ml-home-lead { margin: 0; max-width: 34em; font-size: var(--ml-fs-body); line-height: 1.8; color: var(--ml-ink-muted); text-shadow: 0 1px 12px var(--ml-shadow-text); }
 .ml-home-ask { display: flex; flex-direction: column; gap: 18px; max-width: 640px; width: 100%; }
@@ -182,12 +185,13 @@ body:has(.ml-app) {
   .ml-tab:hover { color: var(--ml-ink); }
   .ml-tab[aria-current="page"] { color: var(--ml-ink); font-weight: 700; background: var(--ml-surface); border-color: var(--ml-line); }
   .ml-main { padding-inline: var(--ml-space-6); padding-bottom: var(--ml-space-6); }
-  .ml-method { min-height: 140px; }
+  .ml-home .ml-method { min-height: 140px; padding-block: var(--ml-space-4); gap: 6px; }
+  .ml-home .ml-home-ask { gap: 18px; }
   .ml-method[data-m="tarot"] { grid-column: auto; }
   .ml-home-methods { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .ml-home-soon { margin-left: auto; }
   .ml-home-soon .ml-soon-pill:last-child { display: inline-flex; }
-  .ml-home { gap: var(--ml-space-6); padding-block: 12vh var(--ml-space-6); }
+  .ml-home { justify-content: flex-end; gap: var(--ml-space-6); padding-block: 420px var(--ml-space-6); }
 }
 
 /* 電腦（含平板橫放）：左 brand＋文字分頁、右側日期或回首頁 */
@@ -200,7 +204,8 @@ body:has(.ml-app) {
 
 @media (prefers-reduced-motion: reduce) {
   .ml-app *, .ml-app *::before, .ml-app *::after {
-    animation-duration: .01ms; animation-iteration-count: 1; transition-duration: .01ms;
+    animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important;
   }
+  .ml-app *, .ml-app *::before, .ml-app *::after { animation-delay: 0s !important; transition-delay: 0s !important; }
   .ml-bagua svg { animation: none; }
 }

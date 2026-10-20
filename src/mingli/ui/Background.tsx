@@ -130,9 +130,21 @@ export default function Background() {
       fx.side += (fx.sideT - fx.side) * 0.05
       fx.ang += reduce ? 0.0004 : 0.0016
       fx.stir *= 0.94
-      // 太極位置：寬螢幕放右側，手機放右上角淡淡襯底
-      const wide = innerWidth >= 900
-      gl.uniform3f(u.tc, wide ? 0.78 : 0.84, wide ? 0.5 : 0.8, wide ? 0.31 : 0.38)
+      // 太極位置與大小（像素，照設計稿）：< 1100 置中在標題上方，≥ 1100 放右側置中
+      const w = innerWidth
+      const md = Math.min(w, innerHeight)
+      let cx: number, cy: number, dia: number
+      if (w >= 1100) {
+        dia = 0.536 * md
+        cx = 0.778 * w
+        cy = innerHeight / 2
+      } else {
+        const k = Math.min(Math.max((w - 390) / 430, 0), 1)
+        dia = 210 + k * 130
+        cx = w / 2
+        cy = 200 + k * 115
+      }
+      gl.uniform3f(u.tc, cx / w, 1 - cy / innerHeight, dia / 2 / md)
       gl.uniform2f(u.res, cv.width, cv.height)
       gl.uniform1f(u.time, t)
       gl.uniform2f(u.mouse, fx.mouse[0], fx.mouse[1])
