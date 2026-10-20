@@ -1,0 +1,34 @@
+[
+ {
+  "id": "Z1",
+  "desc": "dayDivide forward 改成 current",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "dayDivide: 'forward'",
+  "replace": "dayDivide: 'current'",
+  "test": "src/mingli/ziwei"
+ },
+ {
+  "id": "Z2",
+  "desc": "timeIndexOf 23 點改成 0",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "if (hour === 23) return 12",
+  "replace": "if (hour === 23) return 0",
+  "test": "src/mingli/ziwei"
+ },
+ {
+  "id": "Z3",
+  "desc": "fixLeap 改回 true（閏月後半月算下個月）",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "export const ZIWEI_FIX_LEAP = false",
+  "replace": "export const ZIWEI_FIX_LEAP = true",
+  "test": "src/mingli/ziwei"
+ },
+ {
+  "id": "Z4",
+  "desc": "答案檔案例 1 的紫微星由午改成未",
+  "file": "src/mingli/ziwei/__tests__/ziwei.fixtures.json",
+  "find": "陽男）\",\n   \"crossCheck\": \"元亨利貞網 紫微斗數在線排盤（china95.net/paipan/ziwei/，天盤）（一致）\"\n  },\n  \"answer\": {\n   \"soul\": \"寅\",\n   \"body\": \"戌\",\n   \"stars\": {\n    \"紫微\": \"午\"",
+  "replace": "陽男）\",\n   \"crossCheck\": \"元亨利貞網 紫微斗數在線排盤（china95.net/paipan/ziwei/，天盤）（一致）\"\n  },\n  \"answer\": {\n   \"soul\": \"寅\",\n   \"body\": \"戌\",\n   \"stars\": {\n    \"紫微\": \"未\"",
+  "test": "src/mingli/ziwei"
+ }
+]

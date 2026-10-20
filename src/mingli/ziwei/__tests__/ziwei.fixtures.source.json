@@ -1,0 +1,10 @@
+{
+ "site": "Windada 紫微斗數算命（fate.windada.com）",
+ "url": "https://fate.windada.com/cgi-bin/fate",
+ "queriedAt": "2026-10-20",
+ "notIztroCheck": "Windada 是 Perl CGI 伺服器端排盤：表單 POST 到 /cgi-bin/fate，回傳已算好的 HTML 命盤；用 javascript_tool 檢查整頁原始碼與 15 支 script 無任何 iztro 字樣，也無 iztro / astro 相關全域變數。交叉比對站元亨利貞網同為 ASP 伺服器端（POST ziwei.asp），原始碼亦無 iztro",
+ "lateZiHandling": "Windada 時辰選單逐小時列，23 時標為「子 23:00~23:59」，沒有晚子時選項；實測 23 點後一律算當天（農曆日與日柱都不換，時柱取當天子時，如 1995-03-15 23 時 → 乙巳日丙子時）。案例 5/6/7 另附 altNextDay（同站查隔天 00 時）供 App 採隔天制時使用",
+ "inputMethod": "國曆、輸入整點時（時辰選單只到小時，分鐘未輸入）；網站無地點與真太陽時選項（真太陽時是另一個獨立查詢按鈕，未使用）",
+ "leapMonthHandling": "閏月一律依本月排（案例 29 閏6月23日、案例 18 閏8月8日仍以 6 月 / 8 月起命宮），元亨利貞網結果相同",
+ "parsing": "以 javascript_tool 抓回傳 HTML，依每宮「干支【宮名】」取地支、宮名含「命宮」「身宮」者定命身宮，主星取宮內星曜清單開頭名稱；每盤 12 宮、命宮與身宮各剛好 1 個、14 主星皆找到且無重複。案例 1 另以截圖人工核對"
+}
