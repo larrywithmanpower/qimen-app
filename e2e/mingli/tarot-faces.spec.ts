@@ -2,7 +2,7 @@ import { test, expect } from './checks'
 import { mkdirSync } from 'node:fs'
 import { BASE } from './checks'
 
-// 78 張牌面都畫得出來：在 App 裡把 78 張 faceSVG 排成一頁截圖存檔，並檢查每張都有圖騰線條
+// 78 張牌面圖都載入得到：在 App 裡把 78 張 faceSrc 的 img 排成一頁截圖存檔，並檢查每張都載入成功
 test('78 張牌面截圖存檔', async ({ page }) => {
   await page.setViewportSize({ width: 1200, height: 1100 })
   await page.goto(BASE + '#/tarot?seed=4271')
@@ -11,19 +11,18 @@ test('78 張牌面截圖存檔', async ({ page }) => {
     const mod = await import('/qimen-app/src/mingli/tarot/cardArt.ts')
     const grid = document.createElement('div')
     grid.style.cssText = 'position:fixed;inset:0;z-index:99;display:grid;grid-template-columns:repeat(13,1fr);gap:6px;padding:8px;background:var(--ml-ground)'
+    const imgs: HTMLImageElement[] = []
     for (let i = 0; i < 78; i++) {
-      const card = document.createElement('div')
-      card.className = 'ml-face'
-      card.style.cssText = 'position:relative;aspect-ratio:5/8;transform:none;backface-visibility:visible'
-      card.innerHTML = mod.faceSVG(i)
-      grid.append(card)
+      const img = document.createElement('img')
+      img.style.cssText = 'width:100%;aspect-ratio:5/8;object-fit:cover;display:block'
+      img.src = mod.faceSrc(i)
+      imgs.push(img)
+      grid.append(img)
     }
     document.body.append(grid)
-    // 每張牌面的圖騰都要有實際畫出的圖形（外框不為 0）
-    return [...grid.children].filter(c => {
-      const shapes = [...c.querySelectorAll('path, circle, line, rect, polygon, polyline, ellipse')]
-      return shapes.some(s => { const b = (s as SVGGraphicsElement).getBBox(); return b.width > 0 || b.height > 0 })
-    }).length
+    // 等每張載入完成（成功或失敗都放行，最後用 naturalWidth 判斷）
+    await Promise.all(imgs.map(img => img.decode().catch(() => undefined)))
+    return imgs.filter(img => img.complete && img.naturalWidth > 0).length
   })
   expect(count).toBe(78)
   mkdirSync('qa-reports/mingli-v2/tarot-faces', { recursive: true })

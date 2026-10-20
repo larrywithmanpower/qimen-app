@@ -28,11 +28,12 @@
   border: 1px solid var(--ml-frame-gold-dim);
   box-shadow: inset 0 0 0 4px var(--ml-night-blue), inset 0 0 0 5px var(--ml-frame-gold-faint);
 }
-.ml-cb svg, .ml-face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ml-cb img, .ml-face-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; border-radius: inherit; user-select: none; }
 .ml-face {
   transform: rotateY(180deg);
   background: linear-gradient(160deg, var(--ml-card-face-a), var(--ml-card-face-b) 62%, var(--ml-card-face-c));
   border: 1px solid var(--ml-frame-gold-strong);
+  container-type: inline-size;
 }
 .ml-face-art {
   position: absolute; inset: 0;
@@ -41,9 +42,32 @@
 }
 .ml-tcard.ml-revealed .ml-face-art { animation: ml-reveal 1.4s cubic-bezier(.2,.7,.2,1) forwards; }
 @keyframes ml-reveal { to { --ml-r: 160%; } }
-.ml-face-art.ml-rev svg { transform: rotate(180deg); }
+.ml-face-art.ml-rev { transform: rotate(180deg); }
+/* 牌名疊在插畫上：下緣漸層墊底讓字讀得清楚，字級依牌寬（cqw）換算 */
+.ml-face-art::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 42%; pointer-events: none;
+  background: linear-gradient(to top, var(--ml-night-glass), transparent);
+}
+.ml-fc-roman {
+  position: absolute; top: 4cqw; left: 0; right: 0; z-index: 1; text-align: center;
+  font-family: var(--ml-font-west); font-weight: 700; font-size: 10cqw; line-height: 1;
+  color: var(--ml-card-motif); text-shadow: 0 0 6px var(--ml-night-blue);
+}
+.ml-fc-text {
+  position: absolute; left: 4cqw; right: 4cqw; bottom: 4cqw; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; gap: 1.5cqw; text-align: center;
+}
+.ml-fc-zh {
+  font-family: var(--ml-font-serif); font-weight: 900; font-size: 14cqw; line-height: 1.1;
+  color: var(--ml-ink); text-shadow: 0 0 6px var(--ml-night-blue);
+}
+.ml-fc-en {
+  max-width: 100%; font-family: var(--ml-font-west); font-style: italic; font-size: 7.5cqw; line-height: 1.15;
+  color: var(--ml-card-sub);
+}
+/* 箔面反光：水墨插畫上太強會把米白洗成淡紫，只留一點 */
 .ml-face::after {
-  content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: .9;
+  content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: .35;
   background:
     radial-gradient(circle at var(--ml-mx, 50%) var(--ml-my, 30%), var(--ml-foil-hi), transparent 42%),
     linear-gradient(115deg, transparent 28%, var(--ml-foil-blue) 42%, var(--ml-foil-white) 50%, var(--ml-foil-violet) 58%, transparent 72%);

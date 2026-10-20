@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { readFileSync } from 'node:fs'
+import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import { CARDS } from '../cards'
 import {
   shuffle, drawThree, seedFrom, nextSeed, templateReading, REVERSED_RATE, SEED_RANGE,
 } from '../engine'
-import { faceSVG, motifSVG, backSVG } from '../cardArt'
+import { cardFile } from '../cardArt'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
@@ -109,27 +109,32 @@ describe('牌組資料', () => {
   })
 })
 
-describe('牌面 SVG', () => {
-  it('78 張 faceSVG 都含角標、中文名、英文名', () => {
-    expect(CARDS).toHaveLength(78)
+describe('牌面圖檔', () => {
+  it('78 個 cardFile 各不相同且格式正確', () => {
+    const files = CARDS.map((c) => cardFile(c.index))
+    expect(new Set(files).size).toBe(78)
+    for (const f of files) expect(f).toMatch(/^(major-\d{2}|(wands|cups|swords|pentacles)-(0[1-9]|1[0-4]))$/)
+  })
+
+  it('抽查對應正確，且小牌檔名花色跟 CARDS 的 suit 一致', () => {
+    expect(cardFile(0)).toBe('major-00')
+    expect(cardFile(21)).toBe('major-21')
+    expect(cardFile(22)).toBe('wands-01')
+    expect(cardFile(35)).toBe('wands-14')
+    expect(cardFile(36)).toBe('cups-01')
+    expect(cardFile(77)).toBe('pentacles-14')
     for (const c of CARDS) {
-      const svg = faceSVG(c.index)
-      expect(svg).toContain(`>${c.roman}<`)
-      expect(svg).toContain(`>${c.zh}<`)
-      expect(svg).toContain(`>${c.en}<`)
+      const f = cardFile(c.index)
+      if (c.suit === null) expect(f.startsWith('major-')).toBe(true)
+      else expect(f.startsWith(`${c.suit}-`)).toBe(true)
     }
   })
 
-  it('22 張大牌的圖騰字串兩兩不同', () => {
-    const motifs = CARDS.filter((c) => c.suit === null).map((c) => motifSVG(c.index))
-    expect(new Set(motifs).size).toBe(22)
-  })
-
-  it('SVG 內沒有寫死色碼', () => {
-    const all = CARDS.map((c) => faceSVG(c.index)).join('') + backSVG()
-    expect(all).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
-    expect(all).not.toMatch(/rgba?\(/)
-    expect(all).not.toMatch(/\b(fill|stroke)="(?!none)/)
+  it('public/mingli/tarot 下 78 張牌面與兩張牌背都存在', () => {
+    const dir = join(here, '../../../../public/mingli/tarot')
+    const names = [...CARDS.map((c) => cardFile(c.index)), 'back', 'back-sm']
+    const missing = names.filter((n) => !existsSync(join(dir, `${n}.webp`)))
+    expect(missing).toEqual([])
   })
 })
 

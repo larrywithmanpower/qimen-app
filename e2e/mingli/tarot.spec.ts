@@ -3,6 +3,7 @@ import type { Page } from 'playwright/test'
 import { BASE, checkLayout, prepare } from './checks'
 
 import { drawThree } from '../../src/mingli/tarot/engine'
+import { cardFile } from '../../src/mingli/tarot/cardArt'
 
 // 只在手機尺寸 390×844 跑
 test.use({ viewport: { width: 390, height: 844 } })
@@ -80,6 +81,22 @@ test('三個牌位的牌名等於引擎抽出的牌，重新整理後相同', as
   await expect(page.getByTestId('ml-tarot')).toBeVisible()
   await pickAll(page)
   expect(await slotNames(page)).toEqual(expected)
+})
+
+test('三個牌位的牌面圖檔對應抽出的牌且已載入，逆位才有 ml-rev', async ({ page }) => {
+  await open(page)
+  await pickAll(page)
+  const drawn = drawThree(SEED, PICKS)
+  const arts = page.locator('.ml-face-art')
+  await expect(arts).toHaveCount(3)
+  for (let k = 0; k < 3; k++) {
+    const art = arts.nth(k)
+    const img = art.locator('img')
+    await expect(img).toHaveAttribute('src', new RegExp(`${cardFile(drawn[k].card.index)}\\.webp$`))
+    await expect.poll(() => img.evaluate((el) => (el as HTMLImageElement).complete && (el as HTMLImageElement).naturalWidth > 0)).toBe(true)
+    if (drawn[k].reversed) await expect(art).toHaveClass(/ml-rev/)
+    else await expect(art).not.toHaveClass(/ml-rev/)
+  }
 })
 
 test('抽滿後牌堆隱藏、外框與解讀區不相交，依據標籤只有這 3 張牌', async ({ page }) => {

@@ -4,7 +4,7 @@ import '../ui/tarot.css'
 import { burstAt, prefersReduced, setRealm } from '../ui/fx'
 import { SAMPLE_QUESTION, session } from '../ui/session'
 import { CARDS } from './cards'
-import { backSVG, faceSVG } from './cardArt'
+import { BACK_SRC, BACK_SM_SRC, faceSrc } from './cardArt'
 import { drawThree, nextSeed, SEED_RANGE, seedFrom, shuffle, templateReading } from './engine'
 
 const SLOT_LABELS = [['過去', 'Past'], ['現在', 'Present'], ['接下來', 'Future']] as const
@@ -107,6 +107,8 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     const cur = picksRef.current
     if (cur.length >= 3 || cur.includes(pos) || busy) return
     const slot = cur.length
+    // 先預載抽中那張的牌面，翻牌時才不會空白
+    new Image().src = faceSrc(deck[pos].index)
     const reduce = prefersReduced()
     picksRef.current = [...cur, pos]
     setPicks(picksRef.current)
@@ -118,7 +120,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     const to = well.getBoundingClientRect()
     const fly = document.createElement('div')
     fly.className = 'ml-flyer ml-cb'
-    fly.innerHTML = backSVG()
+    fly.innerHTML = `<img src="${BACK_SRC}" alt="" draggable="false">`
     Object.assign(fly.style, { left: `${from.left}px`, top: `${from.top}px`, width: `${from.width}px`, height: `${from.height}px` })
     document.body.append(fly)
     const dx = to.left - from.left
@@ -222,9 +224,16 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
                   {slotCard && card && phase !== 'empty' && phase !== 'flying' && (
                     <div className={`ml-tcard${phase === 'flipped' || phase === 'revealed' ? ' ml-flipped' : ''}${phase === 'revealed' ? ' ml-revealed' : ''}`}>
                       <div className="ml-tcard-inner">
-                        <div className="ml-cb" dangerouslySetInnerHTML={{ __html: backSVG() }} />
+                        <div className="ml-cb"><img src={BACK_SRC} alt="" draggable={false} /></div>
                         <div className="ml-face">
-                          <div className={`ml-face-art${slotCard.reversed ? ' ml-rev' : ''}`} dangerouslySetInnerHTML={{ __html: faceSVG(card.index) }} />
+                          <div className={`ml-face-art${slotCard.reversed ? ' ml-rev' : ''}`}>
+                            <img src={faceSrc(card.index)} alt="" draggable={false} />
+                            <span className="ml-fc-roman">{card.roman}</span>
+                            <span className="ml-fc-text">
+                              <span className="ml-fc-zh">{card.zh}</span>
+                              <span className="ml-fc-en">{card.en}</span>
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -271,7 +280,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
                   style={{ '--ml-i': k, visibility: picks.includes(k) ? 'hidden' : 'visible' } as CSSProperties}
                   onClick={(e) => tapCard(k, e.currentTarget)}
                 >
-                  <span className="ml-cb" dangerouslySetInnerHTML={{ __html: backSVG() }} />
+                  <span className="ml-cb"><img src={BACK_SM_SRC} alt="" draggable={false} /></span>
                 </button>
               ))}
             </div>

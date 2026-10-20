@@ -4,5 +4,6 @@
   { "id": "T3", "desc": "交換 drawThree 的位置順序", "file": "src/mingli/tarot/engine.ts", "find": "return [one(picks[0]), one(picks[1]), one(picks[2])]", "replace": "return [one(picks[2]), one(picks[1]), one(picks[0])]", "test": "src/mingli/tarot" },
   { "id": "T4", "desc": "錢幣國王改名成跟錢幣皇后重複", "file": "src/mingli/tarot/cards.ts", "find": "['富足穩重，事業有成', '貪財固執，被物慾牽著走']", "replace": "['務實持家，大方照顧人', '太重物質，顧此失彼']", "test": "src/mingli/tarot" },
   { "id": "T5", "desc": "宮廷牌階級少一階（國王變成騎士名）", "file": "src/mingli/tarot/cards.ts", "find": "['侍者', 'Page', 'P'], ['騎士', 'Knight', 'Kn'], ['皇后', 'Queen', 'Q'], ['國王', 'King', 'K']", "replace": "['侍者', 'Page', 'P'], ['騎士', 'Knight', 'Kn'], ['皇后', 'Queen', 'Q'], ['騎士', 'Knight', 'K']", "test": "src/mingli/tarot" },
-  { "id": "T6", "desc": "drawThree 邊界寫死 22", "file": "src/mingli/tarot/engine.ts", "find": "p >= CARDS.length", "replace": "p >= 22", "test": "src/mingli/tarot" }
+  { "id": "T6", "desc": "drawThree 邊界寫死 22", "file": "src/mingli/tarot/engine.ts", "find": "p >= CARDS.length", "replace": "p >= 22", "test": "src/mingli/tarot" },
+  { "id": "T7", "desc": "牌面檔名花色順序 wands 與 cups 對調", "file": "src/mingli/tarot/cardArt.ts", "find": "['wands', 'cups', 'swords', 'pentacles']", "replace": "['cups', 'wands', 'swords', 'pentacles']", "test": "src/mingli/tarot" }
 ]
