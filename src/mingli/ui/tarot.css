@@ -1,0 +1,120 @@
+/* 塔羅頁（西方：月光銀，金只畫在牌框細線）。顏色一律走 tokens */
+.ml-tarot { --ml-cw: 58px; gap: 22px; padding-top: var(--ml-space-2); }
+.ml-tarot-board { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.ml-tarot-head { display: flex; flex-direction: column; gap: 6px; }
+.ml-tarot-sub { font-family: var(--ml-font-west); font-style: italic; font-weight: 500; font-size: var(--ml-fs-card-title); letter-spacing: .08em; color: var(--ml-star); }
+.ml-tarot-question { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-title); font-weight: 700; letter-spacing: .04em; line-height: 1.4; }
+.ml-slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ml-space-3); max-width: 560px; width: 100%; margin: 0 auto; }
+.ml-slot { display: flex; flex-direction: column; align-items: center; gap: var(--ml-space-2); min-width: 0; }
+.ml-well {
+  position: relative; width: 100%; max-width: 160px; aspect-ratio: 5 / 8; border-radius: var(--ml-space-3);
+  border: 1px dashed var(--ml-star-line); perspective: 900px;
+}
+.ml-well[data-filled="true"] { border-color: transparent; }
+.ml-slot-label { display: flex; flex-direction: column; align-items: center; font-size: var(--ml-fs-label); color: var(--ml-ink-muted); letter-spacing: .2em; }
+.ml-slot-en { font-family: var(--ml-font-west); font-style: italic; letter-spacing: .06em; color: var(--ml-ink-faint); }
+
+/* 牌：背面、正面、立體翻轉 */
+.ml-tcard {
+  position: absolute; inset: 0; transform-style: preserve-3d;
+  transform: rotateX(var(--ml-rx, 0deg)) rotateY(var(--ml-ry, 0deg)); transition: transform .25s ease-out;
+}
+.ml-tcard-inner { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 1.1s cubic-bezier(.3,.7,.1,1); }
+.ml-tcard.ml-flipped .ml-tcard-inner { transform: rotateY(180deg); }
+.ml-tcard-inner > .ml-cb, .ml-face { position: absolute; inset: 0; border-radius: var(--ml-space-3); backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
+.ml-cb {
+  display: block; border-radius: var(--ml-space-3);
+  background: radial-gradient(circle at 50% 50%, var(--ml-card-back-hi) 0, var(--ml-night-blue) 70%);
+  border: 1px solid var(--ml-frame-gold-dim);
+  box-shadow: inset 0 0 0 4px var(--ml-night-blue), inset 0 0 0 5px var(--ml-frame-gold-faint);
+}
+.ml-cb svg, .ml-face svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ml-face {
+  transform: rotateY(180deg);
+  background: linear-gradient(160deg, var(--ml-card-face-a), var(--ml-card-face-b) 62%, var(--ml-card-face-c));
+  border: 1px solid var(--ml-frame-gold-strong);
+}
+.ml-face-art {
+  position: absolute; inset: 0;
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, black calc(var(--ml-r) - 18%), transparent var(--ml-r));
+  mask-image: radial-gradient(circle at 50% 50%, black calc(var(--ml-r) - 18%), transparent var(--ml-r));
+}
+.ml-tcard.ml-revealed .ml-face-art { animation: ml-reveal 1.4s cubic-bezier(.2,.7,.2,1) forwards; }
+@keyframes ml-reveal { to { --ml-r: 160%; } }
+.ml-face-art.ml-rev svg { transform: rotate(180deg); }
+.ml-face::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none; mix-blend-mode: screen; opacity: .9;
+  background:
+    radial-gradient(circle at var(--ml-mx, 50%) var(--ml-my, 30%), var(--ml-foil-hi), transparent 42%),
+    linear-gradient(115deg, transparent 28%, var(--ml-foil-blue) 42%, var(--ml-foil-white) 50%, var(--ml-foil-violet) 58%, transparent 72%);
+  background-size: 100% 100%, 260% 260%; background-position: 0 0, var(--ml-mx, 50%) var(--ml-my, 50%);
+}
+.ml-flyer { position: fixed; z-index: 30; border-radius: var(--ml-space-2); pointer-events: none; }
+
+/* 洗牌鈕與牌序 */
+.ml-tools { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; }
+.ml-seed { font-family: var(--ml-font-west); font-size: var(--ml-fs-body-sm); color: var(--ml-ink-faint); letter-spacing: .06em; }
+.ml-tarot-hint { margin: 0; text-align: center; font-size: var(--ml-fs-body-sm); color: var(--ml-ink-muted); letter-spacing: .1em; }
+
+/* 扇形牌堆：整排裁在自己的框裡，邊緣的牌不會撐出橫向捲動 */
+.ml-fan { position: relative; height: calc(var(--ml-cw) * 2.9); margin-top: 6px; overflow: clip; touch-action: manipulation; }
+.ml-fan-card {
+  position: absolute; left: 50%; bottom: 0; width: var(--ml-cw); aspect-ratio: 5 / 8; margin-left: calc(var(--ml-cw) / -2);
+  border-radius: var(--ml-space-2); transform-origin: 50% 340%;
+  transform: rotate(var(--ml-a)) translateY(var(--ml-lift, 0px)); transition: transform .35s cubic-bezier(.2,.7,.2,1);
+  cursor: pointer; padding: 0; border: 0; background: none;
+}
+.ml-fan-card .ml-cb { position: absolute; inset: 0; border-radius: var(--ml-space-2); }
+.ml-fan-card:hover, .ml-fan-card:focus-visible { --ml-lift: -18px; }
+.ml-fan.ml-locked .ml-fan-card { pointer-events: none; }
+
+/* 解讀 */
+.ml-reading { display: flex; flex-direction: column; gap: var(--ml-space-4); max-width: 680px; width: 100%; margin: 6px auto 0; min-width: 0; }
+.ml-verdict {
+  padding: 20px 22px; border-radius: var(--ml-radius-card); border: 1px solid var(--ml-accent);
+  background: var(--ml-night-glass); backdrop-filter: blur(8px);
+}
+.ml-verdict-k { font-size: var(--ml-fs-caption); letter-spacing: .3em; color: var(--ml-accent); }
+.ml-verdict-v { margin-top: 6px; font-family: var(--ml-font-serif); font-size: var(--ml-fs-title); font-weight: 900; letter-spacing: .08em; }
+.ml-paras { display: flex; flex-direction: column; gap: var(--ml-space-4); }
+.ml-para { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ml-space-2); padding: 0 var(--ml-space-1) 14px; border-bottom: 1px solid var(--ml-line); animation: ml-view-in .8s both; }
+.ml-para-title { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 700; }
+.ml-para-text { margin: 0; font-size: var(--ml-fs-body); line-height: 1.85; color: var(--ml-ink-body); }
+.ml-basis {
+  display: inline-block; padding: 3px 10px; border-radius: var(--ml-radius-tag); border: 1px solid var(--ml-silver-line);
+  background: var(--ml-accent-soft); color: var(--ml-accent); font-size: var(--ml-fs-caption);
+}
+.ml-note { margin: 0; font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); }
+
+/* 手機抽完：三張牌縮成一排，問題放右邊，解讀緊接在下 */
+@media (max-width: 719px) {
+  .ml-tarot[data-read="true"] .ml-tarot-board {
+    display: grid; grid-template-columns: 200px minmax(0, 1fr); grid-template-areas: "slots head" "tools tools";
+    align-items: center; column-gap: var(--ml-space-3); row-gap: var(--ml-space-3);
+  }
+  .ml-tarot[data-read="true"] .ml-slots { grid-area: slots; margin: 0; gap: var(--ml-space-2); }
+  .ml-tarot[data-read="true"] .ml-tarot-head { grid-area: head; }
+  .ml-tarot[data-read="true"] .ml-tools { grid-area: tools; }
+  .ml-tarot[data-read="true"] .ml-slot-label { display: none; }
+  .ml-tarot[data-read="true"] .ml-tarot-question { font-size: var(--ml-fs-card-title); }
+  .ml-tarot[data-read="true"] .ml-tarot-sub { font-size: var(--ml-fs-label); }
+}
+
+/* 平板直式：置中，三段解讀並排 */
+@media (min-width: 720px) {
+  .ml-tarot { --ml-cw: 74px; }
+  .ml-tarot-head { align-items: center; text-align: center; }
+  .ml-slots { gap: var(--ml-space-6); max-width: 640px; }
+  .ml-reading { max-width: none; }
+  .ml-paras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ml-space-6); align-items: start; }
+}
+
+/* 電腦：抽完左牌陣右解讀 */
+@media (min-width: 1100px) {
+  .ml-tarot[data-read="true"] { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--ml-space-6); align-items: center; }
+  .ml-tarot[data-read="true"] .ml-tarot-head { align-items: flex-start; text-align: left; }
+  .ml-tarot[data-read="true"] .ml-slots { margin: 0; }
+  .ml-tarot[data-read="true"] .ml-tools { justify-content: flex-start; }
+  .ml-tarot[data-read="true"] .ml-reading { margin: 0; max-width: 560px; }
+  .ml-tarot[data-read="true"] .ml-paras { display: flex; flex-direction: column; gap: var(--ml-space-4); }
+}
