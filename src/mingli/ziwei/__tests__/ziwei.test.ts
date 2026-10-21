@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
 import {
-  ZIWEI_CONFIG, ZIWEI_FIX_LEAP, MAJOR_STAR_NAMES, timeIndexOf, buildChart, candidates, starPositions,
+  ZIWEI_CONFIG, ZIWEI_FIX_LEAP, MAJOR_STAR_NAMES, timeIndexOf, buildChart, candidates, starPositions, sortMinorStars,
   type Gender,
 } from '../engine'
 
@@ -101,6 +101,119 @@ describe('30 盤對答案', () => {
       expect(pos.soul).toBe(fx.answer.soul)
       expect(pos.body).toBe(fx.answer.body)
       expect(pos.stars).toEqual(fx.answer.stars)
+    })
+  }
+})
+
+// 晚子時算隔天：農曆日期與四化（看年干）都要跟隔天早子時一致
+const starKey = (s: { name: string; mutagen?: string }) => (s.mutagen ? `${s.name}化${s.mutagen}` : s.name)
+
+describe('晚子時與隔天', () => {
+  const pairs: Array<[string, string]> = [
+    ['1990-05-15', '1990-05-16'],
+    ['2023-12-31', '2024-01-01'], // 跨年
+    ['2024-02-28', '2024-02-29'], // 閏日
+    ['2023-01-31', '2023-02-01'], // 跨月
+    ['2019-03-06', '2019-03-07'], // 農曆月底（隔天初一）
+    ['2020-06-20', '2020-06-21'],
+    ['2022-12-22', '2022-12-23'],
+    ['2023-10-14', '2023-10-15'],
+  ]
+  for (const [d, next] of pairs) {
+    it(`${d} 23 點的農曆、干支、全盤等於 ${next} 0 點`, () => {
+      const late = buildChart({ solarDate: d, timeIndex: 12, gender: '女' })
+      const early = buildChart({ solarDate: next, timeIndex: 0, gender: '女' })
+      expect(late).toEqual(early)
+    })
+  }
+
+  it('除夕 23 點（2023-01-21）整盤等於大年初一 0 點，四化看癸干', () => {
+    const late = buildChart({ solarDate: '2023-01-21', timeIndex: 12, gender: '男' })
+    const early = buildChart({ solarDate: '2023-01-22', timeIndex: 0, gender: '男' })
+    expect(early.lunar).toEqual({ month: 1, day: 1, leap: false })
+    expect(late).toEqual(early)
+    const mut = late.palaces.flatMap((p) => [...p.majorStars, ...p.minorStars]).filter((s) => s.mutagen).map(starKey).sort()
+    expect(mut).toEqual(['破軍化祿', '巨門化權', '太陰化科', '貪狼化忌'].sort())
+  })
+
+  it('2023 年每 7 天抽一天，23 點的盤都等於隔天 0 點的盤（月底案例另列於上）', () => {
+    for (let t = Date.UTC(2023, 0, 1); t < Date.UTC(2024, 0, 1); t += 7 * 86400000) {
+      const d = new Date(t).toISOString().slice(0, 10)
+      const n = new Date(t + 86400000).toISOString().slice(0, 10)
+      expect(buildChart({ solarDate: d, timeIndex: 12, gender: '女' }), d).toEqual(buildChart({ solarDate: n, timeIndex: 0, gender: '女' }))
+    }
+  })
+})
+
+describe('輔星排序', () => {
+  it('帶化的排最前面，其餘維持原順序', () => {
+    const out = sortMinorStars([{ name: '左輔' }, { name: '文昌', mutagen: '忌' }, { name: '右弼' }, { name: '文曲', mutagen: '科' }])
+    expect(out.map((s) => s.name)).toEqual(['文昌', '文曲', '左輔', '右弼'])
+  })
+})
+
+// 完整對答案：宮干、宮名、四化（含輔星）、輔星、大限、五行局、命身主、農曆
+interface FullPalace {
+  stem: string
+  name: string
+  isBody: boolean
+  decadalStart: number
+  stars: Array<{ name: string; mutagen?: string }>
+}
+interface FullChart {
+  id: number
+  lunar: { leap: boolean; month: number; day: number }
+  fiveElements: string
+  soulMaster: string
+  bodyMaster: string
+  palaces: Record<string, FullPalace>
+}
+const fullPath = join(dirname(fileURLToPath(import.meta.url)), 'ziwei.fixtures.full.json')
+
+describe('30 盤完整對答案（宮干、四化、輔星…）', () => {
+  const full: { charts: FullChart[] } = JSON.parse(readFileSync(fullPath, 'utf8'))
+  const base: Fixture[] = JSON.parse(readFileSync(fixturePath, 'utf8'))
+
+  it('完整答案檔剛好 30 盤', () => {
+    expect(full.charts).toHaveLength(30)
+  })
+
+  for (const ans of full.charts) {
+    const fx = base.find((b) => Number(b.id) === ans.id)
+    it(`${ans.id} ${fx?.solarDate} ${fx?.time} ${fx?.gender}`, () => {
+      expect(fx).toBeTruthy()
+      const hour = Number(fx!.time.split(':')[0])
+      const facts = buildChart({ solarDate: fx!.solarDate, timeIndex: timeIndexOf(hour), gender: fx!.gender })
+
+      expect(ans.fiveElements.endsWith(facts.fiveElementsClass), '五行局').toBe(true)
+      expect(facts.soul, '命主').toBe(ans.soulMaster)
+      expect(facts.body, '身主').toBe(ans.bodyMaster)
+      expect(facts.lunar, '農曆月日閏').toEqual(ans.lunar)
+
+      for (const [branch, exp] of Object.entries(ans.palaces)) {
+        const p = facts.palaces.find((x) => x.branch === branch)!
+        expect(p, `${branch} 宮存在`).toBeTruthy()
+        expect(p.stem, `${branch} 宮干`).toBe(exp.stem)
+        expect(p.name, `${branch} 宮名`).toBe(exp.name)
+        expect(p.isBody, `${branch} 身宮`).toBe(exp.isBody)
+        expect(p.decadalStart, `${branch} 大限起始`).toBe(exp.decadalStart)
+
+        let got = [...p.majorStars, ...p.minorStars].map(starKey)
+        let want = exp.stars.map(starKey)
+        if (ans.id === 6) {
+          // 已知派別差異：辛年天魁鉞，網站天魁在寅、天鉞在午，iztro 預設天魁午、天鉞寅，App 維持 iztro
+          got = got.filter((n) => n !== '天魁' && n !== '天鉞')
+          want = want.filter((n) => n !== '天魁' && n !== '天鉞')
+        }
+        expect([...got].sort(), `${branch} 宮星曜`).toEqual([...want].sort())
+      }
+
+      if (ans.id === 6) {
+        // 鎖住現狀：iztro 給的是魁午鉞寅（網站為魁寅鉞午）
+        const at = (n: string) => facts.palaces.find((x) => x.minorStars.some((s) => s.name === n))?.branch
+        expect(at('天魁')).toBe('午')
+        expect(at('天鉞')).toBe('寅')
+      }
     })
   }
 })

@@ -5,7 +5,7 @@ import { setRealm } from '../../ui/fx'
 import DatePicker from '../../ui/DatePicker'
 import { clearBirth, loadBirth, saveBirth } from '../../storage/birth'
 import type { Birth } from '../../storage/birth'
-import { buildChart, candidates } from '../engine'
+import { buildChart, candidates, sortMinorStars } from '../engine'
 import type { Gender, ZiweiFacts } from '../engine'
 import { palaceByBranch, palaceReadout } from './readout'
 
@@ -93,7 +93,17 @@ function Chart({ facts, gender, sel, onSel }: { facts: ZiweiFacts; gender: Gende
                 </span>
               ))}
             </span>
-            {p.minorStars.length > 0 && <span className="ml-pa-minor">{p.minorStars.slice(0, 2).join(' ')}</span>}
+            {p.minorStars.length > 0 && (
+              <span className="ml-pa-minor">
+                {sortMinorStars(p.minorStars).slice(0, 2).map((s) => (
+                  <span key={s.name}>
+                    {s.name}
+                    {s.mutagen && <span className="ml-pa-mut">{s.mutagen}</span>}
+                    {' '}
+                  </span>
+                ))}
+              </span>
+            )}
             <span className="ml-pa-foot">
               <span className="ml-pa-name">{p.name}{p.isBody ? '・身' : ''}</span>
               <span className="ml-pa-branch">{branch}</span>
@@ -240,6 +250,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
                 <span className="ml-pill-name">不知道</span>
               </button>
             </div>
+            {timeIdx === 12 && <p className="ml-z-hint" data-testid="ml-latezi-note">23 點後出生依晚子時算隔天</p>}
           </div>
           <div className="ml-field" role="group" aria-label="性別">
             <span className="ml-field-k">性別</span>

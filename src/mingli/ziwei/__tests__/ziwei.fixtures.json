@@ -140,7 +140,7 @@
   "solarDate": "1995-03-15",
   "time": "23:30",
   "gender": "男",
-  "note": "Windada 把 23 點後的子時算成當天（日柱不換、時柱取當天早子時），這裡記的是網站實際結果；若 App 採「晚子時算隔天」，應改用 altNextDay；晚子時算隔天，答案取同站查隔天 00 時（altNextDay）",
+  "note": "Windada 預設把 23 點後算當天；App 採晚子時算隔天，這裡記的是同站查隔天 0 點的結果（altNextDay）",
   "source": {
    "site": "Windada 紫微斗數算命（fate.windada.com）",
    "url": "https://fate.windada.com/cgi-bin/fate",
@@ -174,7 +174,7 @@
   "solarDate": "2001-11-20",
   "time": "23:15",
   "gender": "女",
-  "note": "Windada 把 23 點後的子時算成當天（日柱不換、時柱取當天早子時），這裡記的是網站實際結果；若 App 採「晚子時算隔天」，應改用 altNextDay；晚子時算隔天，答案取同站查隔天 00 時（altNextDay）",
+  "note": "Windada 預設把 23 點後算當天；App 採晚子時算隔天，這裡記的是同站查隔天 0 點的結果（altNextDay）",
   "source": {
    "site": "Windada 紫微斗數算命（fate.windada.com）",
    "url": "https://fate.windada.com/cgi-bin/fate",
@@ -208,7 +208,7 @@
   "solarDate": "1978-09-09",
   "time": "23:50",
   "gender": "女",
-  "note": "Windada 把 23 點後的子時算成當天（日柱不換、時柱取當天早子時），這裡記的是網站實際結果；若 App 採「晚子時算隔天」，應改用 altNextDay；晚子時算隔天，答案取同站查隔天 00 時（altNextDay）",
+  "note": "Windada 預設把 23 點後算當天；App 採晚子時算隔天，這裡記的是同站查隔天 0 點的結果（altNextDay）",
   "source": {
    "site": "Windada 紫微斗數算命（fate.windada.com）",
    "url": "https://fate.windada.com/cgi-bin/fate",

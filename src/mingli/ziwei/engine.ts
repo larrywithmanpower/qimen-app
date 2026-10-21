@@ -6,6 +6,7 @@ export const ZIWEI_CONFIG = {
   yearDivide: 'normal',
   horoscopeDivide: 'normal',
   ageDivide: 'normal',
+  // 晚子時已在 buildChart 自己換成隔天早子時，不依賴 iztro 的 forward
   dayDivide: 'forward',
   algorithm: 'default',
 } as const
@@ -31,7 +32,8 @@ export interface ZiweiPalace {
   branch: string
   stem: string
   majorStars: ZiweiStar[]
-  minorStars: string[]
+  minorStars: ZiweiStar[]
+  decadalStart: number
   isSoul: boolean
   isBody: boolean
 }
@@ -45,6 +47,7 @@ export interface ZiweiFacts {
   body: string
   lunarDate: string
   chineseDate: string
+  lunar: { month: number; day: number; leap: boolean }
 }
 
 export interface ChartInput {
@@ -60,8 +63,22 @@ export function timeIndexOf(hour: number): number {
   return Math.floor((hour + 1) / 2)
 }
 
-export function buildChart({ solarDate, timeIndex, gender }: ChartInput): ZiweiFacts {
-  const chart = astro.withOptions({
+const toStar = (s: { name: string; mutagen?: string }): ZiweiStar =>
+  s.mutagen ? { name: s.name, mutagen: s.mutagen } : { name: s.name }
+
+// 輔星排序：帶化的排最前面（格子只顯示前幾顆時不會被藏掉），其餘維持原順序
+export function sortMinorStars(stars: ZiweiStar[]): ZiweiStar[] {
+  return [...stars.filter((s) => s.mutagen), ...stars.filter((s) => !s.mutagen)]
+}
+
+// 公曆日期加一天（YYYY-MM-DD），用 UTC 算避免時區與跨月跨年問題
+function nextDay(solarDate: string): string {
+  const [y, m, d] = solarDate.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10)
+}
+
+const make = (solarDate: string, timeIndex: number, gender: Gender) =>
+  astro.withOptions({
     type: 'solar',
     dateStr: solarDate,
     timeIndex,
@@ -70,12 +87,18 @@ export function buildChart({ solarDate, timeIndex, gender }: ChartInput): ZiweiF
     fixLeap: ZIWEI_FIX_LEAP,
     config: { ...ZIWEI_CONFIG },
   })
+
+export function buildChart({ solarDate, timeIndex, gender }: ChartInput): ZiweiFacts {
+  // 晚子時算隔天：直接用隔天早子時排盤（盤、農曆、干支全來自它），不把 12 傳給 iztro
+  const chart = timeIndex === 12 ? make(nextDay(solarDate), 0, gender) : make(solarDate, timeIndex, gender)
+  const lunar = chart.rawDates.lunarDate
   const palaces: ZiweiPalace[] = chart.palaces.map((p) => ({
     name: p.name,
     branch: p.earthlyBranch,
     stem: p.heavenlyStem,
-    majorStars: p.majorStars.map((s) => (s.mutagen ? { name: s.name, mutagen: s.mutagen } : { name: s.name })),
-    minorStars: p.minorStars.map((s) => s.name),
+    majorStars: p.majorStars.map(toStar),
+    minorStars: p.minorStars.map(toStar),
+    decadalStart: p.decadal.range[0],
     isSoul: p.earthlyBranch === chart.earthlyBranchOfSoulPalace,
     isBody: p.isBodyPalace,
   }))
@@ -88,6 +111,7 @@ export function buildChart({ solarDate, timeIndex, gender }: ChartInput): ZiweiF
     body: chart.body,
     lunarDate: chart.lunarDate,
     chineseDate: chart.chineseDate,
+    lunar: { month: lunar.lunarMonth, day: lunar.lunarDay, leap: lunar.isLeap },
   }
 }
 

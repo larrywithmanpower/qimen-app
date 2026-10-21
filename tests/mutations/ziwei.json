@@ -1,10 +1,10 @@
 [
  {
   "id": "Z1",
-  "desc": "dayDivide forward 改成 current",
+  "desc": "晚子時不換成隔天（換日條件改掉）",
   "file": "src/mingli/ziwei/engine.ts",
-  "find": "dayDivide: 'forward'",
-  "replace": "dayDivide: 'current'",
+  "find": "const chart = timeIndex === 12 ? make(nextDay(solarDate), 0, gender) : make(solarDate, timeIndex, gender)",
+  "replace": "const chart = make(solarDate, timeIndex, gender)",
   "test": "src/mingli/ziwei"
  },
  {
@@ -29,6 +29,38 @@
   "file": "src/mingli/ziwei/__tests__/ziwei.fixtures.json",
   "find": "陽男）\",\n   \"crossCheck\": \"元亨利貞網 紫微斗數在線排盤（china95.net/paipan/ziwei/，天盤）（一致）\"\n  },\n  \"answer\": {\n   \"soul\": \"寅\",\n   \"body\": \"戌\",\n   \"stars\": {\n    \"紫微\": \"午\"",
   "replace": "陽男）\",\n   \"crossCheck\": \"元亨利貞網 紫微斗數在線排盤（china95.net/paipan/ziwei/，天盤）（一致）\"\n  },\n  \"answer\": {\n   \"soul\": \"寅\",\n   \"body\": \"戌\",\n   \"stars\": {\n    \"紫微\": \"未\"",
+  "test": "src/mingli/ziwei"
+ },
+ {
+  "id": "Z5",
+  "desc": "輔星不帶四化（只取 name）",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "minorStars: p.minorStars.map(toStar),",
+  "replace": "minorStars: p.minorStars.map((s) => ({ name: s.name })),",
+  "test": "src/mingli/ziwei"
+ },
+ {
+  "id": "Z6",
+  "desc": "晚子時換日條件改成 timeIndex === -1",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "const chart = timeIndex === 12 ? make(",
+  "replace": "const chart = timeIndex === -1 ? make(",
+  "test": "src/mingli/ziwei"
+ },
+ {
+  "id": "Z7",
+  "desc": "完整答案檔第 1 盤巳宮宮干由辛改壬",
+  "file": "src/mingli/ziwei/__tests__/ziwei.fixtures.full.json",
+  "find": "\"id\": 1,\n   \"siteLunar\": \"1990年閏5月13日辰時\",\n   \"siteGanzhi\": \"庚午年壬午月辛未日壬辰時\",\n   \"lunar\": {\n    \"leap\": true,\n    \"month\": 5,\n    \"day\": 13\n   },\n   \"fiveElements\": \"城頭土五局\",\n   \"soulMaster\": \"祿存\",\n   \"bodyMaster\": \"火星\",\n   \"palaces\": {\n    \"巳\": {\n     \"stem\": \"辛\"",
+  "replace": "\"id\": 1,\n   \"siteLunar\": \"1990年閏5月13日辰時\",\n   \"siteGanzhi\": \"庚午年壬午月辛未日壬辰時\",\n   \"lunar\": {\n    \"leap\": true,\n    \"month\": 5,\n    \"day\": 13\n   },\n   \"fiveElements\": \"城頭土五局\",\n   \"soulMaster\": \"祿存\",\n   \"bodyMaster\": \"火星\",\n   \"palaces\": {\n    \"巳\": {\n     \"stem\": \"壬\"",
+  "test": "src/mingli/ziwei"
+ },
+ {
+  "id": "Z8",
+  "desc": "輔星排序不把帶化的排前面",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "return [...stars.filter((s) => s.mutagen), ...stars.filter((s) => !s.mutagen)]",
+  "replace": "return [...stars]",
   "test": "src/mingli/ziwei"
  }
 ]
