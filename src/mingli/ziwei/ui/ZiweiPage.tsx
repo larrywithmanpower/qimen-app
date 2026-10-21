@@ -2,6 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import './ziwei.css'
 import { setRealm } from '../../ui/fx'
+import { clipQuestion, proxyUrl, ziweiFacts } from '../../ai'
+import { AiLoading, AiReadingView } from '../../ui/AiReadingView'
+import { useAiReading } from '../../ui/useAiReading'
+import { session } from '../../ui/session'
 import DatePicker from '../../ui/DatePicker'
 import { clearBirth, loadBirth, saveBirth } from '../../storage/birth'
 import type { Birth } from '../../storage/birth'
@@ -170,6 +174,19 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
     () => (birth && timeIndex !== null ? buildChart({ solarDate: birth.solarDate, timeIndex, gender: birth.gender }) : null),
     [birth, timeIndex],
   )
+  // AI 解讀整張命盤：紫微沒有吉凶，tone 固定送「平」；生辰不送，只送排好的盤
+  const aiFacts = useMemo(() => (facts ? ziweiFacts(facts) : null), [facts])
+  const chartKey = aiFacts ? JSON.stringify(aiFacts) : ''
+  // 按鈕才呼叫：asked[盤] 是這張盤按過幾次（重試會加一）；換盤後沒按過，自然回到按鈕狀態
+  const [asked, setAsked] = useState<Record<string, number>>({})
+  const askedN = asked[chartKey]
+  const ai = useAiReading(
+    aiFacts && askedN !== undefined
+      ? { kind: 'ziwei', question: clipQuestion(session.question), facts: aiFacts, tone: '平' }
+      : null,
+    `${chartKey}#${askedN ?? 0}`,
+  )
+  const canAsk = proxyUrl() !== ''
   const detail = useMemo(() => (facts && sel ? palaceReadout(facts, sel) : null), [facts, sel])
 
   const canMake = validDate(dateStr) && timeIdx !== null && gender !== null
@@ -325,6 +342,22 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
                 <span className="ml-zbasis" data-testid="ml-basis">依據：{detail.basis}</span>
                 <p className="ml-znote">範例說明，正式版由 AI 依星曜規則卡撰寫</p>
               </div>
+            )}
+            {ai.status === 'loading' && <AiLoading />}
+            {ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
+            {canAsk && ai.status !== 'ok' && (
+              <>
+                {ai.status === 'fail' && <p className="ml-z-hint" data-testid="ml-ai-error" role="status">AI 暫時無法解讀，稍後再試</p>}
+                <button
+                  type="button"
+                  className="ml-ghost"
+                  data-testid="ml-ai-ziwei-btn"
+                  disabled={ai.status === 'loading'}
+                  onClick={() => setAsked((cur) => ({ ...cur, [chartKey]: (cur[chartKey] ?? 0) + 1 }))}
+                >
+                  AI 解讀這張盤
+                </button>
+              </>
             )}
             <p className="ml-z-hint ml-z-hint-bottom">點任一宮看說明</p>
             <div className="ml-zactions ml-zactions-start">

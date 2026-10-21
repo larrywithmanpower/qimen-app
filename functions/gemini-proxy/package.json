@@ -1,15 +1,16 @@
 {
   "name": "gemini-proxy",
   "version": "1.0.0",
-  "description": "Gemini API proxy for qimen-app (hides API key from frontend)",
+  "description": "命理 App 的 Claude 解讀代理（金鑰只放後端）",
   "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "functions-framework --target=geminiProxy --port=8080"
   },
   "dependencies": {
-    "@google-cloud/functions-framework": "^3.4.0",
-    "@google/genai": "^1.40.0"
+    "@anthropic-ai/sdk": "^0.137.0",
+    "@google-cloud/firestore": "^8.7.1",
+    "@google-cloud/functions-framework": "^3.4.0"
   },
   "engines": {
     "node": "22"

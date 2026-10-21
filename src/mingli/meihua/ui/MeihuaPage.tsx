@@ -4,6 +4,9 @@ import { Solar } from 'lunar-javascript'
 import './meihua.css'
 import { burstAt, lightTrigrams, prefersReduced, setRealm } from '../../ui/fx'
 import { SAMPLE_QUESTION, session } from '../../ui/session'
+import { clipQuestion, meihuaFacts } from '../../ai'
+import { AiLoading, AiReadingView } from '../../ui/AiReadingView'
+import { useAiReading } from '../../ui/useAiReading'
 import { castByNumbers, castByTime, lunarNumbersOf, templateReading } from '../engine'
 import type { MeihuaResult } from '../engine'
 
@@ -121,6 +124,12 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
 
   const res = cast?.res ?? null
   const reading = res ? templateReading(res) : null
+  // AI 解讀：按「看解讀」才送；吉凶沿用範本算出來的 tone
+  const ai = useAiReading(
+    res && reading && read ? { kind: 'meihua', question: clipQuestion(question), facts: meihuaFacts(res), tone: reading.tone } : null,
+    String(cast?.key ?? 0),
+  )
+  const tpl = ai.status === 'idle' || ai.status === 'fail'
   const instant = prefersReduced()
   const complete = shown >= ROW_KEYS.length
 
@@ -227,7 +236,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
       </div>
 
       {res && reading && read && (
-        <div className="ml-mreading" data-testid="ml-reading">
+        <div className="ml-mreading" data-testid={tpl ? 'ml-reading' : undefined}>
           <button type="button" className="ml-ghost ml-back-hex" data-testid="ml-back-hex" onClick={() => { setRead(false); window.scrollTo(0, 0) }}>返回卦象</button>
           <div className="ml-read-head">
             <MiniHex res={res} />
@@ -236,23 +245,29 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
               <span className="ml-read-q">{question}</span>
             </div>
           </div>
-          <div className="ml-mverdict">
-            <div>
-              <div className="ml-mverdict-k">一句話</div>
-              <div className="ml-mverdict-v">{reading.verdict}</div>
-            </div>
-            <span className="ml-seal ml-seal-sm" aria-hidden="true">{res.tone}</span>
-          </div>
-          <div className="ml-mparas">
-            {reading.paragraphs.map((p, k) => (
-              <div className="ml-mpara" key={p.title} style={{ animationDelay: `${0.15 + k * 0.18}s` }}>
-                <h2 className="ml-mpara-title">{p.title}</h2>
-                <p className="ml-mpara-text">{p.text}</p>
-                <span className="ml-mbasis" data-testid="ml-basis">依據：{p.basis}</span>
+          {ai.status === 'loading' && <AiLoading />}
+          {ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
+          {tpl && (
+            <>
+              <div className="ml-mverdict">
+                <div>
+                  <div className="ml-mverdict-k">一句話</div>
+                  <div className="ml-mverdict-v">{reading.verdict}</div>
+                </div>
+                <span className="ml-seal ml-seal-sm" aria-hidden="true">{res.tone}</span>
               </div>
-            ))}
-          </div>
-          <p className="ml-mnote">範例解讀，正式版由 AI 依卦義規則卡撰寫</p>
+              <div className="ml-mparas">
+                {reading.paragraphs.map((p, k) => (
+                  <div className="ml-mpara" key={p.title} style={{ animationDelay: `${0.15 + k * 0.18}s` }}>
+                    <h2 className="ml-mpara-title">{p.title}</h2>
+                    <p className="ml-mpara-text">{p.text}</p>
+                    <span className="ml-mbasis" data-testid="ml-basis">依據：{p.basis}</span>
+                  </div>
+                ))}
+              </div>
+              <p className="ml-mnote">範例解讀，正式版由 AI 依卦義規則卡撰寫</p>
+            </>
+          )}
         </div>
       )}
     </section>

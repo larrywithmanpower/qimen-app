@@ -5,6 +5,9 @@ import { burstAt, prefersReduced, setRealm } from '../ui/fx'
 import { SAMPLE_QUESTION, session } from '../ui/session'
 import { CARDS } from './cards'
 import { BACK_SRC, BACK_SM_SRC, faceSrc } from './cardArt'
+import { clipQuestion, tarotFacts } from '../ai'
+import { AiLoading, AiReadingView } from '../ui/AiReadingView'
+import { useAiReading } from '../ui/useAiReading'
 import { drawThree, nextSeed, SEED_RANGE, seedFrom, shuffle, templateReading } from './engine'
 
 const SLOT_LABELS = [['過去', 'Past'], ['現在', 'Present'], ['接下來', 'Future']] as const
@@ -199,6 +202,11 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
 
   const drawn = read && picks.length === 3 ? drawThree(seed, [picks[0], picks[1], picks[2]]) : null
   const reading = drawn ? templateReading(drawn) : null
+  // AI 解讀：吉凶沿用範本算出來的 tone；沒設網址時 ai.status 一律是 idle，直接顯示範本
+  const ai = useAiReading(
+    drawn && reading ? { kind: 'tarot', question: clipQuestion(question), facts: tarotFacts(drawn), tone: reading.tone } : null,
+    `${seed}-${picks.join(',')}`,
+  )
 
   return (
     <section className="ml-view ml-tarot" data-testid="ml-tarot" data-read={read}>
@@ -287,7 +295,9 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
           </div>
         </div>
       </div>
-      {reading && (
+      {drawn && ai.status === 'loading' && <AiLoading />}
+      {drawn && ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
+      {reading && (ai.status === 'idle' || ai.status === 'fail') && (
         <div className="ml-reading" data-testid="ml-reading">
           <div className="ml-verdict" data-testid="ml-verdict">
             <div className="ml-verdict-k">一句話</div>

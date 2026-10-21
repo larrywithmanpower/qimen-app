@@ -1,0 +1,107 @@
+[
+ {
+  "id": "A1",
+  "desc": "後端：沒帶 Origin 改成放行",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "if (!origin || !allowed.has(origin)) {",
+  "replace": "if (origin && !allowed.has(origin)) {",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A2",
+  "desc": "後端：緊急開關失效（AI_ENABLED 不管設什麼都放行）",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "if (env.AI_ENABLED !== 'true') {",
+  "replace": "if (false) {",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A3",
+  "desc": "後端：每日上限失效（額度滿了仍放行）",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "if (!(await usage.consume(taiwanDate(now()), limit))) {",
+  "replace": "if (!(await usage.consume(taiwanDate(now()), limit)) && false) {",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A4",
+  "desc": "後端：回傳 tone 不必等於請求 tone",
+  "file": "functions/gemini-proxy/validate.js",
+  "find": "if (!nonEmpty(out.verdict) || out.tone !== tone) return null;",
+  "replace": "if (!nonEmpty(out.verdict)) return null;",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A5",
+  "desc": "後端：basis 可以是空陣列",
+  "file": "functions/gemini-proxy/validate.js",
+  "find": "if (!Array.isArray(p.basis) || p.basis.length === 0 || !p.basis.every(nonEmpty)) return null;",
+  "replace": "if (!Array.isArray(p.basis)) return null;",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A6",
+  "desc": "後端：格式不過不重叫（只叫一次）",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "attempt < 2",
+  "replace": "attempt < 1",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A7",
+  "desc": "後端：日誌記下使用者的問題",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "console.warn('reading format rejected', { kind, attempt });",
+  "replace": "console.warn('reading format rejected', { kind, attempt, question });",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A8",
+  "desc": "前端：tone 檢查失效",
+  "file": "src/mingli/ai.ts",
+  "find": "if (!nonEmpty(o.verdict) || o.tone !== tone) return null",
+  "replace": "if (!nonEmpty(o.verdict)) return null",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A9",
+  "desc": "前端：basis 檢查失效",
+  "file": "src/mingli/ai.ts",
+  "find": "if (!Array.isArray(q.basis) || q.basis.length === 0 || !q.basis.every(nonEmpty)) return null",
+  "replace": "if (!Array.isArray(q.basis)) return null",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A10",
+  "desc": "前端：越界名稱檢查失效（牌／卦／星都放行）",
+  "file": "src/mingli/ai.ts",
+  "find": "if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null",
+  "replace": "if (mentionedNames(text, universe, common).some((n) => !allowed.has(n)) && false) return null",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A11",
+  "desc": "前端：後端非 200 也照單全收",
+  "file": "src/mingli/ai.ts",
+  "find": "if (res.status !== 200) return null",
+  "replace": "",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A12",
+  "desc": "前端：名稱比對命中後不跳過整個名字（「聖杯皇后」被拆出「皇后」誤判）",
+  "file": "src/mingli/ai.ts",
+  "find": "    i += hit.length\n",
+  "replace": "    i++\n",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A13",
+  "desc": "紫微：打開命盤就自動呼叫（不等按鈕）",
+  "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
+  "find": "aiFacts && askedN !== undefined",
+  "replace": "aiFacts",
+  "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
+ }
+]

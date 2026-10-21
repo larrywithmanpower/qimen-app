@@ -1,0 +1,24 @@
+/* AI 解讀共用樣式：塔羅、梅花、紫微都用同一組 */
+.ml-ai-loading {
+  display: flex; align-items: center; justify-content: center; gap: var(--ml-space-2);
+  padding: 20px; color: var(--ml-ink-muted); font-size: var(--ml-fs-body); letter-spacing: .1em;
+}
+.ml-ai-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--ml-accent);
+  animation: ml-ai-pulse 1.2s ease-in-out infinite;
+}
+@keyframes ml-ai-pulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .ml-ai-dot { animation: none; }
+}
+.ml-ai-reading { display: flex; flex-direction: column; gap: var(--ml-space-4); max-width: 680px; width: 100%; margin: 6px auto 0; min-width: 0; }
+.ml-ai-verdict {
+  padding: 20px 22px; border-radius: var(--ml-radius-card); border: 1px solid var(--ml-accent);
+  background: var(--ml-night-glass);
+}
+.ml-ai-verdict-k { font-size: var(--ml-fs-caption); letter-spacing: .3em; color: var(--ml-accent); }
+.ml-ai-verdict-v { margin-top: 6px; font-family: var(--ml-font-serif); font-size: var(--ml-fs-title); font-weight: 900; letter-spacing: .08em; }
+.ml-ai-para { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ml-space-2); padding: 0 var(--ml-space-1) 14px; border-bottom: 1px solid var(--ml-line); }
+.ml-ai-title { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 700; }
+.ml-ai-text { margin: 0; font-size: var(--ml-fs-body); line-height: 1.85; color: var(--ml-ink-body); }
+.ml-ai-basis { font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); line-height: 1.6; }
