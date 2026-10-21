@@ -40,10 +40,9 @@ jobs:
           cache: 'npm'
       - name: Install dependencies
         run: npm install --legacy-peer-deps
+      # 先不帶 AI 代理網址：額度上限與緊急開關（Todo 階段 1）補好前，正式站不呼叫 AI
       - name: Build
         run: npm run build
-        env:
-          VITE_GEMINI_PROXY_URL: ${{ secrets.VITE_GEMINI_PROXY_URL }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
