@@ -67,6 +67,8 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
   const sealRef = useRef<HTMLSpanElement>(null)
   const timers = useRef<number[]>([])
   const castKey = useRef(0)
+  // 網址 a、b 的自動起卦只在進頁面時觸發一次
+  const autoRan = useRef(false)
 
   const later = (fn: () => void, ms: number) => {
     timers.current.push(window.setTimeout(fn, ms))
@@ -100,6 +102,16 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
     later(() => sealRef.current && burstAt(sealRef.current), 3400 + ROW_KEYS.length * 380 + 80)
   }
 
+  // 重新起卦：先清掉卦象、解讀與 AI 結果，回到起卦前的畫面（這時可以改問題）
+  const resetCast = () => {
+    clearTimers()
+    lightTrigrams([])
+    setCast(null)
+    setShown(0)
+    setRead(false)
+    window.scrollTo(0, 0)
+  }
+
   const doCast = (btn?: Element) => {
     if (btn) burstAt(btn)
     if (!question) return
@@ -119,18 +131,16 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
     return () => {
       clearTimers()
       lightTrigrams([])
+      // StrictMode 會重掛一次，要讓自動起卦能重跑
+      autoRan.current = false
     }
   }, [])
 
-  // 網址帶 a、b 時有問題就直接起卦（沒問題要等填完）
-  const autoRan = useRef(false)
+  // 網址帶 a、b 時有問題就直接起卦（沒問題要等填完）；之後不再自動觸發
   useEffect(() => {
     if (question && pa !== null && pb !== null && !autoRan.current) {
       autoRan.current = true
       run(castByNumbers(pa, pb), `報數 ${pa}、${pb}`)
-    }
-    return () => {
-      autoRan.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [question])
@@ -243,8 +253,8 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
             type="button"
             className={cast ? 'ml-ghost' : 'ml-cta'}
             data-testid="ml-cast"
-            disabled={!question || (way === 'numbers' && !numsOk)}
-            onClick={(e) => doCast(e.currentTarget)}
+            disabled={!cast && (!question || (way === 'numbers' && !numsOk))}
+            onClick={(e) => (cast ? resetCast() : doCast(e.currentTarget))}
           >
             {cast ? '重新起卦' : '起卦'}
           </button>

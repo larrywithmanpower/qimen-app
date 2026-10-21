@@ -126,8 +126,17 @@
   "id": "A16",
   "desc": "梅花：沒問題時起卦鈕仍可按",
   "file": "src/mingli/meihua/ui/MeihuaPage.tsx",
-  "find": "disabled={!question || (way === 'numbers' && !numsOk)}",
-  "replace": "disabled={way === 'numbers' && !numsOk}",
+  "find": "disabled={!cast && (!question || (way === 'numbers' && !numsOk))}",
+  "replace": "disabled={!cast && way === 'numbers' && !numsOk}",
+  "test": "e2e/mingli/question.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A17",
+  "desc": "梅花：重新起卦後仍不能改問題（重新起卦不清卦象）",
+  "file": "src/mingli/meihua/ui/MeihuaPage.tsx",
+  "find": "onClick={(e) => (cast ? resetCast() : doCast(e.currentTarget))}",
+  "replace": "onClick={(e) => doCast(e.currentTarget)}",
   "test": "e2e/mingli/question.spec.ts",
   "runner": "playwright"
  }

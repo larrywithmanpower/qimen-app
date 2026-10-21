@@ -120,6 +120,49 @@ test('梅花：直接開網址是輸入框＋提示，起卦鈕停用；輸入�
   await noHScroll(page)
 })
 
+test('梅花：起卦 → 重新起卦回到起卦前 → 改問題 → 用新問題起卦', async ({ page }) => {
+  await openMeihua(page)
+  await askQuestion(page, '舊問題')
+  await page.getByTestId('ml-cast').click()
+  await expect(page.getByTestId('ml-edit-question')).toHaveCount(0)
+  await expect(page.getByTestId('ml-yao').first()).toBeVisible()
+
+  // 重新起卦：卦象、解讀按鈕都清掉，回到起卦前
+  await page.getByTestId('ml-cast').click()
+  await expect(page.getByTestId('ml-yao')).toHaveCount(0)
+  await expect(page.getByTestId('ml-gua-row')).toHaveCount(0)
+  await expect(page.getByTestId('ml-cast-info')).toHaveCount(0)
+  await expect(page.getByTestId('ml-to-reading')).toHaveCount(0)
+  await expect(page.getByTestId('ml-edit-question')).toBeVisible()
+  await noHScroll(page)
+
+  await page.getByTestId('ml-edit-question').click()
+  await page.getByTestId('ml-question-input').fill('新問題')
+  await page.getByTestId('ml-question-ok').click()
+  await page.getByTestId('ml-cast').click()
+  await expect(page.getByTestId('ml-to-reading')).toBeVisible()
+  await page.getByTestId('ml-to-reading').click()
+  await expect(page.getByTestId('ml-reading')).toBeVisible()
+  await expect(page.locator('.ml-read-q')).toHaveText('新問題')
+  await noHScroll(page)
+})
+
+test('梅花：網址帶 a、b 只在進頁面時自動起卦一次，重新起卦後不會再自動起', async ({ page }) => {
+  await openMeihua(page, '#/meihua?a=16&b=5')
+  await askQuestion(page, '要不要搬家？')
+  await expect(page.getByTestId('ml-cast-info')).toHaveText('報數 16、5')
+  await page.getByTestId('ml-cast').click() // 重新起卦
+  await expect(page.getByTestId('ml-yao')).toHaveCount(0)
+  // 改問題也不會自動起卦
+  await page.getByTestId('ml-edit-question').click()
+  await page.getByTestId('ml-question-input').fill('別的問題')
+  await page.getByTestId('ml-question-ok').click()
+  await page.waitForTimeout(600)
+  await expect(page.getByTestId('ml-yao')).toHaveCount(0)
+  await page.getByTestId('ml-cast').click()
+  await expect(page.getByTestId('ml-cast-info')).toHaveText('報數 16、5')
+})
+
 test('梅花：網址帶 a、b 但沒問題 → 先不起卦，填完問題才起卦', async ({ page }) => {
   await openMeihua(page, '#/meihua?a=16&b=5')
   await expect(page.getByTestId('ml-yao')).toHaveCount(0)
