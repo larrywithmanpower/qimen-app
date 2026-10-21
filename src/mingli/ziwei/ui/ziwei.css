@@ -74,7 +74,7 @@
 .ml-pa-star { font-family: var(--ml-font-serif); font-size: var(--ml-fs-body-sm); font-weight: 900; line-height: 1.3; }
 .ml-pa-mut { margin-left: 3px; font-size: var(--ml-fs-caption); font-weight: 700; color: var(--ml-cinnabar-text); }
 .ml-pa-minor { font-size: var(--ml-fs-caption); color: var(--ml-ink-muted); line-height: 1.35; }
-.ml-pa-foot { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ml-space-1); width: 100%; margin-top: auto; padding-top: var(--ml-space-1); font-size: var(--ml-fs-caption); color: var(--ml-ink-soft); }
+.ml-pa-foot { display: flex; white-space: nowrap; justify-content: space-between; align-items: baseline; gap: var(--ml-space-1); width: 100%; margin-top: auto; padding-top: var(--ml-space-1); font-size: var(--ml-fs-caption); color: var(--ml-ink-soft); }
 .ml-pa-branch { color: var(--ml-ink-faint); }
 .ml-zcenter {
   grid-row: 2 / 4; grid-column: 2 / 4; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ml-space-2);
@@ -120,3 +120,61 @@
   .ml-z-hint-top { display: block; }
   .ml-chart { grid-auto-rows: minmax(150px, auto); }
 }
+
+/* 運限：查詢日期與分層切換 */
+.ml-zlayers { display: flex; flex-direction: column; gap: var(--ml-space-2); min-width: 0; }
+.ml-zdate { display: flex; flex-direction: column; gap: 6px; }
+.ml-zlayer-pills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ml-space-2); }
+.ml-zlayer {
+  min-height: 44px; min-width: 44px; padding: 0 var(--ml-space-2); border-radius: var(--ml-radius-control);
+  border: 1px solid var(--ml-line-strong); background: var(--ml-veil); color: var(--ml-ink-muted);
+  font-family: var(--ml-font-serif); font-size: var(--ml-fs-body); font-weight: 700; cursor: pointer;
+}
+.ml-zlayer[aria-pressed="true"] { border-color: var(--ml-paper); background: var(--ml-paper-soft); color: var(--ml-paper); }
+.ml-zlayer[data-layer="decadal"][aria-pressed="true"] { border-color: var(--ml-lay-decadal); color: var(--ml-lay-decadal); background: var(--ml-lay-decadal-soft); }
+.ml-zlayer[data-layer="age"][aria-pressed="true"] { border-color: var(--ml-lay-age); color: var(--ml-lay-age); background: var(--ml-lay-age-soft); }
+.ml-zlayer[data-layer="yearly"][aria-pressed="true"] { border-color: var(--ml-lay-yearly); color: var(--ml-lay-yearly); background: var(--ml-lay-yearly-soft); }
+.ml-zlayer[data-layer="monthly"][aria-pressed="true"] { border-color: var(--ml-lay-monthly); color: var(--ml-lay-monthly); background: var(--ml-lay-monthly-soft); }
+.ml-zlayer[data-layer="daily"][aria-pressed="true"] { border-color: var(--ml-lay-daily); color: var(--ml-lay-daily); background: var(--ml-lay-daily-soft); }
+.ml-zlayer-info { margin: 0; font-size: var(--ml-fs-label); line-height: 1.6; color: var(--ml-ink-soft); overflow-wrap: anywhere; }
+.ml-zlayer-info[data-layer="decadal"] { color: var(--ml-lay-decadal); }
+.ml-zlayer-info[data-layer="age"] { color: var(--ml-lay-age); }
+.ml-zlayer-info[data-layer="yearly"] { color: var(--ml-lay-yearly); }
+.ml-zlayer-info[data-layer="monthly"] { color: var(--ml-lay-monthly); }
+.ml-zlayer-info[data-layer="daily"] { color: var(--ml-lay-daily); }
+
+/* 格子裡的小字：亮度、雜曜、長生博士、大限歲數 */
+.ml-palace { position: relative; overflow-wrap: anywhere; }
+.ml-pa-br { margin-left: 2px; font-family: var(--ml-font-sans); font-size: var(--ml-fs-micro); font-weight: 400; color: var(--ml-ink-muted); }
+.ml-pa-micro { font-size: var(--ml-fs-micro); line-height: 1.35; color: var(--ml-ink-faint); }
+.ml-pa-dec { margin-top: -1px; color: var(--ml-ink-muted); display: flex; justify-content: space-between; align-items: baseline; width: 100%; }
+.ml-pa-tags { display: flex; gap: 2px; }
+.ml-pa-tag { font-weight: 700; color: var(--ml-cinnabar-text); }
+.ml-pa-over { font-size: var(--ml-fs-micro); font-weight: 700; line-height: 1.3; color: var(--ml-ink-soft); }
+.ml-pa-over[data-layer="decadal"], .ml-pa-lstars[data-layer="decadal"] { color: var(--ml-lay-decadal); }
+.ml-pa-over[data-layer="age"], .ml-pa-lstars[data-layer="age"] { color: var(--ml-lay-age); }
+.ml-pa-over[data-layer="yearly"], .ml-pa-lstars[data-layer="yearly"] { color: var(--ml-lay-yearly); }
+.ml-pa-over[data-layer="monthly"], .ml-pa-lstars[data-layer="monthly"] { color: var(--ml-lay-monthly); }
+.ml-pa-over[data-layer="daily"], .ml-pa-lstars[data-layer="daily"] { color: var(--ml-lay-daily); }
+.ml-pa-lmuts { display: flex; flex-wrap: wrap; gap: 2px; }
+.ml-pa-lmut { padding: 0 3px; border-radius: 4px; border: 1px solid currentColor; font-size: var(--ml-fs-micro); line-height: 1.35; }
+.ml-pa-lmut[data-layer="decadal"] { color: var(--ml-lay-decadal); background: var(--ml-lay-decadal-soft); }
+.ml-pa-lmut[data-layer="age"] { color: var(--ml-lay-age); background: var(--ml-lay-age-soft); }
+.ml-pa-lmut[data-layer="yearly"] { color: var(--ml-lay-yearly); background: var(--ml-lay-yearly-soft); }
+.ml-pa-lmut[data-layer="monthly"] { color: var(--ml-lay-monthly); background: var(--ml-lay-monthly-soft); }
+.ml-pa-lmut[data-layer="daily"] { color: var(--ml-lay-daily); background: var(--ml-lay-daily-soft); }
+
+/* 該層命宮：用該層顏色描邊；點宮後的三方四正：虛線外框 */
+.ml-palace[data-layer-soul="true"] { border-width: 2px; padding: 7px 6px 5px; }
+.ml-palace[data-layer-soul="true"][data-layer-key="decadal"] { border-color: var(--ml-lay-decadal); background: var(--ml-lay-decadal-soft); }
+.ml-palace[data-layer-soul="true"][data-layer-key="age"] { border-color: var(--ml-lay-age); background: var(--ml-lay-age-soft); }
+.ml-palace[data-layer-soul="true"][data-layer-key="yearly"] { border-color: var(--ml-lay-yearly); background: var(--ml-lay-yearly-soft); }
+.ml-palace[data-layer-soul="true"][data-layer-key="monthly"] { border-color: var(--ml-lay-monthly); background: var(--ml-lay-monthly-soft); }
+.ml-palace[data-layer-soul="true"][data-layer-key="daily"] { border-color: var(--ml-lay-daily); background: var(--ml-lay-daily-soft); }
+.ml-palace[data-surround="true"] { border-style: dashed; border-color: var(--ml-accent); background: var(--ml-accent-soft); }
+
+/* 點宮後的完整清單 */
+.ml-pfull { display: flex; flex-direction: column; gap: var(--ml-space-1); width: 100%; margin: 0; }
+.ml-pfull-row { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: var(--ml-space-2); font-size: var(--ml-fs-label); line-height: 1.6; }
+.ml-pfull-k { margin: 0; color: var(--ml-ink-faint); }
+.ml-pfull-v { margin: 0; color: var(--ml-ink-body); overflow-wrap: anywhere; }

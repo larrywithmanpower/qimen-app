@@ -174,9 +174,9 @@ export async function checkLayout(page: Page): Promise<LayoutIssue[]> {
 }
 
 /** 用日期選擇器的 UI 點出 YYYY-MM-DD（欄位 → 年 → 月 → 日） */
-export async function pickDate(page: Page, iso: string) {
+export async function pickDate(page: Page, iso: string, fieldTestId = 'ml-birth-date') {
   const [y, m, d] = iso.split('-').map(Number);
-  await page.getByTestId('ml-birth-date').click();
+  await page.getByTestId(fieldTestId).click();
   const panel = page.getByTestId('ml-dp-panel');
   await panel.waitFor();
   // 在月／日畫面先回到年畫面

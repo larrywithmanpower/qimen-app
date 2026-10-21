@@ -63,6 +63,18 @@
   --ml-card-shadow: rgba(0, 0, 0, .55);
   --ml-card-glow: rgba(159, 180, 232, .12);
 
+  /* 紫微運限各層的識別色（大限／小限／流年／流月／流日），跟生年四化的朱砂色分得開 */
+  --ml-lay-decadal: #9FB4E8;
+  --ml-lay-decadal-soft: rgba(159, 180, 232, .14);
+  --ml-lay-age: #C8A85A;
+  --ml-lay-age-soft: rgba(200, 168, 90, .14);
+  --ml-lay-yearly: #8FC9A8;
+  --ml-lay-yearly-soft: rgba(143, 201, 168, .14);
+  --ml-lay-monthly: #C9A0DC;
+  --ml-lay-monthly-soft: rgba(201, 160, 220, .14);
+  --ml-lay-daily: #E8A178;
+  --ml-lay-daily-soft: rgba(232, 161, 120, .14);
+
   /* 字體 */
   --ml-font-serif: "Noto Serif TC", "Songti TC", serif;
   --ml-font-sans: "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
@@ -78,6 +90,7 @@
   --ml-fs-label: .8125rem;
   --ml-fs-caption: .75rem;
   --ml-fs-tab: .6875rem;
+  --ml-fs-micro: .625rem;
 
   /* 間距 */
   --ml-space-1: 4px;

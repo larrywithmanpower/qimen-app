@@ -3,8 +3,8 @@
   "id": "Z1",
   "desc": "晚子時不換成隔天（換日條件改掉）",
   "file": "src/mingli/ziwei/engine.ts",
-  "find": "const chart = timeIndex === 12 ? make(nextDay(solarDate), 0, gender) : make(solarDate, timeIndex, gender)",
-  "replace": "const chart = make(solarDate, timeIndex, gender)",
+  "find": "  timeIndex === 12 ? make(nextDay(solarDate), 0, gender) : make(solarDate, timeIndex, gender)",
+  "replace": "  make(solarDate, timeIndex, gender)",
   "test": "src/mingli/ziwei"
  },
  {
@@ -43,8 +43,8 @@
   "id": "Z6",
   "desc": "晚子時換日條件改成 timeIndex === -1",
   "file": "src/mingli/ziwei/engine.ts",
-  "find": "const chart = timeIndex === 12 ? make(",
-  "replace": "const chart = timeIndex === -1 ? make(",
+  "find": "  timeIndex === 12 ? make(nextDay",
+  "replace": "  timeIndex === -1 ? make(nextDay",
   "test": "src/mingli/ziwei"
  },
  {
@@ -62,5 +62,71 @@
   "find": "return [...stars.filter((s) => s.mutagen), ...stars.filter((s) => !s.mutagen)]",
   "replace": "return [...stars]",
   "test": "src/mingli/ziwei"
- }
+ },
+ {
+  "id": "Z-H1",
+  "desc": "流月：閏月改回「15 日以後 +1」（iztro 內建算法）",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "hourIdx + month)",
+  "replace": "hourIdx + month + (isLeap && day > 15 ? 1 : 0))",
+  "test": "src/mingli/ziwei/__tests__/ziwei.windada.test.ts"
+ },
+ {
+  "id": "Z-H2",
+  "desc": "流月：改從流年命宮起（不用斗君）",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "h.yearly.index - birthMonth + hourIdx + month",
+  "replace": "h.yearly.index + month - 1",
+  "test": "src/mingli/ziwei/__tests__/ziwei.windada.test.ts"
+ },
+ {
+  "id": "Z-H3",
+  "desc": "亮度：iztro 的「不」不轉成「陷」",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "b === '不' ? '陷' : b || undefined",
+  "replace": "b || undefined",
+  "test": "src/mingli/ziwei/__tests__/ziwei.windada.test.ts"
+ },
+ {
+  "id": "Z-H4",
+  "desc": "雜曜：拿掉「天傷」改名「天殤」",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "if (name === '天傷') return '天殤'",
+  "replace": "if (name === '天傷') return '天傷'",
+  "test": "src/mingli/ziwei/__tests__/ziwei.windada.test.ts"
+ },
+ {
+  "id": "Z-H5",
+  "desc": "雜曜：拿掉截路、空亡互換",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "if (SWAP_STEMS.includes(yearStem)) {",
+  "replace": "if (false) {",
+  "test": "src/mingli/ziwei/__tests__/ziwei.windada.test.ts"
+ },
+ {
+  "id": "Z-H6",
+  "desc": "流日：不從流月命宮起算初一",
+  "file": "src/mingli/ziwei/engine.ts",
+  "find": "iztroUtil.fixIndex(monthlyIndex + day - 1)",
+  "replace": "iztroUtil.fixIndex(h.yearly.index + day - 1)",
+  "test": "src/mingli/ziwei/__tests__/ziwei.windada.test.ts"
+ },
+ {
+  "id": "Z-H7",
+  "desc": "AI facts 漏掉 horoscope（選了流年仍不帶運限資料）",
+  "file": "src/mingli/ai.ts",
+  "find": "...(hs ? { horoscope: horoscopeFacts(hs) } : {}),",
+  "replace": "...(hs ? {} : {}),",
+  "test": "e2e/mingli/ziwei.spec.ts",
+  "runner": "playwright"
+ },
+  {
+    "id": "Z-H8",
+    "desc": "日期選擇器：已有日期時切回年畫面不翻到該年那一頁",
+    "file": "src/mingli/ui/DatePicker.tsx",
+    "find": "    if (v === 'year') setPageStart(yearPageStart(viewYear, minP.y))\n",
+    "replace": "",
+    "test": "e2e/mingli/ziwei.spec.ts",
+    "runner": "playwright"
+  }
 ]

@@ -9,9 +9,9 @@ import { session } from '../../ui/session'
 import DatePicker from '../../ui/DatePicker'
 import { clearBirth, loadBirth, saveBirth } from '../../storage/birth'
 import type { Birth } from '../../storage/birth'
-import { buildChart, candidates, sortMinorStars } from '../engine'
-import type { Gender, ZiweiFacts } from '../engine'
-import { palaceByBranch, palaceReadout } from './readout'
+import { buildChart, candidates, horoscope, LAYER_LABEL, sortMinorStars } from '../engine'
+import type { Gender, HoroscopeFacts, HoroscopeLayer, HoroscopeLayerKey, ZiweiFacts, ZiweiPalace, ZiweiStar } from '../engine'
+import { BRANCHES, palaceByBranch, palaceReadout } from './readout'
 
 type Phase = 'loading' | 'form' | 'chart' | 'candidates'
 
@@ -68,13 +68,32 @@ function LockIcon() {
   )
 }
 
-function Chart({ facts, gender, sel, onSel }: { facts: ZiweiFacts; gender: Gender; sel: string; onSel: (b: string) => void }) {
+type LayerChoice = 'natal' | HoroscopeLayerKey
+const LAYER_CHOICES: LayerChoice[] = ['natal', 'decadal', 'age', 'yearly', 'monthly', 'daily']
+const LAYER_NAME: Record<LayerChoice, string> = { natal: '本命', ...LAYER_LABEL }
+const LAYER_PREFIX: Record<HoroscopeLayerKey, string> = { decadal: '大', age: '小', yearly: '年', monthly: '月', daily: '日' }
+
+// 某宮的三方四正：對宮與左右三合
+const surroundOf = (branch: string): string[] => {
+  const i = BRANCHES.indexOf(branch as (typeof BRANCHES)[number])
+  return [4, 6, 8].map((n) => BRANCHES[(i + n) % 12])
+}
+
+const starText = (s: ZiweiStar) => `${s.name}${s.brightness ?? ''}${s.mutagen ? `化${s.mutagen}` : ''}`
+
+function Chart({ facts, gender, sel, onSel, layer, hs }: {
+  facts: ZiweiFacts; gender: Gender; sel: string; onSel: (b: string) => void; layer: LayerChoice; hs: HoroscopeFacts | null
+}) {
   const yin = yangStems.includes(facts.chineseDate[0]) ? '陽' : '陰'
+  const L: HoroscopeLayer | null = hs && layer !== 'natal' ? hs[layer] : null
+  const around = sel ? surroundOf(sel) : []
   return (
-    <div className="ml-chart" data-testid="ml-chart" role="group" aria-label="紫微十二宮命盤">
+    <div className="ml-chart" data-testid="ml-chart" data-layer={layer} role="group" aria-label="紫微十二宮命盤">
       {BRANCH_ORDER.map((branch) => {
         const p = palaceByBranch(facts, branch)
         const [row, col] = CELL[branch]
+        const lmuts = L ? L.mutagens.filter((m) => m.branch === branch) : []
+        const lstars = L ? L.stars[branch] ?? [] : []
         return (
           <button
             key={branch}
@@ -84,15 +103,21 @@ function Chart({ facts, gender, sel, onSel }: { facts: ZiweiFacts; gender: Gende
             data-branch={branch}
             data-stars={p.majorStars.map((s) => s.name).join(',')}
             data-soul={p.isSoul}
+            data-origin={p.isOriginal}
+            data-layer-soul={L ? L.soulBranch === branch : undefined}
+            data-layer-key={L ? layer : undefined}
+            data-surround={around.includes(branch)}
             aria-pressed={sel === branch}
-            aria-label={`${p.name} ${branch}宮 ${p.majorStars.length ? p.majorStars.map((s) => s.name).join('、') : '無主星'}`}
+            aria-label={`${p.name} ${branch}宮 ${p.majorStars.length ? p.majorStars.map((s) => s.name).join('、') : '無主星'}${L ? ` ${L.palaceNames[branch]}` : ''}`}
             style={{ gridRow: row, gridColumn: col } as CSSProperties}
             onClick={() => onSel(branch)}
           >
+            {L && <span className="ml-pa-over" data-testid="ml-pa-over" data-layer={layer}>{L.palaceNames[branch]}</span>}
             <span className="ml-pa-stars">
               {p.majorStars.map((s) => (
                 <span className="ml-pa-star" key={s.name}>
                   {s.name}
+                  {s.brightness && <span className="ml-pa-br">{s.brightness}</span>}
                   {s.mutagen && <span className="ml-pa-mut">{s.mutagen}</span>}
                 </span>
               ))}
@@ -108,9 +133,33 @@ function Chart({ facts, gender, sel, onSel }: { facts: ZiweiFacts; gender: Gende
                 ))}
               </span>
             )}
+            {lmuts.length > 0 && (
+              <span className="ml-pa-lmuts">
+                {lmuts.map((m) => (
+                  <span className="ml-pa-lmut" data-layer={layer} data-testid="ml-pa-lmut" key={m.star}>{m.star}{LAYER_PREFIX[layer as HoroscopeLayerKey]}{m.mutagen}</span>
+                ))}
+              </span>
+            )}
+            {lstars.length > 0 && <span className="ml-pa-micro ml-pa-lstars" data-layer={layer}>{lstars.slice(0, 3).join(' ')}</span>}
+            {p.adjectiveStars.length > 0 && <span className="ml-pa-micro">{p.adjectiveStars.slice(0, 2).join(' ')}</span>}
+            <span className="ml-pa-micro">
+              {layer === 'yearly' && L?.suiqian && L.jiangqian
+                ? `${L.suiqian[branch]} ${L.jiangqian[branch]}`
+                : `${p.changsheng12} ${p.boshi12}`}
+            </span>
             <span className="ml-pa-foot">
-              <span className="ml-pa-name">{p.name}{p.isBody ? '・身' : ''}</span>
-              <span className="ml-pa-branch">{branch}</span>
+              <span className="ml-pa-name">{p.name}</span>
+              <span className="ml-pa-branch">{p.stem}{branch}</span>
+            </span>
+            {/* 身宮、來因宮標在大限這行右邊，不擠宮名那行 */}
+            <span className="ml-pa-micro ml-pa-dec">
+              <span>{p.decadalRange[0]}–{p.decadalRange[1]}</span>
+              {(p.isBody || p.isOriginal) && (
+                <span className="ml-pa-tags">
+                  {p.isBody && <span className="ml-pa-tag">身</span>}
+                  {p.isOriginal && <span className="ml-pa-tag">因</span>}
+                </span>
+              )}
             </span>
           </button>
         )
@@ -124,11 +173,51 @@ function Chart({ facts, gender, sel, onSel }: { facts: ZiweiFacts; gender: Gende
   )
 }
 
+// 點宮後的完整清單：格子放不下的全列在這裡
+function FullList({ p, facts, L, layer }: { p: ZiweiPalace; facts: ZiweiFacts; L: HoroscopeLayer | null; layer: LayerChoice }) {
+  const around = surroundOf(p.branch)
+  const nameAt = (b: string) => `${palaceByBranch(facts, b).name}（${b}）`
+  const rows: [string, string][] = [
+    ['宮位', `${p.stem}${p.branch}・${p.name}${p.isBody ? '・身宮' : ''}${p.isSoul ? '・命宮' : ''}${p.isOriginal ? '・來因宮' : ''}`],
+    ['主星', p.majorStars.length ? p.majorStars.map(starText).join('、') : '無主星'],
+    ['輔星', p.minorStars.length ? sortMinorStars(p.minorStars).map(starText).join('、') : '無'],
+    ['雜曜', p.adjectiveStars.length ? p.adjectiveStars.join('、') : '無'],
+    ['長生十二', p.changsheng12],
+    ['博士十二', p.boshi12],
+    ['大限', `${p.decadalRange[0]}–${p.decadalRange[1]} 歲`],
+    ['小限歲數', p.ages.join('、')],
+    ['三方四正', `對宮 ${nameAt(around[1])}；三合 ${nameAt(around[0])}、${nameAt(around[2])}`],
+  ]
+  if (L) {
+    rows.push([`${LAYER_NAME[layer]}宮名`, L.palaceNames[p.branch]])
+    const lm = L.mutagens.filter((m) => m.branch === p.branch)
+    rows.push([`${LAYER_NAME[layer]}四化`, lm.length ? lm.map((m) => `${m.star}化${m.mutagen}`).join('、') : '無'])
+    rows.push([`${LAYER_NAME[layer]}星`, (L.stars[p.branch] ?? []).join('、') || '無'])
+    if (L.suiqian && L.jiangqian) {
+      rows.push(['流年歲前', L.suiqian[p.branch]])
+      rows.push(['流年將前', L.jiangqian[p.branch]])
+    }
+  }
+  return (
+    <dl className="ml-pfull" data-testid="ml-palace-full">
+      {rows.map(([k, v]) => (
+        <div className="ml-pfull-row" key={k}>
+          <dt className="ml-pfull-k">{k}</dt>
+          <dd className="ml-pfull-v">{v}</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
+
 export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URLSearchParams; testid?: string }) {
   const [phase, setPhase] = useState<Phase>('loading')
   const [birth, setBirth] = useState<Birth | null>(null)
   const [picked, setPicked] = useState<number | null>(null)
   const [sel, setSel] = useState('')
+  // 運限：查詢日（預設今天）與目前看哪一層
+  const [layer, setLayer] = useState<LayerChoice>('natal')
+  const [queryDate, setQueryDate] = useState(todayIso)
   // 表單欄位
   const [dateStr, setDateStr] = useState('')
   const [timeIdx, setTimeIdx] = useState<number | 'unknown' | null>(null)
@@ -175,7 +264,11 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
     [birth, timeIndex],
   )
   // AI 解讀整張命盤：紫微沒有吉凶，tone 固定送「平」；生辰不送，只送排好的盤
-  const aiFacts = useMemo(() => (facts ? ziweiFacts(facts) : null), [facts])
+  const hs = useMemo(
+    () => (birth && timeIndex !== null ? horoscope({ solarDate: birth.solarDate, timeIndex, gender: birth.gender }, queryDate) : null),
+    [birth, timeIndex, queryDate],
+  )
+  const aiFacts = useMemo(() => (facts ? ziweiFacts(facts, layer === 'natal' ? undefined : hs ?? undefined) : null), [facts, hs, layer])
   const chartKey = aiFacts ? JSON.stringify(aiFacts) : ''
   // 按鈕才呼叫：asked[盤] 是這張盤按過幾次（重試會加一）；換盤後沒按過，自然回到按鈕狀態
   const [asked, setAsked] = useState<Record<string, number>>({})
@@ -326,7 +419,26 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
               </div>
               <span className="ml-z-local">資料只存這台裝置</span>
             </div>
-            <Chart facts={facts} gender={birth.gender} sel={sel} onSel={setSel} />
+            <div className="ml-zlayers" data-testid="ml-layerbar">
+              <div className="ml-zdate">
+                <span className="ml-field-k">查詢日期</span>
+                <DatePicker testid="ml-query-date" label="選擇查詢日期" min="1900-01-01" max="2100-12-31" value={queryDate} onChange={(v) => setQueryDate(v || todayIso())} />
+              </div>
+              <div className="ml-zlayer-pills" role="group" aria-label="運限分層">
+                {LAYER_CHOICES.map((k) => (
+                  <button key={k} type="button" className="ml-zlayer" data-testid={`ml-layer-${k}`} data-layer={k} aria-pressed={layer === k} onClick={() => setLayer(k)}>
+                    {LAYER_NAME[k]}
+                  </button>
+                ))}
+              </div>
+              {hs && layer !== 'natal' && (
+                <p className="ml-zlayer-info" data-testid="ml-layer-info" data-layer={layer} data-soul={hs[layer].soulBranch}>
+                  {LAYER_NAME[layer]}（{hs[layer].stem}{hs[layer].branch}）命宮在{hs[layer].soulBranch}宮・農曆{hs.lunar.year}年{hs.lunar.month}月{hs.lunar.day}日・虛歲 {hs.nominalAge}
+                  {layer === 'decadal' && hs.isChildhood ? '（童限）' : ''}
+                </p>
+              )}
+            </div>
+            <Chart facts={facts} gender={birth.gender} sel={sel} onSel={setSel} layer={layer} hs={hs} />
           </div>
           <div className="ml-zside">
             <p className="ml-z-hint ml-z-hint-top">資料只存這台裝置・點任一宮看說明</p>
@@ -339,6 +451,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
                 <div className="ml-pdetail-body">
                   {detail.sentences.map((s, k) => <p className="ml-pdetail-text" key={k}>{s}。</p>)}
                 </div>
+                <FullList p={palaceByBranch(facts, sel)} facts={facts} L={hs && layer !== 'natal' ? hs[layer] : null} layer={layer} />
                 <span className="ml-zbasis" data-testid="ml-basis">依據：{detail.basis}</span>
                 <p className="ml-znote">範例說明，正式版由 AI 依星曜規則卡撰寫</p>
               </div>

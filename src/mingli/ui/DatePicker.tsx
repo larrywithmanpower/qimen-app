@@ -11,6 +11,8 @@ type Props = {
   min: string
   max: string
   testid?: string
+  // 面板的無障礙名稱，預設是出生日期
+  label?: string
 }
 
 const WEEK = ['日', '一', '二', '三', '四', '五', '六']
@@ -29,7 +31,7 @@ const Chevron = ({ dir }: { dir: 'l' | 'r' }) => (
   </svg>
 )
 
-export default function DatePicker({ value, onChange, min, max, testid }: Props) {
+export default function DatePicker({ value, onChange, min, max, testid, label = '選擇出生日期' }: Props) {
   const minP = parseIso(min)!
   const maxP = parseIso(max)!
   const sel = parseIso(value)
@@ -90,6 +92,8 @@ export default function DatePicker({ value, onChange, min, max, testid }: Props)
   })
 
   const goView = (v: View) => {
+    // 回年畫面時翻到目前所在年份那一頁（從日／月畫面切回來時 pageStart 還沒設過）
+    if (v === 'year') setPageStart(yearPageStart(viewYear, minP.y))
     setView(v)
     setCursor(null)
     focusPending.current = true
@@ -184,7 +188,7 @@ export default function DatePicker({ value, onChange, min, max, testid }: Props)
       </button>
 
       {open && (
-        <div className="ml-dp-panel" role="dialog" aria-label="選擇出生日期" data-testid="ml-dp-panel" data-view={view} ref={panelRef}>
+        <div className="ml-dp-panel" role="dialog" aria-label={label} data-testid="ml-dp-panel" data-view={view} ref={panelRef}>
           <div className="ml-dp-head">
             <button type="button" className="ml-dp-nav" data-testid="ml-dp-prev" aria-label="上一頁" disabled={prevDisabled} onClick={() => flip(-1)}>
               <Chevron dir="l" />

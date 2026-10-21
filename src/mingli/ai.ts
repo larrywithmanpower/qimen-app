@@ -5,7 +5,7 @@ import type { DrawnCard } from './tarot/engine'
 import { hexagramName } from './meihua/engine'
 import type { MeihuaResult, Trigram } from './meihua/engine'
 import { MAJOR_STAR_NAMES } from './ziwei/engine'
-import type { ZiweiFacts } from './ziwei/engine'
+import type { HoroscopeFacts, HoroscopeLayer, ZiweiFacts } from './ziwei/engine'
 
 export type AiKind = 'tarot' | 'meihua' | 'ziwei'
 export type AiTone = '吉' | '平' | '凶'
@@ -76,9 +76,35 @@ export function meihuaFacts(r: MeihuaResult): Record<string, unknown> {
   }
 }
 
-// 不放 lunarDate／chineseDate（等於生日原文），只放排好的宮位與星曜
-export function ziweiFacts(f: ZiweiFacts): Record<string, unknown> {
+const layerFacts = (l: HoroscopeLayer) => ({
+  ganzhi: `${l.stem}${l.branch}`,
+  soulBranch: l.soulBranch,
+  mutagens: l.mutagens.map((m) => ({ star: m.star, mutagen: m.mutagen, branch: m.branch })),
+})
+
+// 選了運限層時多帶的資料：日期、各層命宮與四化，以及流年星、歲前、將前的落宮（只放有星的宮，控制長度）
+function horoscopeFacts(h: HoroscopeFacts): Record<string, unknown> {
+  const yearlyStars: Record<string, string[]> = {}
+  for (const [b, names] of Object.entries(h.yearly.stars)) if (names.length) yearlyStars[b] = names
   return {
+    date: h.solarDate,
+    lunar: `${h.lunar.year}年${h.lunar.month}月${h.lunar.day}日`,
+    nominalAge: h.nominalAge,
+    decadal: layerFacts(h.decadal),
+    age: layerFacts(h.age),
+    yearly: layerFacts(h.yearly),
+    monthly: layerFacts(h.monthly),
+    daily: layerFacts(h.daily),
+    yearlyStars,
+    suiqian: h.yearly.suiqian,
+    jiangqian: h.yearly.jiangqian,
+  }
+}
+
+// 不放 lunarDate／chineseDate（等於生日原文），只放排好的宮位與星曜；有帶 hs 就多一份 horoscope
+export function ziweiFacts(f: ZiweiFacts, hs?: HoroscopeFacts): Record<string, unknown> {
+  return {
+    ...(hs ? { horoscope: horoscopeFacts(hs) } : {}),
     fiveElementsClass: f.fiveElementsClass,
     soul: f.soul,
     body: f.body,
@@ -101,6 +127,14 @@ export function ziweiFacts(f: ZiweiFacts): Record<string, unknown> {
 const TRIGRAMS: Trigram[] = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤']
 const HEXAGRAM_NAME_LIST = TRIGRAMS.flatMap((u) => TRIGRAMS.map((l) => hexagramName(u, l)))
 // iztro 的輔星十四顆
+// 運限會出現的星：運／流／月／日的魁鉞昌曲祿羊陀馬鸞喜、年解，以及歲前十二、將前十二
+const HORO_KINDS = ['魁', '鉞', '昌', '曲', '祿', '羊', '陀', '馬', '鸞', '喜']
+export const HOROSCOPE_STAR_NAMES = [
+  ...['運', '流', '月', '日'].flatMap((p) => HORO_KINDS.map((k) => `${p}${k}`)),
+  '年解',
+  '歲建', '晦氣', '喪門', '貫索', '官符', '小耗', '大耗', '龍德', '白虎', '天德', '弔客', '病符',
+  '將星', '攀鞍', '歲驛', '息神', '華蓋', '劫煞', '災煞', '天煞', '指背', '咸池', '月煞', '亡神',
+]
 export const MINOR_STAR_NAMES = [
   '左輔', '右弼', '文昌', '文曲', '天魁', '天鉞', '祿存', '天馬', '擎羊', '陀羅', '火星', '鈴星', '地空', '地劫',
 ] as const
@@ -148,9 +182,18 @@ function nameSets(kind: AiKind, facts: Obj): { allowed: Set<string>; universe: r
     }
   }
   const stars = asArr(facts.palaces).flatMap((p) => [...asArr(asObj(p).majorStars), ...asArr(asObj(p).minorStars)])
+  // 運限裡的名字：facts.horoscope 內出現的字串（流年星、歲前、將前、各層四化的星）
+  const horo = asObj(facts.horoscope)
+  const horoNames = new Set<string>()
+  const walk = (v: unknown) => {
+    if (typeof v === 'string') horoNames.add(v)
+    else if (Array.isArray(v)) v.forEach(walk)
+    else if (typeof v === 'object' && v !== null) Object.values(v).forEach(walk)
+  }
+  walk(horo)
   return {
-    allowed: new Set(stars.map((s) => str(asObj(s).name))),
-    universe: [...MAJOR_STAR_NAMES, ...MINOR_STAR_NAMES],
+    allowed: new Set([...stars.map((s) => str(asObj(s).name)), ...horoNames]),
+    universe: [...MAJOR_STAR_NAMES, ...MINOR_STAR_NAMES, ...HOROSCOPE_STAR_NAMES],
     common: new Set(),
   }
 }

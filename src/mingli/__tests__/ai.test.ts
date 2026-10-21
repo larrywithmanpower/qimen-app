@@ -3,7 +3,7 @@ import { fetchAiReading, meihuaFacts, tarotFacts, validateAiReading, ziweiFacts 
 import type { AiReading, AiRequest } from '../ai'
 import { drawThree, templateReading } from '../tarot/engine'
 import { castByNumbers } from '../meihua/engine'
-import { buildChart } from '../ziwei/engine'
+import { buildChart, horoscope } from '../ziwei/engine'
 
 const make = (over: Partial<AiReading> & { text?: string } = {}): AiReading => ({
   verdict: '先穩住',
@@ -24,6 +24,8 @@ const meiFacts = meihuaFacts(mei)
 
 const chart = buildChart({ solarDate: '1990-07-05', timeIndex: 4, gender: '男' })
 const ziFacts = ziweiFacts(chart)
+const hsFacts = horoscope({ solarDate: '1990-07-05', timeIndex: 4, gender: '男' }, '2026-10-21')
+const ziHsFacts = ziweiFacts(chart, hsFacts)
 
 describe('前端檢查：結構', () => {
   it('正常的解讀通過', () => {
@@ -129,5 +131,30 @@ describe('fetchAiReading 失敗一律回 null（畫面退回範本）', () => {
       init.signal?.addEventListener('abort', () => reject(new DOMException('aborted', 'AbortError')))
     })) as typeof fetch
     expect(await fetchAiReading(req, { url: 'http://x', fetchImpl: hang, timeoutMs: 30 })).toBeNull()
+  })
+})
+
+describe('紫微運限 facts', () => {
+  it('選了運限層才帶 horoscope，沒選不帶', () => {
+    expect(ziFacts).not.toHaveProperty('horoscope')
+    const h = ziHsFacts.horoscope as Record<string, unknown>
+    expect(h).toBeTruthy()
+    expect(h.date).toBe('2026-10-21')
+    for (const k of ['decadal', 'age', 'yearly', 'monthly', 'daily']) expect(h).toHaveProperty(k)
+  })
+  it('JSON 長度小於 8000 字元', () => {
+    expect(JSON.stringify(ziHsFacts).length).toBeLessThan(8000)
+  })
+  it('流年星、歲前、將前：facts 內有的通過，facts 沒有的擋下', () => {
+    const h = ziHsFacts.horoscope as { yearlyStars?: Record<string, string[]>; suiqian?: Record<string, string>; jiangqian?: Record<string, string> }
+    const star = Object.values(h.yearlyStars ?? {}).flat().find((n) => /^流[昌曲祿羊陀魁鉞]$/.test(n))!
+    expect(star).toBeTruthy()
+    expect(validateAiReading('ziwei', ziHsFacts, '平', make({ tone: '平', text: `今年${star}落在這宮` }))).not.toBeNull()
+    const sq = Object.values(h.suiqian ?? {})[0]
+    expect(validateAiReading('ziwei', ziHsFacts, '平', make({ tone: '平', text: `歲前十二神的${sq}` }))).not.toBeNull()
+    // 沒帶運限時，同一顆流年星就是盤上沒有的名稱
+    expect(validateAiReading('ziwei', ziFacts, '平', make({ tone: '平', text: `今年${star}落在這宮` }))).toBeNull()
+    // 沒帶運限時，歲前十二神的名稱也算盤上沒有
+    expect(validateAiReading('ziwei', ziFacts, '平', make({ tone: '平', text: `流年遇${sq}` }))).toBeNull()
   })
 })
