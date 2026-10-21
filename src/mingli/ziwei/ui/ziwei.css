@@ -31,6 +31,8 @@
 }
 /* 面板打開時，下面的欄位先隱藏：避免面板壓在它們上面造成文字重疊，也不會點穿 */
 .ml-field:has([role="dialog"]) ~ * { visibility: hidden; }
+/* 減少動態模式會給所有元素 .01ms 轉場，連 visibility 也會轉場，隱藏的瞬間按鈕仍算顯示；這裡關掉 */
+.ml-field:has([role="dialog"]) ~ *, .ml-field:has([role="dialog"]) ~ * * { transition: none !important; }
 .ml-pills { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: var(--ml-space-2); }
 .ml-pills-gender { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 260px; }
 .ml-pill {
