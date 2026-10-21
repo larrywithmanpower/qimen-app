@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "smoke": "node tests/smoke.mjs",
-    "deploy": "npm test && VITE_GEMINI_PROXY_URL= npm run build && npx firebase-tools deploy --only hosting --project qimen-app-487007",
+    "deploy": "npm test && VITE_GEMINI_PROXY_URL=https://asia-east1-qimen-app-487007.cloudfunctions.net/gemini-proxy npm run build && npx firebase-tools deploy --only hosting --project qimen-app-487007",
     "test:methods": "node tests/method-flows.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

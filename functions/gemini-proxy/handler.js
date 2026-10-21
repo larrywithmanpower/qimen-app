@@ -70,7 +70,8 @@ export function createHandler({ claude, usage, env = process.env, now = Date.now
       }
       res.status(502).json({ error: '大師的回答格式不對' });
     } catch (error) {
-      console.error('claude error', { kind, name: error?.name, status: error?.status });
+      // 只記 Claude 回的錯誤說明，不含問題與盤面
+      console.error('claude error', { kind, name: error?.name, status: error?.status, type: error?.error?.error?.type, message: error?.error?.error?.message?.slice(0, 300) });
       res.status(502).json({ error: 'AI 呼叫失敗' });
     }
   };

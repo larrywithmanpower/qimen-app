@@ -1,6 +1,6 @@
-// 真的 Claude 呼叫（結構化輸出：tool use 強制指定工具）
+// 真的 Claude 呼叫（結構化輸出：output_config 指定 JSON schema；Sonnet 5.5 不支援強制指定工具）
 import Anthropic from '@anthropic-ai/sdk';
-import { MAX_TOKENS, MODEL, READING_TOOL, TOOL_NAME } from './prompt.js';
+import { MAX_TOKENS, MODEL, READING_TOOL } from './prompt.js';
 
 let client;
 
@@ -13,9 +13,13 @@ export async function callClaude(system, user) {
     max_tokens: MAX_TOKENS,
     system,
     messages: [{ role: 'user', content: user }],
-    tools: [READING_TOOL],
-    tool_choice: { type: 'tool', name: TOOL_NAME },
+    output_config: { format: { type: 'json_schema', schema: READING_TOOL.input_schema } },
   });
-  const block = msg.content.find((b) => b.type === 'tool_use' && b.name === TOOL_NAME);
-  return block?.input;
+  const text = msg.content.find((b) => b.type === 'text')?.text;
+  // 解析失敗回 undefined，交給 handler 的格式檢查重叫
+  try {
+    return text ? JSON.parse(text) : undefined;
+  } catch {
+    return undefined;
+  }
 }
