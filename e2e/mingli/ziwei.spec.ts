@@ -1,6 +1,6 @@
 import { test, expect } from './checks'
 import type { Page } from 'playwright/test'
-import { BASE, checkLayout, prepare } from './checks'
+import { BASE, checkLayout, pickDate, prepare } from './checks'
 
 import { buildChart, candidates } from '../../src/mingli/ziwei/engine'
 
@@ -18,7 +18,7 @@ async function openForm(page: Page) {
 }
 
 async function fill(page: Page, time: string) {
-  await page.getByTestId('ml-birth-date').fill(DATE)
+  await pickDate(page, DATE)
   await page.getByTestId(time).click()
   await page.getByTestId('ml-gender-男').click()
 }

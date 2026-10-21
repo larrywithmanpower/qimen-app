@@ -163,3 +163,24 @@ export async function checkLayout(page: Page): Promise<LayoutIssue[]> {
     return issues;
   }, SAFE_BOTTOM);
 }
+
+/** 用日期選擇器的 UI 點出 YYYY-MM-DD（欄位 → 年 → 月 → 日） */
+export async function pickDate(page: Page, iso: string) {
+  const [y, m, d] = iso.split('-').map(Number);
+  await page.getByTestId('ml-birth-date').click();
+  const panel = page.getByTestId('ml-dp-panel');
+  await panel.waitFor();
+  // 在月／日畫面先回到年畫面
+  const yearBtn = page.getByTestId('ml-dp-year');
+  if (await yearBtn.count()) await yearBtn.click();
+  // 翻到含該年的頁
+  const cell = page.getByTestId(`ml-dp-y-${y}`);
+  for (let i = 0; i < 20 && !(await cell.count()); i++) {
+    const start = Number(((await page.getByTestId('ml-dp-title').textContent()) || '').match(/\d+/)![0]);
+    await page.getByTestId(y < start ? 'ml-dp-prev' : 'ml-dp-next').click();
+  }
+  await cell.click();
+  await page.getByTestId(`ml-dp-m-${m}`).click();
+  await page.getByTestId(`ml-dp-d-${d}`).click();
+  await panel.waitFor({ state: 'hidden' });
+}

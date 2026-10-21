@@ -29,6 +29,8 @@
   border: 1px solid var(--ml-line-strong); border-radius: var(--ml-radius-control); background: var(--ml-veil);
   color: var(--ml-ink); font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title);
 }
+/* 面板打開時，下面的欄位先隱藏：避免面板壓在它們上面造成文字重疊，也不會點穿 */
+.ml-field:has([role="dialog"]) ~ * { visibility: hidden; }
 .ml-pills { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: var(--ml-space-2); }
 .ml-pills-gender { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 260px; }
 .ml-pill {

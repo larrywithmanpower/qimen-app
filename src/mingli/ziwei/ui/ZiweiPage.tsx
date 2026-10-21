@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import './ziwei.css'
 import { setRealm } from '../../ui/fx'
+import DatePicker from '../../ui/DatePicker'
 import { clearBirth, loadBirth, saveBirth } from '../../storage/birth'
 import type { Birth } from '../../storage/birth'
 import { buildChart, candidates } from '../engine'
@@ -209,17 +210,10 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
             <span className="ml-z-sub">紫微斗數・生辰</span>
             <h1 className="ml-z-title">你的生辰</h1>
           </div>
-          <label className="ml-field">
+          <div className="ml-field">
             <span className="ml-field-k">出生日期（西曆）</span>
-            <input
-              data-testid="ml-birth-date"
-              type="date"
-              min="1900-01-01"
-              max={todayIso()}
-              value={dateStr}
-              onChange={(e) => setDateStr(e.target.value)}
-            />
-          </label>
+            <DatePicker testid="ml-birth-date" min="1900-01-01" max={todayIso()} value={dateStr} onChange={setDateStr} />
+          </div>
           <div className="ml-field" role="group" aria-label="出生時辰">
             <span className="ml-field-k">出生時辰</span>
             <div className="ml-pills">

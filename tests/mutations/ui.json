@@ -49,5 +49,13 @@
   "find": "String(fan ? fan.scrollLeft / STEP : 0)",
   "replace": "String(38.5)",
   "test": "e2e/mingli/tarot.spec.ts"
+ },
+ {
+  "id": "U7",
+  "desc": "超出範圍的日子不再 disabled（max 比較永遠 false）",
+  "file": "src/mingli/ui/dateMath.ts",
+  "find": "export const inRange = (iso: string, min: string, max: string) => iso >= min && iso <= max",
+  "replace": "export const inRange = (iso: string, min: string, max: string) => iso >= min && iso <= max && max === ''",
+  "test": "src/mingli/__tests__"
  }
 ]

@@ -1,6 +1,6 @@
 import { test, expect } from './checks'
 import type { Page } from 'playwright/test'
-import { BASE, prepare } from './checks'
+import { BASE, pickDate, prepare } from './checks'
 
 // 只在手機尺寸 390×844 跑
 test.use({ viewport: { width: 390, height: 844 } })
@@ -25,7 +25,7 @@ const readBirth = (page: Page) =>
   )
 
 async function fillAndMake(page: Page) {
-  await page.getByTestId('ml-birth-date').fill('1990-07-05')
+  await pickDate(page, '1990-07-05')
   await page.getByTestId('ml-time-4').click()
   await page.getByTestId('ml-gender-男').click()
   await page.getByTestId('ml-make-chart').click()
