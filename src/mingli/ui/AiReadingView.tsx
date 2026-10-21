@@ -6,7 +6,7 @@ export function AiLoading() {
   return (
     <div className="ml-ai-loading" data-testid="ml-ai-loading" role="status">
       <span className="ml-ai-dot" aria-hidden="true" />
-      AI 撰寫中…
+      AI 解讀中…
     </div>
   )
 }

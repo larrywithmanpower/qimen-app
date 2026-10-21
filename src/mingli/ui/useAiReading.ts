@@ -1,4 +1,4 @@
-// AI 解讀的狀態：idle＝沒開 AI（直接顯示範本）、loading＝撰寫中、ok＝AI 成功、fail＝退回範本
+// AI 解讀的狀態：idle＝沒開 AI（直接顯示範本）、loading＝解讀中、ok＝AI 成功、fail＝退回範本
 import { useEffect, useRef, useState } from 'react'
 import { fetchAiReading, proxyUrl } from '../ai'
 import type { AiReading, AiRequest } from '../ai'

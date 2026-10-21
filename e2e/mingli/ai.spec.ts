@@ -113,7 +113,7 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
   test(`${kind}：AI 成功 → 顯示 ml-ai-reading（一句話＋各段＋依據），不顯示範本`, async ({ page }) => {
     const bodies = await setup(page, ok(reading(kind), 400))
     await spec.open(page)
-    // 撰寫中的讀取狀態先出現（紫微：按鈕停用）
+    // 解讀中的讀取狀態先出現（紫微：按鈕停用）
     await expect(page.getByTestId('ml-ai-loading')).toBeVisible()
     if (kind === 'ziwei') await expect(page.getByTestId('ml-ai-ziwei-btn')).toBeDisabled()
     const ai = page.getByTestId('ml-ai-reading')
