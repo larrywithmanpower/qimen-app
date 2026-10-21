@@ -30,7 +30,7 @@ npm run deploy       # npm test → 帶正式代理網址 build → firebase hos
 
 ## AI 解讀
 
-- 前端 `src/mingli/ai.ts`：組盤面事實（不含生日、姓名）→ POST 到 `VITE_GEMINI_PROXY_URL` → 收回後再驗一次（tone 一致、每段 basis 非空、牌名／卦名／星名都在盤上）。沒設網址、逾時 15 秒、非 200 或檢查沒過，一律退回程式範本並維持「範例解讀」那行。
+- 前端 `src/mingli/ai.ts`：組盤面事實（不含生日、姓名）→ POST 到 `VITE_GEMINI_PROXY_URL` → 收回後再驗一次（tone 一致、每段 basis 非空、牌名／卦名／星名都在盤上）。沒設網址、逾時 30 秒、非 200 或檢查沒過，一律退回程式範本並維持「範例解讀」那行。
 - 塔羅、梅花看解讀時自動呼叫；紫微按「AI 解讀這張盤」才呼叫。
 - 後端 `functions/gemini-proxy/`（資料夾與函式名 `geminiProxy` 線上已部署，不要改名）：用 `@anthropic-ai/sdk` 呼叫 `claude-sonnet-5-5`（模型寫死），用 `output_config` 指定 JSON schema 結構化輸出（Sonnet 5.5 不支援 tool_choice 強制指定工具）；Origin 白名單（沒帶 Origin 也 403）、`AI_ENABLED` 緊急開關、`DAILY_LIMIT`（程式預設 200，正式設 30）每日上限（Firestore `usage/{台灣日期}`）。環境變數見 `functions/gemini-proxy/.env.example`；`ANTHROPIC_API_KEY` 正式由 Secret Manager 掛載，不寫進程式。日誌不記錄 question 與 facts。
 - 本機跑後端：`cd functions/gemini-proxy && npm install && npm start`（localhost:8080）。

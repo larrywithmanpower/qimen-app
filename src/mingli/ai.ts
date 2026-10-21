@@ -32,7 +32,7 @@ export interface AiReading {
 }
 
 // 超過這麼久沒回就退回範本
-export const AI_TIMEOUT_MS = 15_000
+export const AI_TIMEOUT_MS = 30_000
 export const MAX_QUESTION = 200
 
 // 代理網址：正式讀 VITE_GEMINI_PROXY_URL。
