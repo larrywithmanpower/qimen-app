@@ -11,11 +11,11 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'pwa-192x192.svg', 'pwa-512x512.svg'],
       manifest: {
-        name: '奇門 AI 大師',
-        short_name: '奇門大師',
-        description: '專業奇門遁甲 AI 解析工具',
-        theme_color: '#0f172a',
-        background_color: '#0f172a',
+        name: '語軒命理',
+        short_name: '語軒命理',
+        description: '塔羅、梅花易數、紫微斗數的白話解讀',
+        theme_color: '#111014',
+        background_color: '#111014',
         display: 'standalone',
         icons: [
           {
@@ -51,11 +51,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           'vendor-react': ['react', 'react-dom'],
-          'vendor-framer': ['framer-motion'],
-          'vendor-datepicker': ['react-datepicker', 'date-fns'],
-          'vendor-markdown': ['react-markdown'],
-          'vendor-qimen': ['qimen-dunjia', 'lunar-javascript'],
-          'vendor-ui': ['lucide-react', 'react-helmet-async'],
+          'vendor-mingli': ['iztro', 'lunar-javascript'],
         },
       },
     },

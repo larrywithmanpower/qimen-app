@@ -4,63 +4,49 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 專案概述
 
-「奇門 AI 大師」是以奇門遁甲邏輯 + Google Gemini AI 打造的決策輔助 PWA。React 19 + Vite + TypeScript + Tailwind，部署於 Firebase Hosting（https://mingli-yuxuan.web.app/ ，專案 qimen-app-487007、site `mingli-yuxuan`，base path `/`）。
+「語軒命理」：塔羅（三張牌陣）、梅花易數、紫微斗數的解讀 PWA。React 19 + Vite + TypeScript，部署於 Firebase Hosting（https://mingli-yuxuan.web.app/ ，專案 qimen-app-487007、site `mingli-yuxuan`，base path `/`）。程式全在 `src/mingli/`，舊的奇門 AI 大師已移除，`#/qimen` 與其他未知網址一律導回首頁 `#/`。
 
 ## 常用指令
 
 ```bash
-npm run dev       # 啟動 Vite dev server（PWA devOptions 已啟用）
-npm run build     # tsc -b && vite build（TypeScript project refs 先跑型別檢查，失敗會中斷 build）
-npm run lint      # ESLint（flat config，含 react-hooks / react-refresh）
-npm run preview   # 預覽 production build
+npm run dev:mingli   # 開發伺服器，固定 port 5180（--strictPort）
+npm run build        # tsc -b && vite build（型別檢查失敗會中斷 build）
+npm run lint         # ESLint
+npm run test:unit    # vitest：排盤／牌序對答案、AI 檢查、gemini-proxy 後端
+npm run test:ui      # Playwright 命理畫面測試（playwright.mingli.config.ts，一律 headless）
+npm test             # 上面兩者
+npm run test:mutation   # 故意改錯測試：node tests/mutation.mjs [組別]，例如 ai、tarot、meihua、ziwei、ui
+npm run deploy       # npm test → 帶正式代理網址 build → firebase hosting deploy
 ```
 
-執行前需於根目錄建立 `.env`：
-```
-VITE_GEMINI_PROXY_URL=http://localhost:8080
-GEMINI_API_KEY=your_api_key_here
-```
+`tests/oracle/` 與 `*.fixtures*.json` 是對答案的答案檔，不可為了讓測試過而改動。
 
-Gemini 金鑰不再直接進前端 bundle，統一走 `functions/gemini-proxy/` Cloud Function 代呼。本機開發時另開終端跑：
+## 架構
+
+- 路由：`src/mingli/ui/route.ts` 的 hash 路由，頁面在 `MingliApp.tsx`：`/` 首頁、`/tarot`、`/meihua`、`/ziwei`、`/records`、`/accuracy`、`/me`。
+- 排盤引擎都是純函式：`tarot/engine.ts`（同一牌序編號洗出同一副牌）、`meihua/engine.ts`、`ziwei/engine.ts`（包 iztro，流派設定寫死）。
+- 問題：首頁輸入後存在 `ui/session.ts`；塔羅、梅花頁可用 `ui/QuestionBar.tsx` 在抽牌／起卦前修改。沒有問題不能開始，範例問題只當 placeholder。紫微問題可空。
+- 樣式：色碼只准寫在 `styles/tokens.css`，class 一律 `ml-` 開頭（`__tests__/static.test.ts` 會檢查）。
+
+## AI 解讀
+
+- 前端 `src/mingli/ai.ts`：組盤面事實（不含生日、姓名）→ POST 到 `VITE_GEMINI_PROXY_URL` → 收回後再驗一次（tone 一致、每段 basis 非空、牌名／卦名／星名都在盤上）。沒設網址、逾時 15 秒、非 200 或檢查沒過，一律退回程式範本並維持「範例解讀」那行。
+- 塔羅、梅花看解讀時自動呼叫；紫微按「AI 解讀這張盤」才呼叫。
+- 後端 `functions/gemini-proxy/`（資料夾與函式名 `geminiProxy` 線上已部署，不要改名）：用 `@anthropic-ai/sdk` 呼叫 `claude-sonnet-5-5`（模型寫死），用 `output_config` 指定 JSON schema 結構化輸出（Sonnet 5.5 不支援 tool_choice 強制指定工具）；Origin 白名單（沒帶 Origin 也 403）、`AI_ENABLED` 緊急開關、`DAILY_LIMIT`（程式預設 200，正式設 30）每日上限（Firestore `usage/{台灣日期}`）。環境變數見 `functions/gemini-proxy/.env.example`；`ANTHROPIC_API_KEY` 正式由 Secret Manager 掛載，不寫進程式。日誌不記錄 question 與 facts。
+- 本機跑後端：`cd functions/gemini-proxy && npm install && npm start`（localhost:8080）。
+- Playwright 測試注入代理網址：頁面載入前設 `window.__MINGLI_AI_URL__`（只在 dev 模式有效），再用 `page.route` 攔截，見 `e2e/mingli/ai.spec.ts`。
+
+## 測試慣例
+
+- vitest 收 `src/mingli/**/*.test.ts` 與 `functions/gemini-proxy/**/*.test.js`。
+- Playwright 命理測試：塔羅、梅花頁預設要先填問題，用 `e2e/mingli/checks.ts` 的 `askQuestion(page)`。
+- 開發 server 可能有人在用（port 5180），跑 Playwright 前先確認。
+
+## 部署
+
+`npm run deploy`（build 時帶入正式代理網址，再 `firebase deploy --only hosting`），快取標頭設在 `firebase.json`。後端另外部署 `functions/gemini-proxy`（gcloud 在 `~/.local/opt/google-cloud-sdk/bin/gcloud`，需先登入）：
 
 ```bash
-cd functions/gemini-proxy && npm install && npm start   # localhost:8080
+gcloud functions deploy gemini-proxy --gen2 --region=asia-east1 --runtime=nodejs22 --source=functions/gemini-proxy --entry-point=geminiProxy --trigger-http --allow-unauthenticated --max-instances=3 --timeout=60s --set-env-vars='^;^AI_ENABLED=true;DAILY_LIMIT=30;ALLOWED_ORIGINS=https://mingli-yuxuan.web.app,http://localhost:5180' --set-secrets=ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest
 ```
-
-Production 的 proxy URL 由 GitHub Actions secret `VITE_GEMINI_PROXY_URL` 注入；後端金鑰放 GCP Secret Manager，不寫死在 .env。
-
-## 架構重點
-
-### 資料流（起盤 → 解析）
-
-1. **`src/hooks/useQiMen.ts`** — 單一資料來源。接收 `Date`，呼叫 `qimen-dunjia` + `lunar-javascript` 計算當下盤面，輸出 `QiMenResult`（含九宮 `palaces: Record<1-9, PalaceData>`、節氣、陰陽、局數、值符、值使）。
-2. **`src/utils/analysis.ts`** — 純函式打分。綠色觸發 `大凶` 立即短路；否則用紅色清單加總（門 +40、神 +20、星 +20、干 +10），≥60 為 `吉`。吉凶名單即 `RED_AUSPICIOUS` / `GREEN_OMINOUS`，修改判斷規則從這裡動。
-3. **`src/components/QimenChart.tsx`** — 3×3 視覺盤。`PALACE_MAPPING = [4,9,2,3,5,7,8,1,6]` 是 library index → 洛書宮位數的對照，UI 布局寫死成這個順序。盲選前整盤套毛玻璃遮罩，報數後才 reveal。
-4. **`src/components/AnalysisCard.tsx`** — 單宮解析卡。呼叫 `aiService.fetchMasterAnalysis`；多宮時 `App.tsx` 另呼叫 `fetchMultiPalaceAnalysis` 做綜合比對。
-5. **`src/services/aiService.ts`** — Gemini 呼叫點。System prompt 內嵌「謀略家人格」與量化報告格式（🌟 成功機率、⚠️ 風險指數、🏗️ 執行建議），修改 AI 輸出結構從這裡。
-
-### 中宮特殊規則
-
-宮位 5（中宮）在奇門遁甲寄於坤二宮。`analyzePalace` 本身保持純粹，**呼叫端負責在 palaceNum === 5 時傳入宮位 2 的 `PalaceData`**，並顯示名稱如「中五 (寄坤二)」。新增中宮相關功能時注意這個約定。
-
-### 主題系統
-
-三主題（`dark` / `light` / `emerald`）以 CSS 變數切換，定義於 `src/index.css` `:root` 與 `.theme-*` class。Tailwind 透過 `tailwind.config.js` 映射為 `theme-bg` / `theme-primary` / `theme-border` / `theme-card` / `theme-accent`。**新增顏色請用這些 token，不要硬寫色碼**，否則主題切換會失效。`ThemeContext` 以 `localStorage` 持久化。
-
-### 狀態流（App.tsx 是唯一 orchestrator）
-
-所有頁面狀態集中在 `App.tsx`：`isCharting` / `isPreCharting` / `isPickingNumber` / `isRevealed` / `mainSelectedNum` / `selectedPalaces` / `restoredEntry`。流程為：
-`QuestionInput` → `NumberPicker`（1-9 盲選）→ `RitualLoading`（1200ms 儀式動畫）→ `QimenChart` reveal → 點宮位疊加 `AnalysisCard` → 多宮時顯示比對按鈕。
-
-歷史紀錄由 `HistoryContext` + `HistoryDrawer` 管理，以 `localStorage` 持久化，還原時透過 `restoredEntry` 注入既有 AI 結果避免重打 API。
-
-### 觸覺回饋
-
-`src/utils/haptics.ts` 封裝 Web Vibration API，區分 `triggerSuccessHaptic` / `triggerLightHaptic` / `triggerWarningHaptic`。報數、封盤揭示、AI 回應完成等關鍵節點都應觸發，維持儀式感一致性。
-
-## 慣例
-
-- **紅吉綠凶色碼**是全域語意符號（`text-red-500` / `text-green-500` + breathing glow），即便 light/emerald 主題也不要換配色，否則吉凶視覺判讀被破壞。
-- **動畫統一用 Framer Motion**，連續光暈 / 呼吸效果寫在 `src/styles/animations.css`（`red-breathing` / `green-breathing`）。
-- **部署 base path 為 `/`**（`vite.config.ts`），網站在 Firebase Hosting 網域根目錄；部署用 `npm run deploy`（先 build 再 `firebase deploy --only hosting`），快取標頭設在 `firebase.json`。已不用 GitHub Pages。AI 代理網址正式站暫不帶，見 Notion Todo 階段 1。
-- PWA manifest 的 `theme_color` / `background_color` 寫死為 dark 主題的 `#0f172a`，切換主題不影響系統 UI 顏色。
+PWA manifest 與 `<title>` 名稱為「語軒命理」。

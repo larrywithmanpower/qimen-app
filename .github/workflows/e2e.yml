@@ -29,15 +29,8 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Build (mock Gemini proxy)
+      - name: Build
         run: npm run build
-        env:
-          VITE_GEMINI_PROXY_URL: /api/gemini-mock
-
-      - name: Run E2E Tests
-        run: npx playwright test
-        env:
-          CI: true
 
       - name: Run 命理 UI tests
         run: npx playwright test -c playwright.mingli.config.ts

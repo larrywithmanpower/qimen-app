@@ -23,6 +23,9 @@ const tabOf = (path: string) => (path === '/ziwei' ? '/me' : ['/records', '/accu
 // 塔羅、梅花右上角放回首頁鈕；紫微照設計稿放日期
 const isMethodPage = (path: string) => ['/tarot', '/meihua'].includes(path)
 
+// 其他網址（含舊的 #/qimen）一律導回首頁
+const KNOWN_PATHS = ['/', '/tarot', '/meihua', '/ziwei', '/records', '/accuracy', '/me']
+
 function today() {
   const d = new Date()
   return `${d.getMonth() + 1} 月 ${d.getDate()} 日`
@@ -35,6 +38,9 @@ export default function MingliApp() {
 
   // effect 不可有回傳值：新版 Chrome 的 scrollTo 會回傳 Promise，被 React 當成 cleanup 會整棵卸掉
   useEffect(() => { window.scrollTo(0, 0) }, [route.hash])
+  useEffect(() => {
+    if (!KNOWN_PATHS.includes(route.path)) location.replace('#/')
+  }, [route.path])
 
   let page
   switch (route.path) {

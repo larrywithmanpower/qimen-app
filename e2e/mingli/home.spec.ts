@@ -93,3 +93,11 @@ for (const size of [{ width: 390, height: 844 }, { width: 820, height: 1180 }]) 
     expect(r.bottom).toBeLessThanOrEqual(r.barTop)
   })
 }
+
+test('舊網址 #/qimen 與未知網址一律導回首頁', async ({ page }) => {
+  for (const hash of ['#/qimen', '#/qimen/chart', '#/nowhere']) {
+    await page.goto(BASE + hash)
+    await expect(page).toHaveURL(/#\/$/)
+    await expect(page.getByTestId('ml-home')).toBeVisible()
+  }
+})
