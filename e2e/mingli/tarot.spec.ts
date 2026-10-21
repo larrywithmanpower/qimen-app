@@ -1,6 +1,6 @@
 import { test, expect } from './checks'
 import type { Page } from 'playwright/test'
-import { BASE, checkLayout, prepare } from './checks'
+import { BASE, askQuestion, checkLayout, prepare } from './checks'
 
 import { drawThree } from '../../src/mingli/tarot/engine'
 import { cardFile } from '../../src/mingli/tarot/cardArt'
@@ -16,6 +16,7 @@ async function open(page: Page) {
   await prepare(page)
   await page.goto(URL)
   await expect(page.getByTestId('ml-tarot')).toBeVisible()
+  await askQuestion(page)
 }
 
 // 牌堆的牌互相疊著，直接對該張送點擊事件；抽牌要點兩下（第一下浮起、第二下確認）
@@ -79,6 +80,8 @@ test('三個牌位的牌名等於引擎抽出的牌，重新整理後相同', as
 
   await page.reload()
   await expect(page.getByTestId('ml-tarot')).toBeVisible()
+  // 問題只存在記憶體，重新整理後要重填；網址帶 seed 時首次填問題不換牌序
+  await askQuestion(page)
   await pickAll(page)
   expect(await slotNames(page)).toEqual(expected)
 })

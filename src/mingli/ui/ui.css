@@ -236,3 +236,4 @@ body:has(.ml-app) {
   .ml-app *, .ml-app *::before, .ml-app *::after { animation-delay: 0s !important; transition-delay: 0s !important; }
   .ml-bagua svg { animation: none; }
 }
+.ml-home-need { margin: 0; font-size: var(--ml-fs-caption); color: var(--ml-cinnabar-text); }

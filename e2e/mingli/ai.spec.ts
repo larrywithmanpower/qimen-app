@@ -1,6 +1,6 @@
 import { test, expect } from 'playwright/test'
 import type { Page, Route } from 'playwright/test'
-import { BASE, prepare } from './checks'
+import { BASE, askQuestion, prepare } from './checks'
 
 import { drawThree, templateReading } from '../../src/mingli/tarot/engine'
 import { castByNumbers } from '../../src/mingli/meihua/engine'
@@ -41,6 +41,7 @@ const SPECS: Record<Kind, {
     outOfBoundsText: `會遇到${['權杖王牌', '聖杯二', '寶劍十'].find((n) => !drawn.some((d) => d.card.zh === n))}`,
     open: async (page) => {
       await page.goto(`${BASE}#/tarot?seed=${SEED}`)
+      await askQuestion(page)
       const tap = (pos: number) => page.getByTestId('ml-fan-card').nth(pos).dispatchEvent('click')
       for (const p of PICKS) { await tap(p); await tap(p) }
     },
@@ -53,6 +54,7 @@ const SPECS: Record<Kind, {
     outOfBoundsText: `像${['乾為天', '坤為地', '水火既濟'].find((n) => ![mei.name, mei.mutual.name, mei.changed.name].includes(n))}`,
     open: async (page) => {
       await page.goto(`${BASE}#/meihua?a=12&b=34`)
+      await askQuestion(page)
       await page.getByTestId('ml-to-reading').click()
     },
     templateTestId: 'ml-reading',

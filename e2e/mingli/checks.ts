@@ -17,6 +17,15 @@ export { expect };
 
 export const BASE = '/';
 
+/** 塔羅、梅花頁不再偷補範例問題：直接開網址會是輸入框，測試先用這個 helper 填問題（Enter 確定） */
+export const DEFAULT_QUESTION = '這週提的企劃會不會過？';
+export async function askQuestion(page: Page, question = DEFAULT_QUESTION) {
+  const input = page.getByTestId('ml-question-input');
+  await input.fill(question);
+  await input.press('Enter');
+  await expect(input).toHaveCount(0);
+}
+
 export const SIZES = [
   { name: 'phone', width: 390, height: 844 },
   { name: 'tablet', width: 820, height: 1180 },

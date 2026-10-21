@@ -103,5 +103,32 @@
   "replace": "aiFacts",
   "test": "e2e/mingli/ai.spec.ts",
   "runner": "playwright"
+ },
+ {
+  "id": "A14",
+  "desc": "首頁：問題空白按開始仍放行",
+  "file": "src/mingli/ui/Home.tsx",
+  "find": "if (!q && method !== 'ziwei') {",
+  "replace": "if (false) {",
+  "test": "e2e/mingli/home.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A15",
+  "desc": "塔羅：沒問題時牌扇仍可抽",
+  "file": "src/mingli/tarot/TarotPage.tsx",
+  "find": "                  disabled={!question}\n",
+  "replace": "",
+  "test": "e2e/mingli/question.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A16",
+  "desc": "梅花：沒問題時起卦鈕仍可按",
+  "file": "src/mingli/meihua/ui/MeihuaPage.tsx",
+  "find": "disabled={!question || (way === 'numbers' && !numsOk)}",
+  "replace": "disabled={way === 'numbers' && !numsOk}",
+  "test": "e2e/mingli/question.spec.ts",
+  "runner": "playwright"
  }
 ]

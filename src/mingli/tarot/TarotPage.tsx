@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, PointerEvent } from 'react'
 import '../ui/tarot.css'
 import { burstAt, prefersReduced, setRealm } from '../ui/fx'
-import { SAMPLE_QUESTION, session } from '../ui/session'
+import QuestionBar, { NEED_QUESTION } from '../ui/QuestionBar'
+import { session, updateSession } from '../ui/session'
 import { CARDS } from './cards'
 import { BACK_SRC, BACK_SM_SRC, faceSrc } from './cardArt'
 import { clipQuestion, tarotFacts } from '../ai'
@@ -23,14 +24,19 @@ const pad = (seed: number) => String(seed).padStart(5, '0')
 // 用問題＋現在時間產生新的牌序編號（放在元件外，事件裡呼叫）
 const freshSeed = (question: string) => seedFrom(question, Date.now())
 
-function initialSeed(param: string | null, question: string) {
+// 網址帶的牌序編號合法才回傳數字
+function validSeed(param: string | null): number | null {
   const n = param === null || param === '' ? NaN : Number(param)
-  return Number.isInteger(n) && n >= 0 && n < SEED_RANGE ? n : freshSeed(question)
+  return Number.isInteger(n) && n >= 0 && n < SEED_RANGE ? n : null
 }
 
+const initialSeed = (param: string | null, question: string) => validSeed(param) ?? freshSeed(question)
+
 export default function TarotPage({ seedParam }: { seedParam: string | null }) {
-  const question = session.question || SAMPLE_QUESTION
+  const [question, setQuestion] = useState(session.question)
   const [seed, setSeed] = useState(() => initialSeed(seedParam, question))
+  // 網址指定了牌序時，第一次填問題不換牌序（測試與分享連結要固定）
+  const pinnedSeed = useRef(validSeed(seedParam) !== null)
   const [picks, setPicks] = useState<number[]>([])
   const [phases, setPhases] = useState<Phase[]>(['empty', 'empty', 'empty'])
   const [read, setRead] = useState(false)
@@ -84,6 +90,16 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
   const setPhase = (slot: number, phase: Phase) =>
     setPhases((cur) => cur.map((p, i) => (i === slot ? phase : p)))
 
+  // 改問題：用新問題重新洗牌（抽牌前才會走到這裡）
+  const commitQuestion = (q: string) => {
+    if (q === question) return
+    updateSession({ question: q })
+    const keep = pinnedSeed.current && question === ''
+    pinnedSeed.current = false
+    setQuestion(q)
+    if (!keep) setSeed(freshSeed(q))
+  }
+
   const reset = (nextSeedValue: number) => {
     clearAll()
     picksRef.current = []
@@ -97,7 +113,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
 
   // 兩步驟：第一次點只浮起，再點同一張才確認抽出
   const tapCard = (pos: number, btn: HTMLElement) => {
-    if (picksRef.current.length >= 3 || picksRef.current.includes(pos) || busy) return
+    if (!question || picksRef.current.length >= 3 || picksRef.current.includes(pos) || busy) return
     if (lifted !== pos) {
       setLifted(pos)
       return
@@ -108,7 +124,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
 
   const pick = (pos: number, btn: HTMLElement) => {
     const cur = picksRef.current
-    if (cur.length >= 3 || cur.includes(pos) || busy) return
+    if (!question || cur.length >= 3 || cur.includes(pos) || busy) return
     const slot = cur.length
     // 先預載抽中那張的牌面，翻牌時才不會空白
     new Image().src = faceSrc(deck[pos].index)
@@ -156,7 +172,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
   }
 
   const shuffleDeck = () => {
-    if (busy) return
+    if (busy || !question) return
     if (picks.length) return reset(freshSeed(question))
     const reduce = prefersReduced()
     const cards = [...(fanRef.current?.querySelectorAll<HTMLElement>('.ml-fan-card') ?? [])]
@@ -213,7 +229,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
       <div className="ml-tarot-board">
         <div className="ml-tarot-head">
           <span className="ml-tarot-sub">The Three-Card Spread</span>
-          <h1 className="ml-tarot-question">{question}</h1>
+          <QuestionBar question={question} canEdit={picks.length === 0 && !busy} titleClass="ml-tarot-question" onCommit={commitQuestion} />
         </div>
         <div className="ml-slots">
           {SLOT_LABELS.map(([zh, en], i) => {
@@ -259,13 +275,13 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
           {read ? (
             <button type="button" className="ml-ghost" data-testid="ml-again" onClick={() => reset(freshSeed(question))}>重新抽</button>
           ) : (
-            <button type="button" className="ml-ghost" data-testid="ml-shuffle" onClick={shuffleDeck}>洗牌</button>
+            <button type="button" className="ml-ghost" data-testid="ml-shuffle" disabled={!question} onClick={shuffleDeck}>洗牌</button>
           )}
           <span className="ml-seed" data-testid="ml-seed">牌序 No. {pad(seed)}</span>
         </div>
-        {!read && <p className="ml-tarot-hint">{lifted !== null ? `再點一次確定抽這張・還要抽 ${3 - picks.length} 張` : picks.length === 0 ? '點牌堆任一張，抽三張' : `再抽 ${3 - picks.length} 張・點牌堆任一張`}</p>}
+        {!read && <p className="ml-tarot-hint">{!question ? NEED_QUESTION : lifted !== null ? `再點一次確定抽這張・還要抽 ${3 - picks.length} 張` : picks.length === 0 ? '點牌堆任一張，抽三張' : `再抽 ${3 - picks.length} 張・點牌堆任一張`}</p>}
         <div
-          className={`ml-fan${picks.length >= 3 || busy ? ' ml-locked' : ''}`}
+          className={`ml-fan${picks.length >= 3 || busy || !question ? ' ml-locked' : ''}`}
           data-testid="ml-fan"
           ref={fanRef}
           onScroll={syncOffset}
@@ -283,6 +299,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
                   className="ml-fan-card"
                   data-testid="ml-fan-card"
                   aria-label={`第 ${k + 1} 張牌`}
+                  disabled={!question}
                   data-lifted={lifted === k}
                   aria-pressed={lifted === k}
                   style={{ '--ml-i': k, visibility: picks.includes(k) ? 'hidden' : 'visible' } as CSSProperties}

@@ -1,6 +1,5 @@
 import { test, expect } from './checks'
-import type { Page } from 'playwright/test'
-import { BASE, checkLayout, prepare } from './checks'
+import { BASE, DEFAULT_QUESTION, checkLayout, prepare } from './checks'
 
 
 // 只在手機尺寸 390×844 跑
@@ -22,10 +21,30 @@ test('首頁可選卡剛好 3 張，沒有奇門入口', async ({ page }) => {
 
 test('選塔羅按開始會到 #/tarot', async ({ page }) => {
   await page.getByTestId('ml-method-tarot').click()
+  await page.getByTestId('ml-question').fill(DEFAULT_QUESTION)
   await page.getByTestId('ml-start').click()
   await expect(page).toHaveURL(/#\/tarot$/)
   await expect(page.getByTestId('ml-tarot')).toBeVisible()
+  // 首頁填的問題帶進塔羅頁，不再出現輸入框
+  await expect(page.getByTestId('ml-question-input')).toHaveCount(0)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(DEFAULT_QUESTION)
 })
+
+for (const m of ['tarot', 'meihua']) {
+  test(`首頁問題空白按開始（${m}）：留在首頁、顯示提示並聚焦輸入框`, async ({ page }) => {
+    await page.getByTestId(`ml-method-${m}`).click()
+    await page.getByTestId('ml-question').fill('   ')
+    await page.getByTestId('ml-start').click()
+    await expect(page.getByTestId('ml-home-need')).toHaveText('先寫下你想問的事')
+    await expect(page.getByTestId('ml-question')).toBeFocused()
+    await page.waitForTimeout(900)
+    await expect(page.getByTestId('ml-home')).toBeVisible()
+    await expect(page).not.toHaveURL(/#\/(tarot|meihua)/)
+    // 開始打字提示就消失
+    await page.getByTestId('ml-question').fill('a')
+    await expect(page.getByTestId('ml-home-need')).toHaveCount(0)
+  })
+}
 
 test('首頁版面檢查沒有問題', async ({ page }) => {
   // 等標題逐字動畫跑完

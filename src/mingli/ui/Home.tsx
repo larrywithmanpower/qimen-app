@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { burstAt, expandTaiji, prefersReduced, setRealm, setTaijiSide } from './fx'
 import { goTo } from './route'
 import { SAMPLE_QUESTION, session, updateSession, type Method } from './session'
+import { NEED_QUESTION } from './QuestionBar'
 
 const TITLE_SEGS = ['心裡有事，', '就問。']
 const TITLE = TITLE_SEGS.join('')
@@ -17,6 +18,8 @@ const SOON = ['奇門遁甲', '八字', '雙人合盤']
 export default function Home() {
   const [method, setMethod] = useState<Method>(session.method)
   const [question, setQuestion] = useState(session.question)
+  const [needQ, setNeedQ] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
   const timer = useRef(0)
 
   useEffect(() => {
@@ -33,7 +36,14 @@ export default function Home() {
   }
 
   const start = (el: Element) => {
-    updateSession({ question: question.trim() || SAMPLE_QUESTION, method })
+    const q = question.trim()
+    // 塔羅、梅花一定要有問題；紫微問題可空
+    if (!q && method !== 'ziwei') {
+      setNeedQ(true)
+      inputRef.current?.focus()
+      return
+    }
+    updateSession({ question: q, method })
     burstAt(el)
     // 太極擴散：選中的那半邊吞掉整個畫面，再進入該頁
     expandTaiji(method === 'tarot' ? 1 : -1)
@@ -60,10 +70,12 @@ export default function Home() {
             aria-label="你想問的事"
             placeholder={`例：${SAMPLE_QUESTION}`}
             autoComplete="off"
+            ref={inputRef}
             value={question}
-            onChange={(e) => setQuestion(e.target.value)}
+            onChange={(e) => { setQuestion(e.target.value); setNeedQ(false) }}
           />
         </div>
+        {needQ && <p className="ml-home-need" data-testid="ml-home-need" role="status">{NEED_QUESTION}</p>}
         <div className="ml-home-methods">
           {METHODS.map((m) => (
             <button

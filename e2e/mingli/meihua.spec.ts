@@ -1,6 +1,6 @@
 import { test, expect } from './checks'
 import type { Page } from 'playwright/test'
-import { BASE, checkLayout, prepare } from './checks'
+import { BASE, askQuestion, checkLayout, prepare } from './checks'
 
 import { castByNumbers, castByTime } from '../../src/mingli/meihua/engine'
 import type { MeihuaResult } from '../../src/mingli/meihua/engine'
@@ -15,6 +15,7 @@ async function open(page: Page, url: string) {
   await prepare(page)
   await page.goto(url)
   await expect(page.getByTestId('ml-meihua')).toBeVisible()
+  await askQuestion(page)
 }
 
 // 右側各行的文字，key 是行標題

@@ -3,7 +3,8 @@ import type { ReactNode } from 'react'
 import { Solar } from 'lunar-javascript'
 import './meihua.css'
 import { burstAt, lightTrigrams, prefersReduced, setRealm } from '../../ui/fx'
-import { SAMPLE_QUESTION, session } from '../../ui/session'
+import QuestionBar, { NEED_QUESTION } from '../../ui/QuestionBar'
+import { session, updateSession } from '../../ui/session'
 import { clipQuestion, meihuaFacts } from '../../ai'
 import { AiLoading, AiReadingView } from '../../ui/AiReadingView'
 import { useAiReading } from '../../ui/useAiReading'
@@ -52,7 +53,7 @@ function MiniHex({ res }: { res: MeihuaResult }) {
 }
 
 export default function MeihuaPage({ params }: { params: URLSearchParams }) {
-  const question = session.question || SAMPLE_QUESTION
+  const [question, setQuestion] = useState(session.question)
   const pa = parseNum(params.get('a') ?? '')
   const pb = parseNum(params.get('b') ?? '')
   const direct = pa !== null && pb !== null
@@ -101,6 +102,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
 
   const doCast = (btn?: Element) => {
     if (btn) burstAt(btn)
+    if (!question) return
     if (way === 'numbers') {
       if (a === null || b === null) return
       run(castByNumbers(a, b), `報數 ${a}、${b}`)
@@ -114,13 +116,24 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
 
   useEffect(() => {
     setRealm('east')
-    if (pa !== null && pb !== null) run(castByNumbers(pa, pb), `報數 ${pa}、${pb}`)
     return () => {
       clearTimers()
       lightTrigrams([])
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // 網址帶 a、b 時有問題就直接起卦（沒問題要等填完）
+  const autoRan = useRef(false)
+  useEffect(() => {
+    if (question && pa !== null && pb !== null && !autoRan.current) {
+      autoRan.current = true
+      run(castByNumbers(pa, pb), `報數 ${pa}、${pb}`)
+    }
+    return () => {
+      autoRan.current = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [question])
 
   const res = cast?.res ?? null
   const reading = res ? templateReading(res) : null
@@ -158,7 +171,12 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
       <div className="ml-mboard">
         <div className="ml-mhead">
           <span className="ml-mh-sub">梅花易數・{way === 'time' ? '時間起卦' : '報數起卦'}</span>
-          <h1 className="ml-mh-question">{question}</h1>
+          <QuestionBar
+            question={question}
+            canEdit={!cast}
+            titleClass="ml-mh-question"
+            onCommit={(q) => { updateSession({ question: q }); setQuestion(q) }}
+          />
         </div>
         <div className="ml-how" role="group" aria-label="起卦方式">
           <button type="button" className="ml-chip" data-testid="ml-method-time" aria-pressed={way === 'time'} onClick={() => setWay('time')}>時間起卦</button>
@@ -218,13 +236,14 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
             )}
           </div>
         </div>
+        {!question && <p className="ml-cast-info" data-testid="ml-cast-need">{NEED_QUESTION}</p>}
         {cast && <p className="ml-cast-info" data-testid="ml-cast-info">{cast.info}</p>}
         <div className="ml-mtools">
           <button
             type="button"
             className={cast ? 'ml-ghost' : 'ml-cta'}
             data-testid="ml-cast"
-            disabled={way === 'numbers' && !numsOk}
+            disabled={!question || (way === 'numbers' && !numsOk)}
             onClick={(e) => doCast(e.currentTarget)}
           >
             {cast ? '重新起卦' : '起卦'}

@@ -1,7 +1,7 @@
 import { test, expect } from './checks'
 import type { Page } from 'playwright/test'
 import { mkdirSync } from 'node:fs'
-import { BASE, SIZES, checkLayout, prepare } from './checks'
+import { BASE, SIZES, askQuestion, checkLayout, prepare } from './checks'
 
 // 四尺寸全套：每頁截圖存 qa-reports/mingli-v2/<頁>/<寬x高>.png，並跑版面檢查
 // 只在交件前跑：SHOTS=1 npx playwright test -c playwright.mingli.config.ts shots
@@ -59,6 +59,7 @@ for (const pg of pick) {
       await prepare(page)
       await page.goto(BASE + pg.hash)
       await page.waitForTimeout(600)
+      if (/^#\/(tarot|meihua)/.test(pg.hash)) await askQuestion(page)
       if (pg.step) await pg.step(page)
       await page.waitForTimeout(800)
       mkdirSync(`${OUT}/${pg.name}`, { recursive: true })
