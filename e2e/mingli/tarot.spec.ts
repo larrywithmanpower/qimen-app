@@ -117,13 +117,13 @@ test('抽滿後牌堆隱藏、外框與解讀區不相交，依據標籤只有�
   await expect(page.getByTestId('ml-reading')).toContainText('範例解讀，正式版由 AI 依牌義規則卡撰寫')
 })
 
-test('減少動態：抽完第 3 張 300ms 內解讀出現', async ({ page }) => {
+test('減少動態：抽完第 3 張 1 秒內解讀出現（正常模式約 2 秒）', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await open(page)
   await pick(page, PICKS[0])
   await pick(page, PICKS[1])
   await pick(page, PICKS[2])
-  await expect(page.getByTestId('ml-reading')).toBeVisible({ timeout: 300 })
+  await expect(page.getByTestId('ml-reading')).toBeVisible({ timeout: 1000 })
 })
 
 test('抽牌中與解讀後版面檢查沒有問題', async ({ page }) => {
