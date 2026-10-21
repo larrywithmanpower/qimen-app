@@ -42,11 +42,10 @@ export default defineConfig({
       }
     }),
     Sitemap({
-      hostname: 'https://larrywithmanpower.github.io/qimen-app/',
-      dynamicRoutes: ['/qimen-app/'],
+      hostname: 'https://mingli-yuxuan.web.app/',
     })
   ],
-  base: '/qimen-app/',
+  base: '/',
   build: {
     rollupOptions: {
       output: {

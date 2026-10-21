@@ -7,7 +7,7 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const SHOTS = join(__dirname, 'screenshots');
-const BASE = 'http://localhost:5173/qimen-app/';
+const BASE = 'http://localhost:5173/';
 
 const check = (label, cond, detail = '') => {
   const mark = cond ? '✅' : '❌';

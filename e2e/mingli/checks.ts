@@ -15,7 +15,7 @@ export { expect };
 
 // 命理 App 畫面共用檢查：橫向捲動、文字重疊／裁切、點擊區大小、安全區域
 
-export const BASE = '/qimen-app/';
+export const BASE = '/';
 
 export const SIZES = [
   { name: 'phone', width: 390, height: 844 },

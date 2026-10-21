@@ -4,7 +4,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const BASE = 'http://localhost:5173/qimen-app/';
+const BASE = 'http://localhost:5173/';
 
 const VIEWPORTS = [
   { name: 'mobile-390', width: 390, height: 844 },

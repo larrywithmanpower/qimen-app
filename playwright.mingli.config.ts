@@ -15,7 +15,7 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'], headless: true } }],
   webServer: {
     command: `npx vite --port ${port} --strictPort`,
-    url: `http://localhost:${port}/qimen-app/`,
+    url: `http://localhost:${port}/`,
     reuseExistingServer: true,
     timeout: 60_000,
   },

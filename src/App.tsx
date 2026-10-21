@@ -252,17 +252,17 @@ function App() {
 
         {/* Open Graph / Facebook */}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://larrywithmanpower.github.io/qimen-app/" />
+        <meta property="og:url" content="https://mingli-yuxuan.web.app/" />
         <meta property="og:title" content="奇門 AI 大師 - 專業奇門遁甲 AI 解析工具" />
         <meta property="og:description" content="結合傳統奇門遁甲與 AI，為您的決策提供精準的時空指引。" />
-        <meta property="og:image" content="https://larrywithmanpower.github.io/qimen-app/pwa-512x512.svg" />
+        <meta property="og:image" content="https://mingli-yuxuan.web.app/pwa-512x512.svg" />
 
         {/* Twitter */}
         <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content="https://larrywithmanpower.github.io/qimen-app/" />
+        <meta property="twitter:url" content="https://mingli-yuxuan.web.app/" />
         <meta property="twitter:title" content="奇門 AI 大師 - 專業奇門遁甲 AI 解析工具" />
         <meta property="twitter:description" content="結合傳統奇門遁甲與 AI，為您的決策提供精準的時空指引。" />
-        <meta property="twitter:image" content="https://larrywithmanpower.github.io/qimen-app/pwa-512x512.svg" />
+        <meta property="twitter:image" content="https://mingli-yuxuan.web.app/pwa-512x512.svg" />
 
         {/* Structured Data (JSON-LD) */}
         <script type="application/ld+json">

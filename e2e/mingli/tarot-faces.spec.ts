@@ -8,7 +8,7 @@ test('78 張牌面截圖存檔', async ({ page }) => {
   await page.goto(BASE + '#/tarot?seed=4271')
   await expect(page.getByTestId('ml-tarot')).toBeVisible()
   const count = await page.evaluate(async () => {
-    const mod = await import('/qimen-app/src/mingli/tarot/cardArt.ts')
+    const mod = await import('/src/mingli/tarot/cardArt.ts')
     const grid = document.createElement('div')
     grid.style.cssText = 'position:fixed;inset:0;z-index:99;display:grid;grid-template-columns:repeat(13,1fr);gap:6px;padding:8px;background:var(--ml-ground)'
     const imgs: HTMLImageElement[] = []

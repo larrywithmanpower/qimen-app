@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "smoke": "node tests/smoke.mjs",
+    "deploy": "npm run build && npx firebase-tools deploy --only hosting --project qimen-app-487007",
     "test:methods": "node tests/method-flows.mjs",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

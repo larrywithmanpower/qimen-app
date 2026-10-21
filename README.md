@@ -2,7 +2,7 @@
 
 > **✨ 融合古老智慧與現代 AI 的頂級謀略工具**
 >
-> 🚀 **線上展示：[https://larrywithmanpower.github.io/qimen-app/](https://larrywithmanpower.github.io/qimen-app/)**
+> 🚀 **線上展示：[https://mingli-yuxuan.web.app/](https://mingli-yuxuan.web.app/)**
 
 「奇門大師」是一款基於 **奇門遁甲** 邏輯與 **Google Gemini AI** 打造的現代化決策輔助應用。它不僅提供精密的自動排盤，更透過 AI 謀略家的人格設定，為使用者提供具備儀式感、深度且量化的行動指南。
 

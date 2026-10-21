@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 專案概述
 
-「奇門 AI 大師」是以奇門遁甲邏輯 + Google Gemini AI 打造的決策輔助 PWA。React 19 + Vite + TypeScript + Tailwind，部署於 GitHub Pages（base path `/qimen-app/`）。
+「奇門 AI 大師」是以奇門遁甲邏輯 + Google Gemini AI 打造的決策輔助 PWA。React 19 + Vite + TypeScript + Tailwind，部署於 Firebase Hosting（https://mingli-yuxuan.web.app/ ，專案 qimen-app-487007、site `mingli-yuxuan`，base path `/`）。
 
 ## 常用指令
 
@@ -62,5 +62,5 @@ Production 的 proxy URL 由 GitHub Actions secret `VITE_GEMINI_PROXY_URL` 注�
 
 - **紅吉綠凶色碼**是全域語意符號（`text-red-500` / `text-green-500` + breathing glow），即便 light/emerald 主題也不要換配色，否則吉凶視覺判讀被破壞。
 - **動畫統一用 Framer Motion**，連續光暈 / 呼吸效果寫在 `src/styles/animations.css`（`red-breathing` / `green-breathing`）。
-- **部署 base path 為 `/qimen-app/`**（`vite.config.ts`），所有靜態資源路徑與 sitemap 都依此前綴，本地開發時注意別誤改。
+- **部署 base path 為 `/`**（`vite.config.ts`），網站在 Firebase Hosting 網域根目錄；部署用 `npm run deploy`（先 build 再 `firebase deploy --only hosting`），快取標頭設在 `firebase.json`。已不用 GitHub Pages。AI 代理網址正式站暫不帶，見 Notion Todo 階段 1。
 - PWA manifest 的 `theme_color` / `background_color` 寫死為 dark 主題的 `#0f172a`，切換主題不影響系統 UI 顏色。
