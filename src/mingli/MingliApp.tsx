@@ -73,7 +73,7 @@ export default function MingliApp() {
       <BrushFilters />
       <header className="ml-header">
         <div className="ml-header-inner">
-          <a className="ml-brand" href="#/">命理</a>
+          <a className="ml-brand" href="#/">星墨</a>
           <nav className="ml-topnav" aria-label="主選單">
             {TABS.map((t) => (
               <a key={t.path} className="ml-tab" href={`#${t.path}`} aria-current={active === t.path ? 'page' : undefined}>{t.label}</a>

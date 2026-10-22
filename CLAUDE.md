@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 專案概述
 
-「語軒命理」：塔羅（三張牌陣）、梅花易數、紫微斗數的解讀 PWA。React 19 + Vite + TypeScript，部署於 Firebase Hosting（https://mingli-yuxuan.web.app/ ，專案 qimen-app-487007、site `mingli-yuxuan`，base path `/`）。程式全在 `src/mingli/`，舊的奇門 AI 大師已移除，`#/qimen` 與其他未知網址一律導回首頁 `#/`。
+「星墨命理」：塔羅（三張牌陣）、梅花易數、紫微斗數的解讀 PWA。React 19 + Vite + TypeScript，部署於 Firebase Hosting（https://mingli-yuxuan.web.app/ ，專案 qimen-app-487007、site `mingli-yuxuan`，base path `/`）。程式全在 `src/mingli/`，舊的奇門 AI 大師已移除，`#/qimen` 與其他未知網址一律導回首頁 `#/`。
 
 ## 常用指令
 
@@ -51,4 +51,4 @@ npm run deploy       # npm test → 帶正式代理網址 build → firebase hos
 ```bash
 gcloud functions deploy gemini-proxy --gen2 --region=asia-east1 --runtime=nodejs22 --source=functions/gemini-proxy --entry-point=geminiProxy --trigger-http --allow-unauthenticated --max-instances=3 --timeout=60s --set-env-vars='^;^AI_ENABLED=true;DAILY_LIMIT=30;ALLOWED_ORIGINS=https://mingli-yuxuan.web.app,http://localhost:5180' --set-secrets=ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest
 ```
-PWA manifest 與 `<title>` 名稱為「語軒命理」。
+PWA manifest 與 `<title>` 名稱為「星墨命理」。

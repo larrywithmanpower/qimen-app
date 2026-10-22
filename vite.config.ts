@@ -11,8 +11,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'pwa-192x192.svg', 'pwa-512x512.svg'],
       manifest: {
-        name: '語軒命理',
-        short_name: '語軒命理',
+        name: '星墨命理',
+        short_name: '星墨命理',
         description: '塔羅、梅花易數、紫微斗數的白話解讀',
         theme_color: '#111014',
         background_color: '#111014',
