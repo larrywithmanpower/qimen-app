@@ -16,10 +16,20 @@ export async function callClaude(system, user) {
     output_config: { format: { type: 'json_schema', schema: READING_TOOL.input_schema } },
   });
   const text = msg.content.find((b) => b.type === 'text')?.text;
-  // 解析失敗回 undefined，交給 handler 的格式檢查重叫
+  // usage 原樣取 API 回應；沒有的快取欄位算 0
+  const u = msg.usage ?? {};
+  const usage = {
+    input_tokens: u.input_tokens ?? 0,
+    output_tokens: u.output_tokens ?? 0,
+    cache_creation_input_tokens: u.cache_creation_input_tokens ?? 0,
+    cache_read_input_tokens: u.cache_read_input_tokens ?? 0,
+  };
+  // 解析失敗 reading 回 undefined，交給 handler 的格式檢查重叫（usage 照樣回報，這次呼叫還是花了錢）
+  let reading;
   try {
-    return text ? JSON.parse(text) : undefined;
+    reading = text ? JSON.parse(text) : undefined;
   } catch {
-    return undefined;
+    reading = undefined;
   }
+  return { reading, usage, model: msg.model ?? MODEL };
 }

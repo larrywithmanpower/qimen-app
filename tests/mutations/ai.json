@@ -139,5 +139,70 @@
   "replace": "onClick={(e) => doCast(e.currentTarget)}",
   "test": "e2e/mingli/question.spec.ts",
   "runner": "playwright"
+ },
+ {
+  "id": "A18",
+  "desc": "前端：請求不送 focus",
+  "file": "src/mingli/ai.ts",
+  "find": "body: JSON.stringify({ ...req, question: clipQuestion(req.question) }),",
+  "replace": "body: JSON.stringify({ kind: req.kind, facts: req.facts, tone: req.tone, question: clipQuestion(req.question) }),",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A19",
+  "desc": "畫面：紫微請求不帶 focus（Playwright）",
+  "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
+  "find": "tone: '平', focus: layer }",
+  "replace": "tone: '平' }",
+  "test": "e2e/mingli/ziwei.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A20",
+  "desc": "後端：接受不合法的 focus（只剩檢查 kind）",
+  "file": "functions/gemini-proxy/validate.js",
+  "find": "(body.kind !== 'ziwei' || !FOCUSES.includes(body.focus))",
+  "replace": "(body.kind !== 'ziwei')",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A21",
+  "desc": "前端：選今年時 facts 把流月、流日也一起送",
+  "file": "src/mingli/ai.ts",
+  "find": "    [focus]: layerFacts(layer),",
+  "replace": "    [focus]: layerFacts(layer),\n    monthly: layerFacts(h.monthly),\n    daily: layerFacts(h.daily),",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "C1",
+  "desc": "成本：重叫的那次不記 usage",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "if (out?.usage) usages.push(out.usage);",
+  "replace": "if (out?.usage && attempt === 0) usages.push(out.usage);",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "C2",
+  "desc": "成本：Firestore 寫入失敗讓請求失敗",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "console.error('cost record failed', { name: error?.name, code: error?.code });",
+  "replace": "console.error('cost record failed', { name: error?.name, code: error?.code });\n        throw error;",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "C3",
+  "desc": "成本：單價把輸出算成輸入價",
+  "file": "scripts/ai-cost-lib.mjs",
+  "find": "n(rec.output_tokens) * p.output +",
+  "replace": "n(rec.output_tokens) * p.input +",
+  "test": "scripts/ai-cost.test.mjs"
+ },
+ {
+  "id": "C4",
+  "desc": "成本：api_error 不記錄",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "    if (cost) {",
+  "replace": "    if (cost && status !== 'api_error') {",
+  "test": "functions/gemini-proxy"
  }
 ]

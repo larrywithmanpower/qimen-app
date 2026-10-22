@@ -114,8 +114,9 @@
 
 /* 電腦：左盤右說明 */
 @media (min-width: 1100px) {
-  .ml-zchart-wrap { display: grid; grid-template-columns: minmax(0, 680px) minmax(0, 1fr); gap: var(--ml-space-6); align-items: center; }
-  .ml-zside { max-width: 480px; }
+  /* 左右兩欄都從頂端對齊；右欄跟著捲動，內容比視窗長時自己捲 */
+  .ml-zchart-wrap { display: grid; grid-template-columns: minmax(0, 680px) minmax(0, 1fr); gap: var(--ml-space-6); align-items: start; }
+  .ml-zside { max-width: 480px; position: sticky; top: var(--ml-space-4); max-height: calc(100vh - var(--ml-space-4) - 88px); overflow-y: auto; overscroll-behavior: contain; padding-bottom: var(--ml-space-2); }
   .ml-z-local, .ml-z-hint-bottom { display: none; }
   .ml-z-hint-top { display: block; }
   .ml-chart { grid-auto-rows: minmax(150px, auto); }
@@ -124,12 +125,15 @@
 /* 運限：查詢日期與分層切換 */
 .ml-zlayers { display: flex; flex-direction: column; gap: var(--ml-space-2); min-width: 0; }
 .ml-zdate { display: flex; flex-direction: column; gap: 6px; }
-.ml-zlayer-pills { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--ml-space-2); }
+.ml-zlayer-pills { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--ml-space-2); }
 .ml-zlayer {
-  min-height: 44px; min-width: 44px; padding: 0 var(--ml-space-2); border-radius: var(--ml-radius-control);
+  min-height: 44px; min-width: 44px; padding: 2px var(--ml-space-1); border-radius: var(--ml-radius-control);
   border: 1px solid var(--ml-line-strong); background: var(--ml-veil); color: var(--ml-ink-muted);
   font-family: var(--ml-font-serif); font-size: var(--ml-fs-body); font-weight: 700; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.5;
 }
+.ml-zlayer-o { font-family: var(--ml-font-sans); font-size: var(--ml-fs-micro); font-weight: 400; opacity: .75; }
+.ml-zlayer-hint { margin: 0; font-size: var(--ml-fs-label); line-height: 1.6; color: var(--ml-ink-muted); }
 .ml-zlayer[aria-pressed="true"] { border-color: var(--ml-paper); background: var(--ml-paper-soft); color: var(--ml-paper); }
 .ml-zlayer[data-layer="decadal"][aria-pressed="true"] { border-color: var(--ml-lay-decadal); color: var(--ml-lay-decadal); background: var(--ml-lay-decadal-soft); }
 .ml-zlayer[data-layer="age"][aria-pressed="true"] { border-color: var(--ml-lay-age); color: var(--ml-lay-age); background: var(--ml-lay-age-soft); }

@@ -25,7 +25,7 @@ const meiFacts = meihuaFacts(mei)
 const chart = buildChart({ solarDate: '1990-07-05', timeIndex: 4, gender: '男' })
 const ziFacts = ziweiFacts(chart)
 const hsFacts = horoscope({ solarDate: '1990-07-05', timeIndex: 4, gender: '男' }, '2026-10-21')
-const ziHsFacts = ziweiFacts(chart, hsFacts)
+const ziHsFacts = ziweiFacts(chart, hsFacts, 'yearly')
 
 describe('前端檢查：結構', () => {
   it('正常的解讀通過', () => {
@@ -140,14 +140,14 @@ describe('紫微運限 facts', () => {
     const h = ziHsFacts.horoscope as Record<string, unknown>
     expect(h).toBeTruthy()
     expect(h.date).toBe('2026-10-21')
-    for (const k of ['decadal', 'age', 'yearly', 'monthly', 'daily']) expect(h).toHaveProperty(k)
+    for (const k of ['decadal', 'yearly']) expect(h).toHaveProperty(k)
   })
   it('JSON 長度小於 8000 字元', () => {
     expect(JSON.stringify(ziHsFacts).length).toBeLessThan(8000)
   })
   it('流年星、歲前、將前：facts 內有的通過，facts 沒有的擋下', () => {
-    const h = ziHsFacts.horoscope as { yearlyStars?: Record<string, string[]>; suiqian?: Record<string, string>; jiangqian?: Record<string, string> }
-    const star = Object.values(h.yearlyStars ?? {}).flat().find((n) => /^流[昌曲祿羊陀魁鉞]$/.test(n))!
+    const h = ziHsFacts.horoscope as { layerStars?: Record<string, string[]>; suiqian?: Record<string, string>; jiangqian?: Record<string, string> }
+    const star = Object.values(h.layerStars ?? {}).flat().find((n) => /^流[昌曲祿羊陀魁鉞]$/.test(n))!
     expect(star).toBeTruthy()
     expect(validateAiReading('ziwei', ziHsFacts, '平', make({ tone: '平', text: `今年${star}落在這宮` }))).not.toBeNull()
     const sq = Object.values(h.suiqian ?? {})[0]
@@ -156,5 +156,48 @@ describe('紫微運限 facts', () => {
     expect(validateAiReading('ziwei', ziFacts, '平', make({ tone: '平', text: `今年${star}落在這宮` }))).toBeNull()
     // 沒帶運限時，歲前十二神的名稱也算盤上沒有
     expect(validateAiReading('ziwei', ziFacts, '平', make({ tone: '平', text: `流年遇${sq}` }))).toBeNull()
+  })
+})
+
+describe('紫微 facts 只帶選中的那一層', () => {
+  const horo = (focus: 'natal' | 'decadal' | 'yearly' | 'monthly' | 'daily') => ziweiFacts(chart, hsFacts, focus).horoscope as Record<string, unknown> | undefined
+  const layers = ['decadal', 'age', 'yearly', 'monthly', 'daily']
+  const has = (h: Record<string, unknown>) => layers.filter((k) => k in h)
+
+  it('一生（natal）：不帶運限', () => {
+    expect(horo('natal')).toBeUndefined()
+  })
+  it('今年：只有流年，加大限當背景；沒有流月、流日、小限', () => {
+    const h = horo('yearly')!
+    expect(h.focus).toBe('yearly')
+    expect(has(h).sort()).toEqual(['decadal', 'yearly'])
+    expect(h.suiqian).toBeTruthy()
+  })
+  it('這個月／今天：各只帶自己加大限背景；不帶流年', () => {
+    expect(has(horo('monthly')!).sort()).toEqual(['decadal', 'monthly'])
+    expect(has(horo('daily')!).sort()).toEqual(['daily', 'decadal'])
+    expect(horo('monthly')!.suiqian).toBeUndefined()
+  })
+  it('這十年：只有大限一份', () => {
+    expect(has(horo('decadal')!)).toEqual(['decadal'])
+  })
+  it('每一層帶的命宮與四化等於 engine', () => {
+    for (const k of ['decadal', 'yearly', 'monthly', 'daily'] as const) {
+      const l = (horo(k) as Record<string, { soulBranch: string; mutagens: { star: string; mutagen: string; branch: string }[] }>)[k]
+      expect(l.soulBranch).toBe(hsFacts[k].soulBranch)
+      expect(l.mutagens).toEqual(hsFacts[k].mutagens.map((m) => ({ star: m.star, mutagen: m.mutagen, branch: m.branch })))
+    }
+  })
+  it('每一層的 JSON 都小於 8000 字元', () => {
+    for (const k of ['decadal', 'yearly', 'monthly', 'daily'] as const) expect(JSON.stringify(ziweiFacts(chart, hsFacts, k)).length).toBeLessThan(8000)
+  })
+  it('fetchAiReading 的請求 body 帶 focus', async () => {
+    let sent: Record<string, unknown> = {}
+    const fetchImpl = (async (_u: unknown, init: { body: string }) => {
+      sent = JSON.parse(init.body)
+      return { status: 500, json: async () => ({}) }
+    }) as unknown as typeof fetch
+    await fetchAiReading({ kind: 'ziwei', question: '', facts: ziweiFacts(chart, hsFacts, 'monthly'), tone: '平', focus: 'monthly' }, { url: 'http://x', fetchImpl })
+    expect(sent.focus).toBe('monthly')
   })
 })

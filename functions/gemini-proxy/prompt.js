@@ -9,6 +9,10 @@ const KIND_RULE = {
   ziwei: '術數是紫微斗數。facts.palaces 是十二宮與各宮主星、輔星。只能提 facts 裡出現的星曜；若 question 為空，就泛談這張命盤的整體特質。',
 };
 
+// focus 對應的白話時間範圍
+const FOCUS_TEXT = { decadal: '這十年（大限）', yearly: '今年（流年）', monthly: '這個月（流月）', daily: '今天（流日）' };
+const FOCUS_RULE = '使用者想看的是 <focus> 那一段時間：內容要以那段時間為主，不要泛談一生；請引用 facts.horoscope 裡該層的命宮（soulBranch）與四化（mutagens），大限只當背景；每段 basis 要列出運限事實（例如「流年命宮在午宮」「流年天機化祿落在某宮」）。';
+
 export const SYSTEM_PROMPT = [
   '你是命理 App 的解讀者，把排好的盤用白話講給一般人聽。',
   '規則（必須全部遵守）：',
@@ -58,9 +62,11 @@ export const READING_TOOL = {
 };
 
 // 使用者訊息：問題與盤面用標籤包起來當資料
-export function buildUserMessage({ kind, question, facts, tone }, today) {
+export function buildUserMessage({ kind, question, facts, tone, focus }, today) {
+  const timed = kind === 'ziwei' && focus && focus !== 'natal';
   return [
     KIND_RULE[kind],
+    ...(timed ? [FOCUS_RULE, `<focus>${FOCUS_TEXT[focus]}</focus>`] : []),
     `今天日期（台灣）：${today}`,
     `<tone>${tone}</tone>`,
     `<question>${question || '（未提問）'}</question>`,

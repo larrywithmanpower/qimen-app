@@ -9,6 +9,7 @@ import type { HoroscopeFacts, HoroscopeLayer, ZiweiFacts } from './ziwei/engine'
 
 export type AiKind = 'tarot' | 'meihua' | 'ziwei'
 export type AiTone = '吉' | '平' | '凶'
+export type AiFocus = 'natal' | 'decadal' | 'yearly' | 'monthly' | 'daily'
 
 export interface AiRequest {
   kind: AiKind
@@ -16,6 +17,8 @@ export interface AiRequest {
   // 只放排好的盤，不放生日原文、姓名
   facts: Record<string, unknown>
   tone: AiTone
+  // 只有紫微會帶：使用者想看哪一段時間（natal＝一生）
+  focus?: AiFocus
 }
 
 export interface AiParagraph {
@@ -82,29 +85,28 @@ const layerFacts = (l: HoroscopeLayer) => ({
   mutagens: l.mutagens.map((m) => ({ star: m.star, mutagen: m.mutagen, branch: m.branch })),
 })
 
-// 選了運限層時多帶的資料：日期、各層命宮與四化，以及流年星、歲前、將前的落宮（只放有星的宮，控制長度）
-function horoscopeFacts(h: HoroscopeFacts): Record<string, unknown> {
-  const yearlyStars: Record<string, string[]> = {}
-  for (const [b, names] of Object.entries(h.yearly.stars)) if (names.length) yearlyStars[b] = names
+// 選了運限層時多帶的資料：日期，以及「選中那一層」的命宮與四化（大限只在選別層時附上當背景）。
+// 流年另帶流年星、歲前、將前的落宮（只放有星的宮，控制長度）；不帶其他層
+function horoscopeFacts(h: HoroscopeFacts, focus: Exclude<AiFocus, 'natal'>): Record<string, unknown> {
+  const layer = h[focus]
+  const stars: Record<string, string[]> = {}
+  for (const [b, names] of Object.entries(layer.stars)) if (names.length) stars[b] = names
   return {
     date: h.solarDate,
     lunar: `${h.lunar.year}年${h.lunar.month}月${h.lunar.day}日`,
     nominalAge: h.nominalAge,
-    decadal: layerFacts(h.decadal),
-    age: layerFacts(h.age),
-    yearly: layerFacts(h.yearly),
-    monthly: layerFacts(h.monthly),
-    daily: layerFacts(h.daily),
-    yearlyStars,
-    suiqian: h.yearly.suiqian,
-    jiangqian: h.yearly.jiangqian,
+    focus,
+    ...(focus === 'decadal' ? {} : { decadal: layerFacts(h.decadal) }),
+    [focus]: layerFacts(layer),
+    layerStars: stars,
+    ...(focus === 'yearly' ? { suiqian: h.yearly.suiqian, jiangqian: h.yearly.jiangqian } : {}),
   }
 }
 
 // 不放 lunarDate／chineseDate（等於生日原文），只放排好的宮位與星曜；有帶 hs 就多一份 horoscope
-export function ziweiFacts(f: ZiweiFacts, hs?: HoroscopeFacts): Record<string, unknown> {
+export function ziweiFacts(f: ZiweiFacts, hs?: HoroscopeFacts, focus: AiFocus = 'natal'): Record<string, unknown> {
   return {
-    ...(hs ? { horoscope: horoscopeFacts(hs) } : {}),
+    ...(hs && focus !== 'natal' ? { horoscope: horoscopeFacts(hs, focus) } : {}),
     fiveElementsClass: f.fiveElementsClass,
     soul: f.soul,
     body: f.body,

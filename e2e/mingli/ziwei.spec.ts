@@ -156,23 +156,89 @@ test('運限：選流年後版面正常，390 寬沒有橫向捲動', async ({ p
   expect(over).toBeLessThanOrEqual(0)
 })
 
-test('運限：選流年後按 AI 解讀，請求帶 facts.horoscope（不含生日）', async ({ page }) => {
+test('運限：按鈕是白話名稱，說明文字跟著分層變，點不同宮講該宮的疊宮名稱', async ({ page }) => {
+  await openChart(page)
+  const label = page.getByTestId('ml-layerbar')
+  await expect(label).toContainText('想看哪一天的運勢')
+  // 查詢日 2025-08-10 不是今天：按鈕用「那一年」這類說法，括號內是原名
+  const names: [string, string, string][] = [['natal', '一生', '本命'], ['decadal', '那十年', '大限'], ['yearly', '那一年', '流年'], ['monthly', '那個月', '流月'], ['daily', '那一天', '流日']]
+  for (const [k, word, orig] of names) {
+    const btn = page.getByTestId(`ml-layer-${k}`)
+    await expect(btn).toContainText(word)
+    await expect(btn).toContainText(`（${orig}）`)
+  }
+  await expect(page.getByTestId('ml-layer-age')).toHaveCount(0)
+
+  const texts: string[] = []
+  const hints: string[] = []
+  const app = horoscope({ solarDate: fx1.solarDate, timeIndex: fx1Time, gender: fx1.gender }, QDATE)
+  for (const k of ['natal', 'decadal', 'yearly', 'monthly', 'daily'] as const) {
+    await page.getByTestId(`ml-layer-${k}`).click()
+    texts.push((await page.getByTestId('ml-palace-detail').textContent()) ?? '')
+    hints.push((await page.getByTestId('ml-layer-hint').textContent()) ?? '')
+    if (k !== 'natal') {
+      // 說明裡的重心（命宮）宮位 = engine 的值
+      await expect(page.getByTestId('ml-palace-detail')).toContainText(`（${app[k].soulBranch}宮）`)
+    }
+  }
+  expect(new Set(texts).size).toBe(5)
+  expect(new Set(hints).size).toBe(5)
+
+  // 選今年後點兩個不同的宮：疊宮名稱各自出現在說明裡
+  await page.getByTestId('ml-layer-yearly').click()
+  for (const b of ['子', '午']) {
+    await page.locator(`[data-testid="ml-palace"][data-branch="${b}"]`).click()
+    await expect(page.getByTestId('ml-palace-detail')).toContainText(`「${app.yearly.palaceNames[b]}」`)
+  }
+})
+
+test('運限：選流年後按 AI 解讀，請求 focus 與 facts 只帶流年（不含生日）', async ({ page }) => {
   await page.addInitScript(() => {
     (window as unknown as { __MINGLI_AI_URL__: string }).__MINGLI_AI_URL__ = '/__mock-ai'
   })
   const bodies: Record<string, unknown>[] = []
   await page.route('**/__mock-ai', async (route) => {
     bodies.push(route.request().postDataJSON())
+    // 200 但內容不合格：前端退回，不會在 console 留錯誤
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
   })
   await openChart(page)
   await page.getByTestId('ml-layer-yearly').click()
   await page.getByTestId('ml-ai-ziwei-btn').click()
   await expect.poll(() => bodies.length).toBe(1)
-  const facts = bodies[0].facts as { horoscope?: { date: string; yearly: unknown } }
+  expect(bodies[0].focus).toBe('yearly')
+  const facts = bodies[0].facts as { horoscope?: Record<string, unknown> & { date: string; focus: string } }
   expect(facts.horoscope?.date).toBe(QDATE)
+  expect(facts.horoscope?.focus).toBe('yearly')
   expect(facts.horoscope?.yearly).toBeTruthy()
+  expect(facts.horoscope?.decadal).toBeTruthy() // 大限當背景
+  for (const k of ['monthly', 'daily', 'age']) expect(facts.horoscope).not.toHaveProperty(k)
   const json = JSON.stringify(bodies[0])
   expect(json).not.toContain(fx1.solarDate)
   expect(json.length).toBeLessThan(8000)
+
+  // 換到「這個月」再按：focus 跟著變，facts 只剩流月（加大限）
+  await page.getByTestId('ml-layer-monthly').click()
+  await page.getByTestId('ml-ai-ziwei-btn').click()
+  await expect.poll(() => bodies.length).toBe(2)
+  expect(bodies[1].focus).toBe('monthly')
+  const f2 = (bodies[1].facts as { horoscope: Record<string, unknown> }).horoscope
+  expect(f2.monthly).toBeTruthy()
+  expect(f2).not.toHaveProperty('yearly')
+  expect(f2).not.toHaveProperty('daily')
+})
+
+test.describe('電腦版版面', () => {
+  test.use({ viewport: { width: 1440, height: 900 } })
+  test('1440 寬：左欄標題與右欄第一張卡片頂端差距小於 40px，沒有橫向捲動', async ({ page }) => {
+    await openChart(page)
+    await page.getByTestId('ml-layer-yearly').click()
+    const title = await page.locator('.ml-z-title').boundingBox()
+    const card = await page.getByTestId('ml-palace-detail').boundingBox()
+    expect(title).not.toBeNull()
+    expect(card).not.toBeNull()
+    expect(Math.abs(title!.y - card!.y)).toBeLessThan(40)
+    const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    expect(over).toBeLessThanOrEqual(0)
+  })
 })

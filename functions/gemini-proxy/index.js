@@ -1,5 +1,6 @@
 import functions from '@google-cloud/functions-framework';
 import { callClaude } from './claude.js';
+import { recordFirestore } from './cost.js';
 import { createHandler } from './handler.js';
 import { consumeFirestore } from './usage.js';
 
@@ -7,4 +8,5 @@ import { consumeFirestore } from './usage.js';
 functions.http('geminiProxy', createHandler({
   claude: callClaude,
   usage: { consume: consumeFirestore },
+  cost: { record: recordFirestore },
 }));

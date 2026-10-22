@@ -131,7 +131,9 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
     }
     // 請求是結構化的，只送一次
     expect(bodies).toHaveLength(1)
-    expect(Object.keys(bodies[0]).sort()).toEqual(['facts', 'kind', 'question', 'tone'])
+    // 紫微多帶 focus（沒選運限層時是 natal）
+    expect(Object.keys(bodies[0]).sort()).toEqual(kind === 'ziwei' ? ['facts', 'focus', 'kind', 'question', 'tone'] : ['facts', 'kind', 'question', 'tone'])
+    if (kind === 'ziwei') expect(bodies[0].focus).toBe('natal')
     expect(bodies[0].kind).toBe(kind)
     expect(bodies[0].tone).toBe(spec.tone)
     if (kind === 'ziwei') {

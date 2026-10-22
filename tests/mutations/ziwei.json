@@ -115,18 +115,35 @@
   "id": "Z-H7",
   "desc": "AI facts 漏掉 horoscope（選了流年仍不帶運限資料）",
   "file": "src/mingli/ai.ts",
-  "find": "...(hs ? { horoscope: horoscopeFacts(hs) } : {}),",
-  "replace": "...(hs ? {} : {}),",
+  "find": "...(hs && focus !== 'natal' ? { horoscope: horoscopeFacts(hs, focus) } : {}),",
+  "replace": "...(hs && focus !== 'natal' ? {} : {}),",
   "test": "e2e/mingli/ziwei.spec.ts",
   "runner": "playwright"
  },
-  {
-    "id": "Z-H8",
-    "desc": "日期選擇器：已有日期時切回年畫面不翻到該年那一頁",
-    "file": "src/mingli/ui/DatePicker.tsx",
-    "find": "    if (v === 'year') setPageStart(yearPageStart(viewYear, minP.y))\n",
-    "replace": "",
-    "test": "e2e/mingli/ziwei.spec.ts",
-    "runner": "playwright"
-  }
+ {
+  "id": "Z-H8",
+  "desc": "日期選擇器：已有日期時切回年畫面不翻到該年那一頁",
+  "file": "src/mingli/ui/DatePicker.tsx",
+  "find": "    if (v === 'year') setPageStart(yearPageStart(viewYear, minP.y))\n",
+  "replace": "",
+  "test": "e2e/mingli/ziwei.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "Z-R1",
+  "desc": "說明文字忽略分層：非流年的層都退回一生的寫法",
+  "file": "src/mingli/ziwei/ui/readout.ts",
+  "find": "  const { word, L } = ctx\n  const p = palaceByBranch(facts, branch)",
+  "replace": "  const { word, L } = ctx\n  if (ctx.key !== 'yearly') return palaceReadout(facts, branch)\n  const p = palaceByBranch(facts, branch)",
+  "test": "src/mingli/ziwei/__tests__/readout.test.ts"
+ },
+ {
+  "id": "Z-R2",
+  "desc": "畫面的說明忽略分層：選了今年仍顯示一生的說明（Playwright）",
+  "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
+  "find": "if (layer === 'natal' || !hs) return palaceReadout(facts, sel)",
+  "replace": "if (layer !== 'natal' || !hs) return palaceReadout(facts, sel)",
+  "test": "e2e/mingli/ziwei.spec.ts",
+  "runner": "playwright"
+ }
 ]

@@ -9,9 +9,10 @@ import { session } from '../../ui/session'
 import DatePicker from '../../ui/DatePicker'
 import { clearBirth, loadBirth, saveBirth } from '../../storage/birth'
 import type { Birth } from '../../storage/birth'
-import { buildChart, candidates, horoscope, LAYER_LABEL, sortMinorStars } from '../engine'
+import { buildChart, candidates, horoscope, sortMinorStars } from '../engine'
 import type { Gender, HoroscopeFacts, HoroscopeLayer, HoroscopeLayerKey, ZiweiFacts, ZiweiPalace, ZiweiStar } from '../engine'
-import { BRANCHES, palaceByBranch, palaceReadout } from './readout'
+import { BRANCHES, palaceByBranch, palaceReadout, periodReadout, periodWord } from './readout'
+import type { LayerChoice } from './readout'
 
 type Phase = 'loading' | 'form' | 'chart' | 'candidates'
 
@@ -68,9 +69,9 @@ function LockIcon() {
   )
 }
 
-type LayerChoice = 'natal' | HoroscopeLayerKey
-const LAYER_CHOICES: LayerChoice[] = ['natal', 'decadal', 'age', 'yearly', 'monthly', 'daily']
-const LAYER_NAME: Record<LayerChoice, string> = { natal: '本命', ...LAYER_LABEL }
+// 分層按鈕：白話名稱＋括號內原名（小限不放按鈕）
+const LAYER_CHOICES: LayerChoice[] = ['natal', 'decadal', 'yearly', 'monthly', 'daily']
+const LAYER_ORIG: Record<LayerChoice, string> = { natal: '本命', decadal: '大限', yearly: '流年', monthly: '流月', daily: '流日' }
 const LAYER_PREFIX: Record<HoroscopeLayerKey, string> = { decadal: '大', age: '小', yearly: '年', monthly: '月', daily: '日' }
 
 // 某宮的三方四正：對宮與左右三合
@@ -174,7 +175,7 @@ function Chart({ facts, gender, sel, onSel, layer, hs }: {
 }
 
 // 點宮後的完整清單：格子放不下的全列在這裡
-function FullList({ p, facts, L, layer }: { p: ZiweiPalace; facts: ZiweiFacts; L: HoroscopeLayer | null; layer: LayerChoice }) {
+function FullList({ p, facts, L, word }: { p: ZiweiPalace; facts: ZiweiFacts; L: HoroscopeLayer | null; word: string }) {
   const around = surroundOf(p.branch)
   const nameAt = (b: string) => `${palaceByBranch(facts, b).name}（${b}）`
   const rows: [string, string][] = [
@@ -189,10 +190,10 @@ function FullList({ p, facts, L, layer }: { p: ZiweiPalace; facts: ZiweiFacts; L
     ['三方四正', `對宮 ${nameAt(around[1])}；三合 ${nameAt(around[0])}、${nameAt(around[2])}`],
   ]
   if (L) {
-    rows.push([`${LAYER_NAME[layer]}宮名`, L.palaceNames[p.branch]])
+    rows.push([`${word}宮名`, L.palaceNames[p.branch]])
     const lm = L.mutagens.filter((m) => m.branch === p.branch)
-    rows.push([`${LAYER_NAME[layer]}四化`, lm.length ? lm.map((m) => `${m.star}化${m.mutagen}`).join('、') : '無'])
-    rows.push([`${LAYER_NAME[layer]}星`, (L.stars[p.branch] ?? []).join('、') || '無'])
+    rows.push([`${word}四化`, lm.length ? lm.map((m) => `${m.star}化${m.mutagen}`).join('、') : '無'])
+    rows.push([`${word}星`, (L.stars[p.branch] ?? []).join('、') || '無'])
     if (L.suiqian && L.jiangqian) {
       rows.push(['流年歲前', L.suiqian[p.branch]])
       rows.push(['流年將前', L.jiangqian[p.branch]])
@@ -268,19 +269,26 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
     () => (birth && timeIndex !== null ? horoscope({ solarDate: birth.solarDate, timeIndex, gender: birth.gender }, queryDate) : null),
     [birth, timeIndex, queryDate],
   )
-  const aiFacts = useMemo(() => (facts ? ziweiFacts(facts, layer === 'natal' ? undefined : hs ?? undefined) : null), [facts, hs, layer])
+  const aiFacts = useMemo(() => (facts ? ziweiFacts(facts, hs ?? undefined, layer) : null), [facts, hs, layer])
+  // 今天以外的日期，按鈕與說明改用「那一年」這類說法
+  const isToday = queryDate === todayIso()
+  const word = (k: LayerChoice) => periodWord(k, isToday)
   const chartKey = aiFacts ? JSON.stringify(aiFacts) : ''
   // 按鈕才呼叫：asked[盤] 是這張盤按過幾次（重試會加一）；換盤後沒按過，自然回到按鈕狀態
   const [asked, setAsked] = useState<Record<string, number>>({})
   const askedN = asked[chartKey]
   const ai = useAiReading(
     aiFacts && askedN !== undefined
-      ? { kind: 'ziwei', question: clipQuestion(session.question), facts: aiFacts, tone: '平' }
+      ? { kind: 'ziwei', question: clipQuestion(session.question), facts: aiFacts, tone: '平', focus: layer }
       : null,
     `${chartKey}#${askedN ?? 0}`,
   )
   const canAsk = proxyUrl() !== ''
-  const detail = useMemo(() => (facts && sel ? palaceReadout(facts, sel) : null), [facts, sel])
+  const detail = useMemo(() => {
+    if (!facts || !sel) return null
+    if (layer === 'natal' || !hs) return palaceReadout(facts, sel)
+    return periodReadout(facts, sel, { key: layer, word: periodWord(layer, isToday), L: hs[layer] })
+  }, [facts, sel, layer, hs, isToday])
 
   const canMake = validDate(dateStr) && timeIdx !== null && gender !== null
   const submit = async (e: FormEvent) => {
@@ -421,19 +429,25 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
             </div>
             <div className="ml-zlayers" data-testid="ml-layerbar">
               <div className="ml-zdate">
-                <span className="ml-field-k">查詢日期</span>
+                <span className="ml-field-k">想看哪一天的運勢</span>
                 <DatePicker testid="ml-query-date" label="選擇查詢日期" min="1900-01-01" max="2100-12-31" value={queryDate} onChange={(v) => setQueryDate(v || todayIso())} />
               </div>
               <div className="ml-zlayer-pills" role="group" aria-label="運限分層">
                 {LAYER_CHOICES.map((k) => (
                   <button key={k} type="button" className="ml-zlayer" data-testid={`ml-layer-${k}`} data-layer={k} aria-pressed={layer === k} onClick={() => setLayer(k)}>
-                    {LAYER_NAME[k]}
+                    <span className="ml-zlayer-w">{word(k)}</span>
+                    <span className="ml-zlayer-o">（{LAYER_ORIG[k]}）</span>
                   </button>
                 ))}
               </div>
+              <p className="ml-zlayer-hint" data-testid="ml-layer-hint" data-layer={layer}>
+                {layer === 'natal'
+                  ? '選「一生」，看這張命盤本來的樣子；選其他按鈕，盤上會標出那段時間的重心落在哪一宮'
+                  : `選「${word(layer)}」，盤上會標出${word(layer)}的重心落在哪一宮`}
+              </p>
               {hs && layer !== 'natal' && (
                 <p className="ml-zlayer-info" data-testid="ml-layer-info" data-layer={layer} data-soul={hs[layer].soulBranch}>
-                  {LAYER_NAME[layer]}（{hs[layer].stem}{hs[layer].branch}）命宮在{hs[layer].soulBranch}宮・農曆{hs.lunar.year}年{hs.lunar.month}月{hs.lunar.day}日・虛歲 {hs.nominalAge}
+                  {word(layer)}（{LAYER_ORIG[layer]}・{hs[layer].stem}{hs[layer].branch}）的重心在{hs[layer].soulBranch}宮・農曆{hs.lunar.year}年{hs.lunar.month}月{hs.lunar.day}日・虛歲 {hs.nominalAge}
                   {layer === 'decadal' && hs.isChildhood ? '（童限）' : ''}
                 </p>
               )}
@@ -451,7 +465,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
                 <div className="ml-pdetail-body">
                   {detail.sentences.map((s, k) => <p className="ml-pdetail-text" key={k}>{s}。</p>)}
                 </div>
-                <FullList p={palaceByBranch(facts, sel)} facts={facts} L={hs && layer !== 'natal' ? hs[layer] : null} layer={layer} />
+                <FullList p={palaceByBranch(facts, sel)} facts={facts} L={hs && layer !== 'natal' ? hs[layer] : null} word={word(layer)} />
                 <span className="ml-zbasis" data-testid="ml-basis">依據：{detail.basis}</span>
                 <p className="ml-znote">範例說明，正式版由 AI 依星曜規則卡撰寫</p>
               </div>

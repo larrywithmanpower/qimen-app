@@ -1,6 +1,8 @@
 // 請求與回應的格式檢查（純函式）
 export const KINDS = ['tarot', 'meihua', 'ziwei'];
 export const TONES = ['吉', '平', '凶'];
+// 紫微想看哪一段時間（本命＝一生）
+export const FOCUSES = ['natal', 'decadal', 'yearly', 'monthly', 'daily'];
 export const MAX_QUESTION = 200;
 export const MAX_FACTS = 8000;
 
@@ -15,6 +17,7 @@ export function validateRequest(body) {
   const q = body.question ?? '';
   if (typeof q !== 'string' || [...q].length > MAX_QUESTION) return 'Invalid question';
   if (body.kind !== 'ziwei' && q.trim() === '') return 'Missing question';
+  if (body.focus !== undefined && (body.kind !== 'ziwei' || !FOCUSES.includes(body.focus))) return 'Invalid focus';
   if (!isObj(body.facts)) return 'Invalid facts';
   if (JSON.stringify(body.facts).length > MAX_FACTS) return 'Facts too long';
   return null;

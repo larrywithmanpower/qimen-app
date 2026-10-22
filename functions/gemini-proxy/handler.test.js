@@ -28,17 +28,24 @@ const fakeReq = (opts = {}) => ({
   get: (h) => (h === 'Origin' ? ('origin' in opts ? opts.origin : ORIGIN) : undefined),
 });
 
-function setup({ env = {}, claudeImpl, consume } = {}) {
-  const claude = vi.fn(claudeImpl ?? (async () => goodReading()));
+const USAGE = { input_tokens: 1000, output_tokens: 200, cache_creation_input_tokens: 30, cache_read_input_tokens: 4 };
+const MODEL = 'claude-sonnet-5-5';
+
+// claudeImpl 只回 reading（或丟錯）；這裡包成 claude.js 的回傳形狀 { reading, usage, model }
+function setup({ env = {}, claudeImpl, consume, recordImpl } = {}) {
+  const impl = claudeImpl ?? (async () => goodReading());
+  const claude = vi.fn(async (...a) => ({ reading: await impl(...a), usage: USAGE, model: MODEL }));
   const usage = { consume: vi.fn(consume ?? (async () => true)) };
+  const cost = { record: vi.fn(recordImpl ?? (async () => {})) };
   const handler = createHandler({
     claude,
     usage,
+    cost,
     env: { ALLOWED_ORIGINS: `${ORIGIN},http://localhost:5180`, AI_ENABLED: 'true', ...env },
     now: () => Date.UTC(2026, 9, 21, 20, 0, 0), // UTC 20:00 = 台灣隔天 04:00
   });
   const call = async (req) => { const res = fakeRes(); await handler(req, res); return res; };
-  return { claude, usage, call };
+  return { claude, usage, cost, call };
 }
 
 let logs;
@@ -125,6 +132,30 @@ describe('400 壞請求', () => {
       expect(claude).not.toHaveBeenCalled();
     });
   }
+  it('focus 只接受五個值，且只限紫微', async () => {
+    for (const focus of ['natal', 'decadal', 'yearly', 'monthly', 'daily']) {
+      const { call } = setup();
+      expect((await call(fakeReq({ data: body({ kind: 'ziwei', focus }) }))).code).toBe(200);
+    }
+    for (const focus of ['age', 'weekly', '', null, 5, 'YEARLY']) {
+      const { claude, call } = setup();
+      expect((await call(fakeReq({ data: body({ kind: 'ziwei', focus }) }))).code).toBe(400);
+      expect(claude).not.toHaveBeenCalled();
+    }
+    const { call } = setup();
+    expect((await call(fakeReq({ data: body({ kind: 'tarot', focus: 'yearly' }) }))).code).toBe(400);
+  });
+  it('紫微 focus 非 natal 時 prompt 帶時間範圍與引用運限的規則；natal 或沒帶則沒有', async () => {
+    const a = setup();
+    await a.call(fakeReq({ data: body({ kind: 'ziwei', focus: 'yearly' }) }));
+    expect(a.claude.mock.calls[0][1]).toContain('<focus>今年（流年）</focus>');
+    expect(a.claude.mock.calls[0][1]).toContain('facts.horoscope');
+    for (const data of [body({ kind: 'ziwei', focus: 'natal' }), body({ kind: 'ziwei' })]) {
+      const b = setup();
+      await b.call(fakeReq({ data }));
+      expect(b.claude.mock.calls[0][1]).not.toContain('<focus>');
+    }
+  });
   it('紫微問題可空', async () => {
     const { call } = setup();
     expect((await call(fakeReq({ data: body({ kind: 'ziwei', question: '' }) }))).code).toBe(200);
@@ -193,6 +224,104 @@ describe('隱私', () => {
     for (const p of paths) await p.call(fakeReq());
     const all = logs.join('\n');
     expect(all).not.toContain(SECRET_Q);
+    expect(all).not.toContain('愚者');
+  });
+});
+
+describe('成本紀錄（ai_calls）', () => {
+  const ZIWEI = (over = {}) => body({ kind: 'ziwei', focus: 'yearly', ...over });
+
+  it('成功：一筆紀錄，attempts 1、token 原樣、台灣日期、focus、model', async () => {
+    const { cost, call } = setup();
+    expect((await call(fakeReq({ data: ZIWEI() }))).code).toBe(200);
+    expect(cost.record).toHaveBeenCalledTimes(1);
+    expect(cost.record.mock.calls[0][0]).toEqual({
+      ts: Date.UTC(2026, 9, 21, 20, 0, 0),
+      date: '2026-10-22',
+      kind: 'ziwei',
+      focus: 'yearly',
+      model: MODEL,
+      attempts: 1,
+      usage: USAGE,
+      status: 'ok',
+      latencyMs: 0,
+    });
+  });
+  it('塔羅沒有 focus（記 null）', async () => {
+    const { cost, call } = setup();
+    await call(fakeReq());
+    expect(cost.record.mock.calls[0][0].focus).toBeNull();
+  });
+  it('格式不合格重叫：attempts 2、token 是兩次加總', async () => {
+    let n = 0;
+    const { cost, call } = setup({ claudeImpl: async () => (n++ === 0 ? { verdict: '' } : goodReading()) });
+    expect((await call(fakeReq())).code).toBe(200);
+    const rec = cost.record.mock.calls[0][0];
+    expect(rec.attempts).toBe(2);
+    expect(rec.status).toBe('ok');
+    expect(rec.usage).toEqual({ input_tokens: 2000, output_tokens: 400, cache_creation_input_tokens: 60, cache_read_input_tokens: 8 });
+  });
+  it('兩次都不合格 → 502，記 bad_format、attempts 2、兩次 token', async () => {
+    const { cost, call } = setup({ claudeImpl: async () => goodReading('凶') });
+    expect((await call(fakeReq())).code).toBe(502);
+    const rec = cost.record.mock.calls[0][0];
+    expect(rec.status).toBe('bad_format');
+    expect(rec.attempts).toBe(2);
+    expect(rec.usage.input_tokens).toBe(2000);
+  });
+  it('api_error 也有記錄（沒拿到 usage 算 0）', async () => {
+    const { cost, call } = setup({ claudeImpl: async () => { throw new Error('boom'); } });
+    expect((await call(fakeReq())).code).toBe(502);
+    expect(cost.record).toHaveBeenCalledTimes(1);
+    const rec = cost.record.mock.calls[0][0];
+    expect(rec.status).toBe('api_error');
+    expect(rec.attempts).toBe(1);
+    expect(rec.usage).toEqual({ input_tokens: 0, output_tokens: 0, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 });
+  });
+  it('第一次格式不合格、第二次 API 出錯：保留第一次的 token', async () => {
+    let n = 0;
+    const claude = vi.fn(async () => {
+      if (n++ === 0) return { reading: { verdict: '' }, usage: USAGE, model: MODEL };
+      throw new Error('boom');
+    });
+    const cost = { record: vi.fn(async () => {}) };
+    const handler = createHandler({ claude, usage: { consume: async () => true }, cost, env: { ALLOWED_ORIGINS: ORIGIN, AI_ENABLED: 'true' }, now: () => 0 });
+    const res = fakeRes();
+    await handler(fakeReq(), res);
+    const rec = cost.record.mock.calls[0][0];
+    expect(rec.status).toBe('api_error');
+    expect(rec.attempts).toBe(2);
+    expect(rec.usage.input_tokens).toBe(1000);
+  });
+  it('Firestore 寫入失敗：使用者仍拿到 200，只記錯誤日誌', async () => {
+    const { call } = setup({ recordImpl: async () => { throw new Error('firestore down'); } });
+    const res = await call(fakeReq());
+    expect(res.code).toBe(200);
+    expect(res.body).toEqual(goodReading());
+    expect(logs.join('\n')).toContain('cost record failed');
+  });
+  it('429、403、400 不呼叫 Claude 也不記成本', async () => {
+    const a = setup({ consume: async () => false });
+    await a.call(fakeReq());
+    const b = setup();
+    await b.call(fakeReq({ data: body({ kind: 'x' }) }));
+    expect(a.cost.record).not.toHaveBeenCalled();
+    expect(b.cost.record).not.toHaveBeenCalled();
+  });
+  it('紀錄與日誌都不含 question、facts 的任何字串', async () => {
+    const SECRET_F = '機密盤面ZZZ';
+    const data = body({ question: SECRET_Q, facts: { cards: [SECRET_F] } });
+    const paths = [
+      setup(),
+      setup({ claudeImpl: async () => goodReading('凶') }),
+      setup({ claudeImpl: async () => { throw new Error(`含 ${SECRET_Q} ${SECRET_F}`); } }),
+      setup({ recordImpl: async () => { throw new Error(`含 ${SECRET_Q} ${SECRET_F}`); } }),
+    ];
+    for (const p of paths) await p.call(fakeReq({ data }));
+    const recs = paths.map((p) => JSON.stringify(p.cost.record.mock.calls)).join('\n');
+    const all = `${recs}\n${logs.join('\n')}`;
+    expect(all).not.toContain(SECRET_Q);
+    expect(all).not.toContain(SECRET_F);
     expect(all).not.toContain('愚者');
   });
 });

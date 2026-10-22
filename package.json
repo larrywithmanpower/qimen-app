@@ -12,6 +12,7 @@
     "test:unit": "vitest run",
     "test:ui": "playwright test -c playwright.mingli.config.ts",
     "test:mutation": "node tests/mutation.mjs",
+    "ai-cost": "node scripts/ai-cost.mjs",
     "test": "npm run test:unit && npm run test:ui",
     "dev:mingli": "vite --port 5180 --strictPort"
   },
