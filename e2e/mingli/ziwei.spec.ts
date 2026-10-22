@@ -1,6 +1,6 @@
 import { test, expect } from './checks'
 import type { Page } from 'playwright/test'
-import { BASE, checkLayout, pickDate, prepare } from './checks'
+import { BASE, DEFAULT_QUESTION, askQuestion, checkLayout, pickDate, prepare } from './checks'
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -241,4 +241,90 @@ test.describe('電腦版版面', () => {
     const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
     expect(over).toBeLessThanOrEqual(0)
   })
+})
+
+// ───────── 想問的事（選填）：只影響 AI，看得到、可改、可清空 ─────────
+async function mockAi(page: Page) {
+  await page.addInitScript(() => {
+    (window as unknown as { __MINGLI_AI_URL__: string }).__MINGLI_AI_URL__ = '/__mock-ai'
+  })
+  const bodies: Record<string, unknown>[] = []
+  await page.route('**/__mock-ai', async (route) => {
+    bodies.push(route.request().postDataJSON())
+    // 200 但內容不合格：前端退回，不會在 console 留錯誤
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
+  })
+  return bodies
+}
+const ZIWEI_HASH = `#/ziwei?d=${DATE}&t=${TIME_INDEX}&g=${encodeURIComponent('男')}`
+
+test('紫微問題欄：帶入塔羅問過的問題，清除後送 AI 的 question 是空字串，再輸入就送新的', async ({ page }) => {
+  const bodies = await mockAi(page)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await prepare(page)
+  await page.goto(`${BASE}#/tarot`)
+  await askQuestion(page)
+  await page.evaluate((h) => { location.hash = h }, ZIWEI_HASH)
+  await expect(page.getByTestId('ml-chart')).toBeVisible()
+
+  const input = page.getByTestId('ml-ziwei-question')
+  await expect(input).toHaveValue(DEFAULT_QUESTION)
+  await page.getByTestId('ml-ziwei-question-clear').click()
+  await expect(input).toHaveValue('')
+  await expect(page.getByTestId('ml-ziwei-question-clear')).toHaveCount(0)
+  await page.getByTestId('ml-ai-ziwei-btn').click()
+  await expect.poll(() => bodies.length).toBe(1)
+  expect(bodies[0].question).toBe('')
+
+  await input.fill('今年適合換工作嗎')
+  await page.getByTestId('ml-ai-ziwei-btn').click()
+  await expect.poll(() => bodies.length).toBe(2)
+  expect(bodies[1].question).toBe('今年適合換工作嗎')
+  expect(JSON.stringify(bodies[1])).not.toContain(DEFAULT_QUESTION)
+})
+
+test('紫微問題欄：改了問題，已顯示的 AI 解讀清掉；切走再回來內容一致', async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as { __MINGLI_AI_URL__: string }).__MINGLI_AI_URL__ = '/__mock-ai'
+  })
+  await page.route('**/__mock-ai', async (route) => {
+    const body = { verdict: '一句話', tone: '平', paragraphs: [{ title: '現在', text: '慢慢來', basis: ['依據'] }], prediction: { claim: '三週內有消息', dueDate: '2099-01-01' } }
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
+  })
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await prepare(page)
+  await page.goto(`${BASE}${ZIWEI_HASH}`)
+  await expect(page.getByTestId('ml-chart')).toBeVisible()
+  const input = page.getByTestId('ml-ziwei-question')
+  await input.fill('第一個問題')
+  await page.getByTestId('ml-ai-ziwei-btn').click()
+  await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await input.fill('第二個問題')
+  await expect(page.getByTestId('ml-ai-reading')).toHaveCount(0)
+  await expect(page.getByTestId('ml-ai-ziwei-btn')).toBeVisible()
+
+  await page.evaluate(() => { location.hash = '#/meihua' })
+  await expect(page.getByTestId('ml-chart')).toHaveCount(0)
+  await page.evaluate((h) => { location.hash = h }, ZIWEI_HASH)
+  await expect(page.getByTestId('ml-ziwei-question')).toHaveValue('第二個問題')
+})
+
+test('紫微問題欄：390／820／1180／1440 版面檢查通過、沒有橫向捲動、清除鈕點擊區 44px 以上', async ({ page }) => {
+  await mockAi(page)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await prepare(page)
+  await page.goto(`${BASE}${ZIWEI_HASH}`)
+  await expect(page.getByTestId('ml-chart')).toBeVisible()
+  await page.getByTestId('ml-ziwei-question').fill('今年適合換工作嗎')
+  for (const [width, height] of [[390, 844], [820, 1180], [1180, 820], [1440, 900]]) {
+    await page.setViewportSize({ width, height })
+    await page.waitForTimeout(400)
+    await page.getByTestId('ml-ziwei-question').scrollIntoViewIfNeeded()
+    const box = await page.getByTestId('ml-ziwei-question-clear').boundingBox()
+    expect(box!.width, `${width} 清除鈕寬`).toBeGreaterThanOrEqual(44)
+    expect(box!.height, `${width} 清除鈕高`).toBeGreaterThanOrEqual(44)
+    expect(await checkLayout(page), `${width} 版面`).toEqual([])
+    const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
+    expect(over, `${width} 橫向捲動`).toBeLessThanOrEqual(0)
+  }
 })

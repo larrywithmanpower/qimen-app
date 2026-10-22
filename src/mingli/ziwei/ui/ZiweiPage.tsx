@@ -5,7 +5,8 @@ import { setRealm } from '../../ui/fx'
 import { clipQuestion, proxyUrl, ziweiFacts } from '../../ai'
 import { AiLoading, AiReadingView } from '../../ui/AiReadingView'
 import { useAiReading } from '../../ui/useAiReading'
-import { session } from '../../ui/session'
+import { session, updateSession } from '../../ui/session'
+import { MAX_QUESTION_LEN } from '../../ui/QuestionBar'
 import DatePicker from '../../ui/DatePicker'
 import { clearBirth, loadBirth, saveBirth } from '../../storage/birth'
 import type { Birth } from '../../storage/birth'
@@ -269,17 +270,24 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
     () => (birth && timeIndex !== null ? horoscope({ solarDate: birth.solarDate, timeIndex, gender: birth.gender }, queryDate) : null),
     [birth, timeIndex, queryDate],
   )
+  // 想問的事（選填）：預設帶別頁問過的，畫面看得到、可改可清；只影響 AI，留空就看整體運勢
+  const [ask, setAsk] = useState(session.question)
+  const changeAsk = (v: string) => {
+    setAsk(v)
+    updateSession({ question: v })
+  }
   const aiFacts = useMemo(() => (facts ? ziweiFacts(facts, hs ?? undefined, layer) : null), [facts, hs, layer])
   // 今天以外的日期，按鈕與說明改用「那一年」這類說法
   const isToday = queryDate === todayIso()
   const word = (k: LayerChoice) => periodWord(k, isToday)
-  const chartKey = aiFacts ? JSON.stringify(aiFacts) : ''
+  // 問題也算進 key：改了問題，已顯示的解讀就清掉、回到按鈕狀態
+  const chartKey = aiFacts ? JSON.stringify([ask.trim(), aiFacts]) : ''
   // 按鈕才呼叫：asked[盤] 是這張盤按過幾次（重試會加一）；換盤後沒按過，自然回到按鈕狀態
   const [asked, setAsked] = useState<Record<string, number>>({})
   const askedN = asked[chartKey]
   const ai = useAiReading(
     aiFacts && askedN !== undefined
-      ? { kind: 'ziwei', question: clipQuestion(session.question), facts: aiFacts, tone: '平', focus: layer }
+      ? { kind: 'ziwei', question: clipQuestion(ask.trim()), facts: aiFacts, tone: '平', focus: layer }
       : null,
     `${chartKey}#${askedN ?? 0}`,
   )
@@ -472,6 +480,25 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
             )}
             {ai.status === 'loading' && <AiLoading />}
             {ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
+            {canAsk && (
+              <label className="ml-zask">
+                <span className="ml-field-k">想問的事（選填）</span>
+                <span className="ml-zask-row">
+                  <input
+                    className="ml-zask-input"
+                    data-testid="ml-ziwei-question"
+                    placeholder="例：今年適合換工作嗎？留空就看整體運勢"
+                    maxLength={MAX_QUESTION_LEN}
+                    autoComplete="off"
+                    value={ask}
+                    onChange={(e) => changeAsk(e.target.value)}
+                  />
+                  {ask !== '' && (
+                    <button type="button" className="ml-ghost ml-zask-clear" data-testid="ml-ziwei-question-clear" onClick={() => changeAsk('')}>清除</button>
+                  )}
+                </span>
+              </label>
+            )}
             {canAsk && ai.status !== 'ok' && (
               <>
                 {ai.status === 'fail' && <p className="ml-z-hint" data-testid="ml-ai-error" role="status">AI 暫時無法解讀，稍後再試</p>}

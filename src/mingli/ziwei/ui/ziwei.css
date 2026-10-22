@@ -182,3 +182,15 @@
 .ml-pfull-row { display: grid; grid-template-columns: 5.5em minmax(0, 1fr); gap: var(--ml-space-2); font-size: var(--ml-fs-label); line-height: 1.6; }
 .ml-pfull-k { margin: 0; color: var(--ml-ink-faint); }
 .ml-pfull-v { margin: 0; color: var(--ml-ink-body); overflow-wrap: anywhere; }
+
+/* 想問的事（選填）：只影響 AI 解讀 */
+.ml-zask { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ml-zask-row { display: flex; align-items: center; gap: var(--ml-space-2); min-width: 0; }
+.ml-zask-input {
+  flex: 1 1 auto; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0 var(--ml-space-3);
+  border: 1px solid var(--ml-line-strong); border-radius: var(--ml-radius-control); background: var(--ml-veil);
+  color: var(--ml-ink); font-family: var(--ml-font-serif); font-size: var(--ml-fs-body);
+}
+.ml-zask-input::placeholder { color: var(--ml-ink-faint); }
+.ml-zask-input:focus-visible { outline: none; border-color: var(--ml-paper); }
+.ml-zask-clear { flex: 0 0 auto; min-width: 44px; padding: 0 var(--ml-space-3); }

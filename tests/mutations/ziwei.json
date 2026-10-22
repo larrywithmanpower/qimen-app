@@ -145,5 +145,32 @@
   "replace": "if (layer !== 'natal' || !hs) return palaceReadout(facts, sel)",
   "test": "e2e/mingli/ziwei.spec.ts",
   "runner": "playwright"
+ },
+ {
+  "id": "Z-Q1",
+  "desc": "紫微問題欄：欄位被藏起來（看不到），問題仍照樣送給 AI（原 bug 的情境，Playwright）",
+  "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
+  "find": "{canAsk && (",
+  "replace": "{false && (",
+  "test": "e2e/mingli/ziwei.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "Z-Q2",
+  "desc": "紫微問題欄：清除按鈕不清內容（Playwright）",
+  "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
+  "find": "data-testid=\"ml-ziwei-question-clear\" onClick={() => changeAsk('')}",
+  "replace": "data-testid=\"ml-ziwei-question-clear\" onClick={() => undefined}",
+  "test": "e2e/mingli/ziwei.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "Z-Q3",
+  "desc": "紫微問題欄：問題改了不清掉已顯示的解讀（key 不含問題，Playwright）",
+  "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
+  "find": "JSON.stringify([ask.trim(), aiFacts])",
+  "replace": "JSON.stringify([aiFacts])",
+  "test": "e2e/mingli/ziwei.spec.ts",
+  "runner": "playwright"
  }
 ]
