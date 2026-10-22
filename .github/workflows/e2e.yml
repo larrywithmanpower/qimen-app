@@ -1,6 +1,9 @@
 name: E2E Tests (Playwright)
 
 on:
+  # 推到 main 就跑全套測試；npm run deploy 只認這裡通過的版本
+  push:
+    branches: ["main"]
   pull_request:
     branches: ["main"]
   workflow_call:

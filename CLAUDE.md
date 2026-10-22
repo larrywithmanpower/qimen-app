@@ -16,7 +16,7 @@ npm run test:unit    # vitest：排盤／牌序對答案、AI 檢查、gemini-pr
 npm run test:ui      # Playwright 命理畫面測試（playwright.mingli.config.ts，一律 headless）
 npm test             # 上面兩者
 npm run test:mutation   # 故意改錯測試：node tests/mutation.mjs [組別]，例如 ai、tarot、meihua、ziwei、ui
-npm run deploy       # npm test → 帶正式代理網址 build → firebase hosting deploy
+npm run deploy       # 確認 HEAD 已推到 main 且 GitHub Actions 全套測試通過 → 帶正式代理網址 build → firebase hosting deploy（本機不跑測試）
 ```
 
 `tests/oracle/` 與 `*.fixtures*.json` 是對答案的答案檔，不可為了讓測試過而改動。
@@ -46,7 +46,7 @@ npm run deploy       # npm test → 帶正式代理網址 build → firebase hos
 
 ## 部署
 
-`npm run deploy`（build 時帶入正式代理網址，再 `firebase deploy --only hosting`），快取標頭設在 `firebase.json`。Firestore 規則：`npx firebase-tools deploy --only firestore:rules --project qimen-app-487007`。後端另外部署 `functions/gemini-proxy`（gcloud 在 `~/.local/opt/google-cloud-sdk/bin/gcloud`，需先登入）：
+`npm run deploy`（`scripts/deploy.mjs`：工作區要乾淨、HEAD 等於 origin/main、該 commit 的 `.github/workflows/e2e.yml` 成功才會 build 並 `firebase deploy --only hosting`；全套測試只在 GitHub 跑，推到 main 自動觸發，不會自動上線），快取標頭設在 `firebase.json`。Firestore 規則：`npx firebase-tools deploy --only firestore:rules --project qimen-app-487007`。後端另外部署 `functions/gemini-proxy`（gcloud 在 `~/.local/opt/google-cloud-sdk/bin/gcloud`，需先登入）：
 
 ```bash
 gcloud functions deploy gemini-proxy --gen2 --region=asia-east1 --runtime=nodejs22 --source=functions/gemini-proxy --entry-point=geminiProxy --trigger-http --allow-unauthenticated --max-instances=3 --timeout=60s --set-env-vars='^;^AI_ENABLED=true;DAILY_LIMIT=30;ALLOWED_ORIGINS=https://mingli-yuxuan.web.app,http://localhost:5180' --set-secrets=ANTHROPIC_API_KEY=ANTHROPIC_API_KEY:latest
