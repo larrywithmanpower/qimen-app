@@ -33,6 +33,7 @@ const DB = {
     c('z-m-ji', { mutagen: '忌' }),
     c('z-f-yearly', { focus: 'yearly' }),
     c('z-f-daily', { focus: 'daily' }),
+    c('z-f-decadal', { focus: 'decadal' }),
   ],
 };
 const ids = (r) => r.map((x) => x.id);
@@ -82,6 +83,13 @@ describe('selectCards：紫微', () => {
     expect(r).toContain('z-m-ji');
     expect(r).not.toContain('z-f-daily');
     expect(r).not.toContain('z-star-qs');
+    expect(r).not.toContain('z-f-decadal');
+  });
+  it('選運限層且附大限背景：同時給大限卡', () => {
+    const f = { ...facts, horoscope: { focus: 'yearly', decadal: { soulBranch: '寅', mutagens: [] }, yearly: { soulBranch: '午', mutagens: [] } } };
+    const r = ids(selectCards('ziwei', f, 'yearly', DB));
+    expect(r).toContain('z-f-yearly');
+    expect(r).toContain('z-f-decadal');
   });
 });
 

@@ -177,7 +177,9 @@ afterAll(() => {
   console.log(`報告已寫到 ${file}`)
 })
 
-const KINDS: [AiKind, string][] = [['tarot', '塔羅'], ['meihua', '梅花'], ['ziwei', '紫微']]
+// AI_EVAL_KINDS=ziwei 這樣可只跑部分術數（逗號分隔），沒設就全跑
+const ONLY = (process.env.AI_EVAL_KINDS ?? '').split(',').map((k) => k.trim()).filter(Boolean)
+const KINDS = ([['tarot', '塔羅'], ['meihua', '梅花'], ['ziwei', '紫微']] as [AiKind, string][]).filter(([k]) => ONLY.length === 0 || ONLY.includes(k))
 
 describe.skipIf(!PROXY_URL)('AI 實測', () => {
   it.runIf(wantBasic)('basic：三種術數各 20 份', async () => {

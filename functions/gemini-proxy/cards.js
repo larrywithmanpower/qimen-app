@@ -52,7 +52,9 @@ function buildMatcher(kind, facts, focus) {
     tests.push((w) => w.star !== undefined && stars.has(w.star));
     tests.push((w) => w.palace !== undefined && palaceNames.has(w.palace));
     tests.push((w) => w.mutagen !== undefined && mutagens.has(w.mutagen));
-    tests.push((w) => w.focus !== undefined && focus && focus !== 'natal' && w.focus === focus);
+    // 選流年／流月／流日時，facts 會附大限當背景，大限卡也要給
+    const hasDecadal = isObj(horo.decadal);
+    tests.push((w) => w.focus !== undefined && focus && focus !== 'natal' && (w.focus === focus || (w.focus === 'decadal' && hasDecadal)));
   }
   return (when) => isObj(when) && tests.some((t) => t(when));
 }

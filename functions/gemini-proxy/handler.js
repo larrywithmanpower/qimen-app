@@ -2,7 +2,7 @@
 import { SYSTEM_PROMPT, buildUserMessage } from './prompt.js';
 import { sumUsage } from './cost.js';
 import { loadCards, selectCards } from './cards.js';
-import { validateReading, validateRequest } from './validate.js';
+import { checkReading, validateRequest } from './validate.js';
 
 // 台灣日期 YYYY-MM-DD（UTC+8）
 export function taiwanDate(nowMs) {
@@ -83,13 +83,18 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
         const out = await claude(SYSTEM_PROMPT, user);
         if (out?.usage) usages.push(out.usage);
         if (out?.model) model = out.model;
-        const reading = validateReading(out?.reading, tone, selected);
+        const { reading, problem } = checkReading(out?.reading, tone, selected);
         if (reading) {
           status = 'ok';
           result = reading;
           break;
         }
-        console.warn('reading format rejected', { kind, attempt });
+        // 只記沒過的是哪一條、不在清單的卡號、Claude 停止原因（不含問題與盤面）
+        const allowedIds = new Set(selected.map((c) => c.id));
+        const unknownCards = (Array.isArray(out?.reading?.paragraphs) ? out.reading.paragraphs : [])
+          .flatMap((p) => (Array.isArray(p?.cards) ? p.cards : []))
+          .filter((id) => !allowedIds.has(id)).slice(0, 10);
+        console.warn('reading format rejected', { kind, attempt, problem, unknownCards, stopReason: out?.stopReason });
       }
     } catch (error) {
       status = 'api_error';

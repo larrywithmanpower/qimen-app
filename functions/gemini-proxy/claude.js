@@ -31,5 +31,5 @@ export async function callClaude(system, user) {
   } catch {
     reading = undefined;
   }
-  return { reading, usage, model: msg.model ?? MODEL };
+  return { reading, usage, model: msg.model ?? MODEL, stopReason: msg.stop_reason };
 }
