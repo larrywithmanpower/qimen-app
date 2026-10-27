@@ -1,10 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import './styles/tokens.css'
 import './ui/ui.css'
+import './ui/legal.css'
 import Background from './ui/Background'
 import { Bagua, BrushFilters } from './ui/Bagua'
 import Home from './ui/Home'
 import { SoonPage } from './ui/Pages'
+import { LegalFooter, MaintenancePage, PrivacyPage, TermsPage } from './ui/Legal'
+import { fetchSiteStatus } from './ai'
 import { useRealm } from './ui/fx'
 import { useRoute } from './ui/route'
 import TarotPage from './tarot/TarotPage'
@@ -24,7 +27,7 @@ const tabOf = (path: string) => (path === '/ziwei' ? '/me' : ['/records', '/accu
 const isMethodPage = (path: string) => ['/tarot', '/meihua'].includes(path)
 
 // 其他網址（含舊的 #/qimen）一律導回首頁
-const KNOWN_PATHS = ['/', '/tarot', '/meihua', '/ziwei', '/records', '/accuracy', '/me']
+const KNOWN_PATHS = ['/', '/tarot', '/meihua', '/ziwei', '/records', '/accuracy', '/me', '/privacy', '/terms']
 
 function today() {
   const d = new Date()
@@ -35,9 +38,16 @@ export default function MingliApp() {
   const route = useRoute()
   const realm = useRealm()
   const active = tabOf(route.path)
+  // 維護狀態還沒回來前照常顯示；失敗時 fetchSiteStatus 自己回正常
+  const [maintenance, setMaintenance] = useState(false)
 
   // effect 不可有回傳值：新版 Chrome 的 scrollTo 會回傳 Promise，被 React 當成 cleanup 會整棵卸掉
   useEffect(() => { window.scrollTo(0, 0) }, [route.hash])
+  useEffect(() => {
+    let alive = true
+    fetchSiteStatus().then((s) => { if (alive) setMaintenance(s.maintenance) })
+    return () => { alive = false }
+  }, [])
   useEffect(() => {
     if (!KNOWN_PATHS.includes(route.path)) location.replace('#/')
   }, [route.path])
@@ -57,14 +67,23 @@ export default function MingliApp() {
       page = <SoonPage testid="ml-records" title="紀錄" line="問過的事和當時的判斷，會收在這裡。" />
       break
     case '/accuracy':
-      page = <SoonPage testid="ml-accuracy" title="準度" line="對答案之後，這裡會算出每種算法準不準。" />
+      page = <SoonPage testid="ml-accuracy" title="準度" line="之後能回頭對答案，看每種算法和實際發生的差多少。" />
       break
     case '/me':
       page = <ZiweiPage params={route.params} testid="ml-me" />
       break
+    case '/privacy':
+      page = <PrivacyPage />
+      break
+    case '/terms':
+      page = <TermsPage />
+      break
     default:
       page = <Home />
   }
+  // 維護中整站只顯示維護頁；隱私與免責頁照樣能看
+  const isLegalPath = route.path === '/privacy' || route.path === '/terms'
+  if (maintenance && !isLegalPath) page = <MaintenancePage />
 
   return (
     <div className="ml-app" data-ml-realm={realm}>
@@ -86,7 +105,7 @@ export default function MingliApp() {
           </div>
         </div>
       </header>
-      <main className="ml-main" key={route.hash}>{page}</main>
+      <main className="ml-main" key={route.hash}>{page}<LegalFooter /></main>
       <nav className="ml-tabbar" aria-label="底部分頁">
         {TABS.map((t) => (
           <a key={t.path} className="ml-tabbar-item" href={`#${t.path}`} aria-current={active === t.path ? 'page' : undefined}>

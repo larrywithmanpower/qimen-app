@@ -1,3 +1,4 @@
+import { findAbsolute } from './safety.js';
 // 請求與回應的格式檢查（純函式）
 export const KINDS = ['tarot', 'meihua', 'ziwei'];
 export const TONES = ['吉', '平', '凶'];
@@ -54,6 +55,9 @@ export function checkReading(out, tone, allowedCards = []) {
   const pr = out.prediction;
   if (!isObj(pr) || !nonEmpty(pr.claim)) return fail('prediction');
   if (!isIsoDate(pr.dueDate)) return fail('due_date');
+  // 絕對化字眼（一定、保證…）視同格式不過
+  const allText = [out.verdict, pr.claim, ...paragraphs.flatMap((p) => [p.title, p.text, ...p.basis])].join('\n');
+  if (findAbsolute(allText).length > 0) return fail('absolute');
   return {
     reading: {
       verdict: out.verdict,

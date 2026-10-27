@@ -27,16 +27,16 @@
   "id": "A4",
   "desc": "後端：回傳 tone 不必等於請求 tone",
   "file": "functions/gemini-proxy/validate.js",
-  "find": "if (!nonEmpty(out.verdict) || out.tone !== tone) return null;",
-  "replace": "if (!nonEmpty(out.verdict)) return null;",
+  "find": "if (out.tone !== tone) return fail('tone');",
+  "replace": "if (false) return fail('tone');",
   "test": "functions/gemini-proxy"
  },
  {
   "id": "A5",
   "desc": "後端：basis 可以是空陣列",
   "file": "functions/gemini-proxy/validate.js",
-  "find": "if (!Array.isArray(p.basis) || p.basis.length === 0 || !p.basis.every(nonEmpty)) return null;",
-  "replace": "if (!Array.isArray(p.basis)) return null;",
+  "find": "if (!Array.isArray(p.basis) || p.basis.length === 0 || !p.basis.every(nonEmpty)) return fail('basis');",
+  "replace": "if (!Array.isArray(p.basis)) return fail('basis');",
   "test": "functions/gemini-proxy"
  },
  {
@@ -51,8 +51,8 @@
   "id": "A7",
   "desc": "後端：日誌記下使用者的問題",
   "file": "functions/gemini-proxy/handler.js",
-  "find": "console.warn('reading format rejected', { kind, attempt });",
-  "replace": "console.warn('reading format rejected', { kind, attempt, question });",
+  "find": "console.warn('reading format rejected', { kind, attempt, problem, unknownCards, stopReason: out?.stopReason });",
+  "replace": "console.warn('reading format rejected', { kind, attempt, problem, unknownCards, stopReason: out?.stopReason, question });",
   "test": "functions/gemini-proxy"
  },
  {
@@ -251,6 +251,55 @@
   "file": "functions/gemini-proxy/handler.js",
   "find": "if (selected.length === 0) {",
   "replace": "if (false) {",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A28",
+  "desc": "後端：拒答題仍呼叫 Claude（refuse 判斷失效）",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "    if (refuse) {",
+  "replace": "    if (refuse && false) {",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A29",
+  "desc": "後端：絕對化字眼檢查失效",
+  "file": "functions/gemini-proxy/safety.js",
+  "find": "    found.add(m[0]);",
+  "replace": "    if (false) found.add(m[0]);",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A30",
+  "desc": "後端：否定判斷失效（不一定也被抓）",
+  "file": "functions/gemini-proxy/safety.js",
+  "find": "    if (NEGATION_TAIL.test(before)) continue;",
+  "replace": "    if (NEGATION_TAIL.test(before) && false) continue;",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A31",
+  "desc": "前端：收到 refusal 不顯示婉拒，改退回範本",
+  "file": "src/mingli/ui/useAiReading.ts",
+  "find": "  return isAiRefusal(reading) ? { status: 'refused', refusal: reading.refusal } : { status: 'ok', reading }",
+  "replace": "  return isAiRefusal(reading) ? { status: 'fail' } : { status: 'ok', reading }",
+  "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A32",
+  "desc": "Claude 判 risk=selfharm 時仍照常回解讀（第二道內容安全失效）",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "if (risk === 'selfharm' || risk === 'death') {",
+  "replace": "if (false) {",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A33",
+  "desc": "關鍵字「想去死」不再攔（第一道內容安全失效）",
+  "file": "functions/gemini-proxy/safety.js",
+  "find": "想(去)?死(?!你|記|背|守|心)/",
+  "replace": "想死(?!你|記|背|守|心)/",
   "test": "functions/gemini-proxy"
  }
 ]

@@ -98,6 +98,8 @@ async function setup(page: Page, handle: (route: Route) => Promise<void>) {
   }, MOCK_URL)
   const bodies: Record<string, unknown>[] = []
   await page.route(`**${MOCK_URL}`, async (route) => {
+    // App 啟動時會 GET 狀態端點（同一個網址），不算解讀請求
+    if (route.request().method() === 'GET') return route.fulfill({ status: 200, contentType: 'application/json', body: '{"ai":true,"maintenance":false}' })
     bodies.push(route.request().postDataJSON())
     await handle(route)
   })
@@ -179,6 +181,38 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
     })
   }
 }
+
+for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
+  test(`${kind}：後端婉拒（selfharm）→ 顯示 ml-ai-refusal 與 1925／1995，不退回範本、不出現「範例解讀」`, async ({ page }) => {
+    const message = '我們很在意你現在的狀態。台灣安心專線 1925（24 小時），也可以撥生命線 1995。'
+    await setup(page, ok({ refusal: { kind: 'selfharm', message } }))
+    await SPECS[kind].open(page)
+    const box = page.getByTestId('ml-ai-refusal')
+    await expect(box).toBeVisible()
+    await expect(box).toContainText('1925')
+    await expect(box).toContainText('1995')
+    await expect(page.getByTestId('ml-ai-reading')).toHaveCount(0)
+    await expect(page.getByTestId('ml-ai-loading')).toHaveCount(0)
+    await expect(page.getByText('範例解讀')).toHaveCount(0)
+    if (kind !== 'ziwei') await expect(page.getByTestId('ml-reading')).toHaveCount(0)
+    if (kind === 'ziwei') await expect(page.getByTestId('ml-ai-error')).toHaveCount(0)
+  })
+
+  test(`${kind}：解讀帶 notice → 最上面顯示提醒 ml-ai-notice，解讀照常顯示`, async ({ page }) => {
+    await setup(page, ok(reading(kind, { notice: ['medical'] })))
+    await SPECS[kind].open(page)
+    await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+    await expect(page.getByTestId('ml-ai-notice')).toContainText('這題涉及健康')
+    await expect(page.getByTestId('ml-ai-notice')).toContainText('醫師')
+  })
+}
+
+test('沒有 notice 的解讀不顯示提醒', async ({ page }) => {
+  await setup(page, ok(reading('tarot')))
+  await SPECS.tarot.open(page)
+  await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await expect(page.getByTestId('ml-ai-notice')).toHaveCount(0)
+})
 
 test('紫微：沒按之前不送請求；按了才送；失敗後可再按，第二次成功', async ({ page }) => {
   let n = 0

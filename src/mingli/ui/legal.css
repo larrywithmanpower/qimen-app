@@ -1,0 +1,18 @@
+/* 隱私權、免責聲明、維護頁與頁尾連結 */
+.ml-legal { justify-content: flex-start; align-items: flex-start; gap: var(--ml-space-4); padding-block: var(--ml-space-6); max-width: 680px; width: 100%; }
+.ml-legal-sec { display: flex; flex-direction: column; gap: var(--ml-space-2); width: 100%; }
+.ml-legal-head { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 700; }
+.ml-legal-list { margin: 0; padding-left: 1.2em; line-height: 1.8; color: var(--ml-ink-soft); font-size: var(--ml-fs-body-sm); }
+
+/* 頁尾連結：放在內容區最下方，.ml-main 底部的留白已經讓出分頁列的位置 */
+.ml-legal-foot { margin-top: auto; padding-top: var(--ml-space-4); display: flex; justify-content: center; gap: var(--ml-space-4); }
+.ml-legal-link {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 0 var(--ml-space-3);
+  color: var(--ml-ink-muted); font-size: var(--ml-fs-label); text-decoration: underline; text-underline-offset: 3px;
+}
+.ml-legal-link:hover { color: var(--ml-ink); }
+
+/* 手機抽牌畫面固定一屏、牌堆延伸到分頁列後面，放不下頁尾；抽完看解讀時才出現 */
+@media (max-width: 719px) {
+  main:has([data-testid="ml-tarot"][data-read="false"]) .ml-legal-foot { display: none; }
+}

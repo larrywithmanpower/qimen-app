@@ -57,5 +57,31 @@
   "find": "export const inRange = (iso: string, min: string, max: string) => iso >= min && iso <= max",
   "replace": "export const inRange = (iso: string, min: string, max: string) => iso >= min && iso <= max && max === ''",
   "test": "src/mingli/__tests__"
+ },
+ {
+  "id": "U8",
+  "desc": "頁尾不放隱私連結（每頁底部要點得到隱私權）",
+  "file": "src/mingli/ui/Legal.tsx",
+  "find": "<a className=\"ml-legal-link\" data-testid=\"ml-footer-privacy\" href=\"#/privacy\">隱私權</a>",
+  "replace": "",
+  "test": "e2e/mingli/legal.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "U9",
+  "desc": "maintenance 為 true 仍顯示首頁",
+  "file": "src/mingli/MingliApp.tsx",
+  "find": "if (maintenance && !isLegalPath) page = <MaintenancePage />",
+  "replace": "if (false) page = <MaintenancePage />",
+  "test": "e2e/mingli/legal.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "U10",
+  "desc": "禁用字測試失效：index.html 描述寫進「神準」仍須被抓到",
+  "file": "index.html",
+  "find": "查得到出處。\" />",
+  "replace": "查得到出處，神準。\" />",
+  "test": "src/mingli/__tests__/copy.test.ts"
  }
 ]

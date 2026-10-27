@@ -13,7 +13,7 @@ export default defineConfig({
       manifest: {
         name: '星墨命理',
         short_name: '星墨命理',
-        description: '塔羅、梅花易數、紫微斗數的白話解讀',
+        description: '塔羅、梅花易數、紫微斗數的白話解讀，每段都附依據，查得到出處',
         theme_color: '#111014',
         background_color: '#111014',
         display: 'standalone',

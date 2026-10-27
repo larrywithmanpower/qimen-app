@@ -35,12 +35,28 @@ export interface AiParagraph {
   cards: AiCardRef[]
 }
 
+// 問題涉及的敏感話題：解讀最上面要顯示提醒
+export type AiNotice = 'medical' | 'investment' | 'legal'
+export const AI_NOTICES: readonly AiNotice[] = ['medical', 'investment', 'legal']
+export const AI_NOTICE_TEXT: Record<AiNotice, string> = {
+  medical: '這題涉及健康，以下只談心態與方向，身體狀況請找醫師',
+  investment: '這題涉及投資理財，以下只談心態與方向，買賣決定請諮詢理財顧問',
+  legal: '這題涉及法律問題，以下只談心態與方向，具體權益請諮詢律師',
+}
+
 export interface AiReading {
   verdict: string
   tone: AiTone
   paragraphs: AiParagraph[]
   prediction: { claim: string; dueDate: string }
+  notice?: AiNotice[]
 }
+
+// 後端婉拒（問壽命生死、輕生念頭）：不是解讀，畫面直接顯示 message
+export interface AiRefusal {
+  refusal: { kind: 'death' | 'selfharm'; message: string }
+}
+export const isAiRefusal = (r: AiReading | AiRefusal): r is AiRefusal => 'refusal' in r
 
 // 超過這麼久沒回就退回範本
 export const AI_TIMEOUT_MS = 30_000
@@ -227,6 +243,25 @@ export function mentionedOrientations(text: string): { name: string; orientation
   return [...text.matchAll(CARD_ORIENT_RE)].map((m) => ({ name: m[1], orientation: m[2] }))
 }
 
+// 絕對化字眼：一定、必定、絕對、保證、百分之百、100%、肯定會。規則與後端 functions/gemini-proxy/safety.js 一致，改一邊要改另一邊
+const ABSOLUTE_RE = /一定|必定|絕對|保證|百分之百|100[%％]|肯定會/g
+// 前面緊接這些字就是否定（不一定、未必一定、不保證、不見得一定）
+const NEGATION_TAIL = /(不|未必|不見得|不是|並非|非|無法|沒辦法|難以|不能)$/
+// 「一定的」「一定程度」是某個程度的意思，不是絕對
+const SOFT_AFTER = /^(的|程度|範圍|限度|水準|數量|比例|機率)/
+
+// 回傳文字裡出現的絕對化字眼（不重複）；被否定的不算
+export function findAbsolute(text: string): string[] {
+  const found = new Set<string>()
+  for (const m of text.matchAll(ABSOLUTE_RE)) {
+    const at = m.index ?? 0
+    if (NEGATION_TAIL.test(text.slice(Math.max(0, at - 4), at))) continue
+    if (m[0] === '一定' && SOFT_AFTER.test(text.slice(at + m[0].length))) continue
+    found.add(m[0])
+  }
+  return [...found]
+}
+
 const isIsoDate = (s: unknown): s is string => {
   if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false
   const [y, m, d] = s.split('-').map(Number)
@@ -257,6 +292,8 @@ export function validateAiReading(kind: AiKind, facts: Obj, tone: AiTone, raw: u
   const pr = asObj(o.prediction)
   if (!nonEmpty(pr.claim) || !isIsoDate(pr.dueDate)) return null
   const reading: AiReading = { verdict: o.verdict, tone, paragraphs, prediction: { claim: pr.claim, dueDate: pr.dueDate } }
+  const notice = asArr(o.notice).filter((n): n is AiNotice => AI_NOTICES.includes(n as AiNotice))
+  if (notice.length > 0) reading.notice = [...new Set(notice)]
 
   // 提到的牌名／卦名／星名都必須在 facts 裡
   const { allowed, universe, common } = nameSets(kind, facts)
@@ -264,6 +301,8 @@ export function validateAiReading(kind: AiKind, facts: Obj, tone: AiTone, raw: u
     .join('\n')
     .replaceAll('紫微斗數', '')
   if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null
+  // 絕對化字眼視同檢查沒過
+  if (findAbsolute(text).length > 0) return null
   // 梅花：只能提動爻那一爻
   if (kind === 'meihua' && typeof facts.movingLine === 'number') {
     if (mentionedLines(text).some((n) => n !== facts.movingLine)) return null
@@ -285,8 +324,8 @@ export interface FetchOptions {
   signal?: AbortSignal
 }
 
-// 回傳通過檢查的解讀；沒網址、網路錯誤、非 200、逾時、檢查沒過一律回 null
-export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): Promise<AiReading | null> {
+// 回傳通過檢查的解讀，或後端的婉拒（{ refusal }）；沒網址、網路錯誤、非 200、逾時、檢查沒過一律回 null
+export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): Promise<AiReading | AiRefusal | null> {
   const url = opts.url ?? proxyUrl()
   if (!url) return null
   const ctrl = new AbortController()
@@ -300,10 +339,38 @@ export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): P
       signal: ctrl.signal,
     })
     if (res.status !== 200) return null
-    return validateAiReading(req.kind, req.facts, req.tone, await res.json())
+    const json: unknown = await res.json()
+    const rf = asObj(asObj(json).refusal)
+    if ('refusal' in asObj(json)) {
+      return (rf.kind === 'death' || rf.kind === 'selfharm') && nonEmpty(rf.message) ? { refusal: { kind: rf.kind, message: rf.message } } : null
+    }
+    return validateAiReading(req.kind, req.facts, req.tone, json)
   } catch {
     return null
   } finally {
     clearTimeout(timer)
+  }
+}
+
+// ───────── 網站狀態（維護頁用）─────────
+
+export interface SiteStatus {
+  ai: boolean
+  maintenance: boolean
+}
+
+// GET 代理網址拿 AI 開關與維護狀態；沒網址、網路錯誤、非 200、格式不對一律當作正常，不擋使用者
+export async function fetchSiteStatus(opts: { url?: string; fetchImpl?: typeof fetch } = {}): Promise<SiteStatus> {
+  const fallback: SiteStatus = { ai: true, maintenance: false }
+  const url = opts.url ?? proxyUrl()
+  if (!url) return fallback
+  try {
+    const res = await (opts.fetchImpl ?? fetch)(url, { method: 'GET' })
+    if (res.status !== 200) return fallback
+    const j = asObj(await res.json())
+    if (typeof j.ai !== 'boolean' || typeof j.maintenance !== 'boolean') return fallback
+    return { ai: j.ai, maintenance: j.maintenance }
+  } catch {
+    return fallback
   }
 }

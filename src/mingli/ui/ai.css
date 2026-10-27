@@ -23,3 +23,15 @@
 .ml-ai-text { margin: 0; font-size: var(--ml-fs-body); line-height: 1.85; color: var(--ml-ink-body); }
 .ml-ai-basis { font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); line-height: 1.6; }
 .ml-ai-cards { font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); line-height: 1.6; }
+
+.ml-ai-notice {
+  padding: 10px 14px; border-radius: var(--ml-radius-card); border: 1px solid var(--ml-line-soft);
+  background: var(--ml-surface-sunk); color: var(--ml-ink-muted); font-size: var(--ml-fs-caption); line-height: 1.7;
+}
+.ml-ai-notice p { margin: 0; }
+.ml-ai-refusal {
+  max-width: 680px; width: 100%; margin: 6px auto 0; padding: 20px 22px; box-sizing: border-box;
+  border-radius: var(--ml-radius-card); border: 1px solid var(--ml-accent); background: var(--ml-night-glass);
+  color: var(--ml-ink-body); font-size: var(--ml-fs-body); line-height: 1.85;
+}
+.ml-ai-refusal p { margin: 0; }

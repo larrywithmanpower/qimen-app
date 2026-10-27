@@ -62,7 +62,7 @@ export default function Home() {
           </span>
         ))}
       </h1>
-      <p className="ml-home-lead">寫下一件具體的事，選一種算法。每次解讀都附上依據，並留一句之後能對答案的判斷。</p>
+      <p className="ml-home-lead">寫下一件具體的事，選一種算法。每段解讀都附上依據的牌義、卦辭與星曜，查得到出處。</p>
       <div className="ml-home-ask">
         <div className="ml-home-q">
           <input

@@ -198,6 +198,8 @@ test('運限：選流年後按 AI 解讀，請求 focus 與 facts 只帶流年�
   })
   const bodies: Record<string, unknown>[] = []
   await page.route('**/__mock-ai', async (route) => {
+    // App 啟動時會 GET 狀態端點（同一個網址），不算解讀請求
+    if (route.request().method() === 'GET') return route.fulfill({ status: 200, contentType: 'application/json', body: '{"ai":true,"maintenance":false}' })
     bodies.push(route.request().postDataJSON())
     // 200 但內容不合格：前端退回，不會在 console 留錯誤
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })
@@ -250,6 +252,8 @@ async function mockAi(page: Page) {
   })
   const bodies: Record<string, unknown>[] = []
   await page.route('**/__mock-ai', async (route) => {
+    // App 啟動時會 GET 狀態端點（同一個網址），不算解讀請求
+    if (route.request().method() === 'GET') return route.fulfill({ status: 200, contentType: 'application/json', body: '{"ai":true,"maintenance":false}' })
     bodies.push(route.request().postDataJSON())
     // 200 但內容不合格：前端退回，不會在 console 留錯誤
     await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' })

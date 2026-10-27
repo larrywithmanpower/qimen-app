@@ -3,6 +3,7 @@ import { SYSTEM_PROMPT, buildUserMessage } from './prompt.js';
 import { sumUsage } from './cost.js';
 import { loadCards, selectCards } from './cards.js';
 import { checkReading, validateRequest } from './validate.js';
+import { REFUSAL_MESSAGES, classifyQuestion } from './safety.js';
 
 // 台灣日期 YYYY-MM-DD（UTC+8）
 export function taiwanDate(nowMs) {
@@ -25,7 +26,7 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
     }
     res.set('Access-Control-Allow-Origin', origin);
     res.set('Vary', 'Origin');
-    res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type');
     res.set('Access-Control-Max-Age', '3600');
 
@@ -33,13 +34,13 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
       res.status(204).send('');
       return;
     }
-    if (req.method !== 'POST') {
-      res.status(405).json({ error: 'Method not allowed' });
+    // 狀態端點：給前端判斷 AI 是否開著、是否維護中；不扣額度
+    if (req.method === 'GET') {
+      res.status(200).json({ ai: env.AI_ENABLED === 'true', maintenance: env.MAINTENANCE === 'true' });
       return;
     }
-    // 緊急開關
-    if (env.AI_ENABLED !== 'true') {
-      res.status(503).json({ error: 'AI 暫停服務' });
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method not allowed' });
       return;
     }
     const bad = validateRequest(req.body);
@@ -48,6 +49,19 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
       return;
     }
     const { kind, question = '', facts, tone, focus } = req.body;
+
+    // 內容安全：該拒答的直接回，不呼叫 Claude、不扣額度、不記成本
+    const { topics, refuse } = classifyQuestion(question);
+    if (refuse) {
+      res.status(200).json({ refusal: { kind: refuse, message: REFUSAL_MESSAGES[refuse] } });
+      return;
+    }
+
+    // 緊急開關（放在拒答之後：AI 關閉時，危機求助訊息仍要送得出去）
+    if (env.AI_ENABLED !== 'true') {
+      res.status(503).json({ error: 'AI 暫停服務' });
+      return;
+    }
 
     // 一張卡都選不到就不呼叫 Claude，也不耗額度
     const selected = selectCards(kind, facts, focus, cardDb);
@@ -69,7 +83,7 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
     }
 
     // 隱私：日誌不記錄 question 與 facts
-    const user = buildUserMessage({ kind, question, facts, tone, focus, cards: selected }, taiwanDate(now()));
+    const user = buildUserMessage({ kind, question, facts, tone, focus, cards: selected, topics }, taiwanDate(now()));
     const startedAt = now();
     const usages = [];
     let model = 'unknown';
@@ -83,6 +97,13 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
         const out = await claude(SYSTEM_PROMPT, user);
         if (out?.usage) usages.push(out.usage);
         if (out?.model) model = out.model;
+        // 第二道內容安全：關鍵字沒抓到的隱晦說法，由 Claude 判斷整句意思
+        const risk = out?.reading?.risk;
+        if (risk === 'selfharm' || risk === 'death') {
+          status = 'refused';
+          result = { refusal: { kind: risk, message: REFUSAL_MESSAGES[risk] } };
+          break;
+        }
         const { reading, problem } = checkReading(out?.reading, tone, selected);
         if (reading) {
           status = 'ok';
@@ -121,7 +142,8 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
       }
     }
 
-    if (status === 'ok') res.status(200).json(result);
+    if (status === 'refused') res.status(200).json(result);
+    else if (status === 'ok') res.status(200).json(topics.length > 0 ? { ...result, notice: topics } : result);
     else if (status === 'api_error') res.status(502).json({ error: 'AI 呼叫失敗' });
     else res.status(502).json({ error: '大師的回答格式不對' });
   };

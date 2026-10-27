@@ -195,9 +195,9 @@ describe('400 壞請求', () => {
     const { call } = setup();
     expect((await call(fakeReq({ data: body({ kind: 'ziwei', question: '' }) }))).code).toBe(200);
   });
-  it('GET → 405', async () => {
+  it('PUT 等其他方法 → 405', async () => {
     const { call } = setup();
-    expect((await call(fakeReq({ method: 'GET' }))).code).toBe(405);
+    expect((await call(fakeReq({ method: 'PUT' }))).code).toBe(405);
   });
 });
 
@@ -384,5 +384,151 @@ describe('成本紀錄（ai_calls）', () => {
     expect(all).not.toContain(SECRET_Q);
     expect(all).not.toContain(SECRET_F);
     expect(all).not.toContain('愚者');
+  });
+});
+
+describe('內容安全：拒答', () => {
+  it('死亡題 → 200 refusal，不呼叫 Claude、不扣額度、不記成本', async () => {
+    const { claude, usage, cost, call } = setup();
+    const res = await call(fakeReq({ data: body({ question: '我哪時候會死' }) }));
+    expect(res.code).toBe(200);
+    expect(res.body.refusal.kind).toBe('death');
+    expect(res.body.refusal.message).toContain('不談壽命');
+    expect(res.body.verdict).toBeUndefined();
+    expect(claude).not.toHaveBeenCalled();
+    expect(usage.consume).not.toHaveBeenCalled();
+    expect(cost.record).not.toHaveBeenCalled();
+  });
+  it('輕生題 → refusal 含 1925 與 1995，一樣不呼叫、不扣、不記', async () => {
+    const { claude, usage, cost, call } = setup();
+    const res = await call(fakeReq({ data: body({ question: '我不想活了' }) }));
+    expect(res.code).toBe(200);
+    expect(res.body.refusal.kind).toBe('selfharm');
+    expect(res.body.refusal.message).toContain('1925');
+    expect(res.body.refusal.message).toContain('1995');
+    expect(claude).not.toHaveBeenCalled();
+    expect(usage.consume).not.toHaveBeenCalled();
+    expect(cost.record).not.toHaveBeenCalled();
+  });
+  it('關鍵字沒抓到、Claude 判 risk=selfharm → 回 refusal，不重叫，成本記 refused', async () => {
+    const { claude, cost, call } = setup({ claudeImpl: async () => ({ ...goodReading(), risk: 'selfharm' }) });
+    const res = await call(fakeReq({ data: body({ question: '好想睡著就不要醒' }) }));
+    expect(res.code).toBe(200);
+    expect(res.body).toEqual({ refusal: { kind: 'selfharm', message: expect.stringContaining('1925') } });
+    expect(claude).toHaveBeenCalledTimes(1);
+    expect(cost.record.mock.calls[0][0].status).toBe('refused');
+  });
+  it('Claude 判 risk=death → 回 death 婉拒；risk=none 照常解讀', async () => {
+    const death = await setup({ claudeImpl: async () => ({ ...goodReading(), risk: 'death' }) }).call(fakeReq());
+    expect(death.body.refusal.kind).toBe('death');
+    const none = setup({ claudeImpl: async (_s, user) => {
+      const id = /<cards>\n([^｜\n]+)｜/.exec(user)?.[1];
+      const r = goodReading();
+      return { ...r, risk: 'none', paragraphs: r.paragraphs.map((p) => ({ ...p, cards: [id] })) };
+    } });
+    const ok = await none.call(fakeReq());
+    expect(ok.body.verdict).toBe('順著做');
+    expect(ok.body.risk).toBeUndefined();
+  });
+  it('AI 關閉時輕生題仍回 refusal（危機訊息不能被緊急開關擋掉）', async () => {
+    const { claude, call } = setup({ env: { AI_ENABLED: 'false' } });
+    const res = await call(fakeReq({ data: body({ question: '我不想活了' }) }));
+    expect(res.code).toBe(200);
+    expect(res.body.refusal.message).toContain('1925');
+    expect(claude).not.toHaveBeenCalled();
+  });
+  it('拒答的日誌不含問題', async () => {
+    const { call } = setup();
+    await call(fakeReq({ data: body({ question: '我不想活了XYZ秘密' }) }));
+    expect(logs.join('\n')).not.toContain('XYZ秘密');
+  });
+});
+
+describe('內容安全：notice 與規則', () => {
+  it('一般題沒有 notice 欄位、prompt 沒有安全規則', async () => {
+    const { claude, call } = setup();
+    const res = await call(fakeReq());
+    expect(res.body).not.toHaveProperty('notice');
+    expect(claude.mock.calls[0][1]).not.toContain('這題涉及');
+  });
+  it('醫療題 → 回應帶 notice，prompt 加規則', async () => {
+    const { claude, call } = setup();
+    const res = await call(fakeReq({ data: body({ question: '媽媽下週要動手術，順利嗎' }) }));
+    expect(res.code).toBe(200);
+    expect(res.body.notice).toEqual(['medical']);
+    const user = claude.mock.calls[0][1];
+    expect(user).toContain('這題涉及健康醫療');
+    expect(user).toContain('不給診斷、用藥');
+    expect(user).toContain('醫師');
+  });
+  it('投資＋法律 → notice 兩項', async () => {
+    const { claude, call } = setup();
+    const res = await call(fakeReq({ data: body({ question: '投資被騙，要不要提告' }) }));
+    expect(res.body.notice.sort()).toEqual(['investment', 'legal']);
+    expect(claude.mock.calls[0][1]).toContain('理財顧問');
+    expect(claude.mock.calls[0][1]).toContain('律師');
+  });
+  it('SYSTEM_PROMPT 明講不用絕對化字眼', async () => {
+    const { claude, call } = setup();
+    await call(fakeReq());
+    expect(claude.mock.calls[0][0]).toContain('絕對化字眼');
+  });
+});
+
+describe('內容安全：絕對化字眼', () => {
+  const withText = (text) => ({ ...goodReading(), paragraphs: [{ ...goodReading().paragraphs[0], text }] });
+  const cardId = (user) => /<cards>\n([^｜\n]+)｜/.exec(user)?.[1];
+  it('第一次含「一定」→ 重叫一次，第二次乾淨就過', async () => {
+    let n = 0;
+    const { claude, call } = setup({
+      claudeImpl: async (_s, user) => {
+        const r = withText(n++ === 0 ? '這件事一定會成功' : '多半順利');
+        return { ...r, paragraphs: r.paragraphs.map((p) => ({ ...p, cards: [cardId(user)] })) };
+      },
+    });
+    const res = await call(fakeReq());
+    expect(res.code).toBe(200);
+    expect(claude).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(res.body)).not.toContain('一定');
+    expect(logs.join('\n')).toContain('absolute');
+  });
+  it('verdict、prediction.claim 含絕對化字眼也算不過；兩次都有 → 502', async () => {
+    for (const patch of [{ verdict: '保證成功' }, { prediction: { claim: '百分之百會來', dueDate: '2026-12-01' } }]) {
+      const { claude, call } = setup({ claudeImpl: async () => ({ ...goodReading(), ...patch }) });
+      expect((await call(fakeReq())).code).toBe(502);
+      expect(claude).toHaveBeenCalledTimes(2);
+    }
+  });
+  it('否定寫法（不一定）不算絕對化', async () => {
+    const { claude, call } = setup({
+      claudeImpl: async (_s, user) => {
+        const r = withText('不一定馬上有結果');
+        return { ...r, paragraphs: r.paragraphs.map((p) => ({ ...p, cards: [cardId(user)] })) };
+      },
+    });
+    expect((await call(fakeReq())).code).toBe(200);
+    expect(claude).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('GET 狀態端點', () => {
+  it('回 ai 與 maintenance，不扣額度、不呼叫 Claude', async () => {
+    const { claude, usage, cost, call } = setup({ env: { MAINTENANCE: 'true' } });
+    const res = await call(fakeReq({ method: 'GET' }));
+    expect(res.code).toBe(200);
+    expect(res.body).toEqual({ ai: true, maintenance: true });
+    expect(res.headers['Access-Control-Allow-Origin']).toBe(ORIGIN);
+    expect(claude).not.toHaveBeenCalled();
+    expect(usage.consume).not.toHaveBeenCalled();
+    expect(cost.record).not.toHaveBeenCalled();
+  });
+  it('MAINTENANCE 沒設等於 false；AI_ENABLED 不是 true → ai:false', async () => {
+    expect((await setup().call(fakeReq({ method: 'GET' }))).body).toEqual({ ai: true, maintenance: false });
+    expect((await setup({ env: { AI_ENABLED: 'false' } }).call(fakeReq({ method: 'GET' }))).body).toEqual({ ai: false, maintenance: false });
+  });
+  it('GET 的 Origin 規則照舊：沒帶或不在名單 → 403', async () => {
+    const { call } = setup();
+    expect((await call(fakeReq({ method: 'GET', origin: undefined }))).code).toBe(403);
+    expect((await call(fakeReq({ method: 'GET', origin: 'https://evil.example' }))).code).toBe(403);
   });
 });

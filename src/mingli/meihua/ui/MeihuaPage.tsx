@@ -6,7 +6,7 @@ import { burstAt, lightTrigrams, prefersReduced, setRealm } from '../../ui/fx'
 import QuestionBar, { NEED_QUESTION } from '../../ui/QuestionBar'
 import { session, updateSession } from '../../ui/session'
 import { clipQuestion, meihuaFacts } from '../../ai'
-import { AiLoading, AiReadingView } from '../../ui/AiReadingView'
+import { AiLoading, AiReadingView, AiRefusalView } from '../../ui/AiReadingView'
 import { useAiReading } from '../../ui/useAiReading'
 import { castByNumbers, castByTime, lunarNumbersOf, templateReading } from '../engine'
 import type { MeihuaResult } from '../engine'
@@ -276,6 +276,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
           </div>
           {ai.status === 'loading' && <AiLoading />}
           {ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
+          {ai.status === 'refused' && <AiRefusalView refusal={ai.refusal} />}
           {tpl && (
             <>
               <div className="ml-mverdict">

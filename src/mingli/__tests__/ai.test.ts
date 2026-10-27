@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fetchAiReading, meihuaFacts, tarotFacts, validateAiReading, ziweiFacts } from '../ai'
+import { fetchAiReading, fetchSiteStatus, findAbsolute, isAiRefusal, meihuaFacts, tarotFacts, validateAiReading, ziweiFacts } from '../ai'
 import type { AiReading, AiRequest } from '../ai'
 import { drawThree, templateReading } from '../tarot/engine'
 import { castByNumbers } from '../meihua/engine'
@@ -185,7 +185,7 @@ describe('fetchAiReading 失敗一律回 null（畫面退回範本）', () => {
       url: 'http://x',
       fetchImpl: (async (_u: unknown, init: RequestInit) => { sent = JSON.parse(String(init.body)); return new Response(JSON.stringify(good)) }) as typeof fetch,
     })
-    expect(r?.verdict).toBe('先穩住')
+    expect(r && !isAiRefusal(r) ? r.verdict : null).toBe('先穩住')
     expect(Object.keys(sent).sort()).toEqual(['facts', 'kind', 'question', 'tone'])
   })
   it('網路錯誤、500、429、壞 JSON、檢查沒過 → 都是 null', async () => {
@@ -273,5 +273,59 @@ describe('紫微 facts 只帶選中的那一層', () => {
     }) as unknown as typeof fetch
     await fetchAiReading({ kind: 'ziwei', question: '', facts: ziweiFacts(chart, hsFacts, 'monthly'), tone: '平', focus: 'monthly' }, { url: 'http://x', fetchImpl })
     expect(sent.focus).toBe('monthly')
+  })
+})
+
+describe('內容安全：絕對化字眼（規則要和後端 safety.js 一致）', () => {
+  it('抓得到七種', () => {
+    for (const w of ['一定', '必定', '絕對', '保證', '百分之百', '100%', '肯定會']) expect(findAbsolute(`這件事${w}成功`), w).toContain(w)
+  })
+  it('否定與「一定的」不算', () => {
+    for (const t of ['不一定會成功', '未必一定順利', '我不保證結果', '不見得一定如此', '有一定的參考價值']) expect(findAbsolute(t), t).toEqual([])
+  })
+  it('validateAiReading：任何一處含絕對化字眼 → null；否定寫法照過', () => {
+    const base = { tone: tarot.tone, text: `第一張是${names[0]}` }
+    expect(validateAiReading('tarot', tarot.facts, tarot.tone, make(base))).not.toBeNull()
+    expect(validateAiReading('tarot', tarot.facts, tarot.tone, make({ ...base, text: `第一張是${names[0]}，一定成功` }))).toBeNull()
+    expect(validateAiReading('tarot', tarot.facts, tarot.tone, make({ ...base, text: `第一張是${names[0]}，不一定馬上有結果` }))).not.toBeNull()
+    expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...make(base), verdict: '保證順利' })).toBeNull()
+  })
+})
+
+describe('內容安全：refusal 與 notice', () => {
+  const req: AiRequest = { kind: 'tarot', question: '問題', facts: tarot.facts, tone: tarot.tone }
+  const reply = (body: unknown) => (async () => new Response(JSON.stringify(body), { status: 200 })) as typeof fetch
+  it('refusal → 回傳 { refusal }，不是 null', async () => {
+    const r = await fetchAiReading(req, { url: 'http://x', fetchImpl: reply({ refusal: { kind: 'selfharm', message: '安心專線 1925' } }) })
+    expect(r && isAiRefusal(r)).toBe(true)
+    expect(r).toEqual({ refusal: { kind: 'selfharm', message: '安心專線 1925' } })
+  })
+  it('refusal 格式不對（kind 不認得、message 空）→ null', async () => {
+    for (const refusal of [{ kind: 'x', message: 'a' }, { kind: 'death', message: '' }, 'oops']) {
+      expect(await fetchAiReading(req, { url: 'http://x', fetchImpl: reply({ refusal }) })).toBeNull()
+    }
+  })
+  it('解讀帶 notice → 保留合法值、丟掉不認得的；沒帶就沒有欄位', () => {
+    const raw = make({ tone: tarot.tone, text: `第一張是${names[0]}` }) as unknown as Record<string, unknown>
+    expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...raw, notice: ['medical', 'bogus', 'legal'] })?.notice).toEqual(['medical', 'legal'])
+    expect(validateAiReading('tarot', tarot.facts, tarot.tone, raw)).not.toHaveProperty('notice')
+  })
+})
+
+describe('fetchSiteStatus', () => {
+  const reply = (status: number, body: unknown) => (async () => new Response(typeof body === 'string' ? body : JSON.stringify(body), { status })) as typeof fetch
+  it('正常回傳狀態，並且用 GET', async () => {
+    let method = ''
+    const fetchImpl = (async (_u: unknown, init: RequestInit) => { method = String(init.method); return new Response(JSON.stringify({ ai: false, maintenance: true })) }) as typeof fetch
+    expect(await fetchSiteStatus({ url: 'http://x', fetchImpl })).toEqual({ ai: false, maintenance: true })
+    expect(method).toBe('GET')
+  })
+  it('沒網址、網路錯誤、非 200、格式不對 → 當作正常，不擋使用者', async () => {
+    const ok = { ai: true, maintenance: false }
+    expect(await fetchSiteStatus({ url: '' })).toEqual(ok)
+    expect(await fetchSiteStatus({ url: 'http://x', fetchImpl: (async () => { throw new TypeError('network') }) as typeof fetch })).toEqual(ok)
+    expect(await fetchSiteStatus({ url: 'http://x', fetchImpl: reply(500, { ai: false, maintenance: true }) })).toEqual(ok)
+    expect(await fetchSiteStatus({ url: 'http://x', fetchImpl: reply(200, 'not json') })).toEqual(ok)
+    expect(await fetchSiteStatus({ url: 'http://x', fetchImpl: reply(200, { ai: 'yes' }) })).toEqual(ok)
   })
 })
