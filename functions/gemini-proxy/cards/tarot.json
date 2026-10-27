@@ -1,0 +1,1566 @@
+{
+  "version": 1,
+  "kind": "tarot",
+  "cards": [
+    {
+      "id": "T00正",
+      "title": "愚者正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "愚者",
+        "orientation": "正位"
+      },
+      "text": "象徵新旅程的起點，帶著天真與信心踏出第一步。問事時代表可以放膽嘗試新的開始，但仍要留意腳下。"
+    },
+    {
+      "id": "T00逆",
+      "title": "愚者逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "愚者",
+        "orientation": "逆位"
+      },
+      "text": "行事輕率，沒想清楚就往前衝。問事時提醒先停下來評估風險，別因一時衝動而白費力氣。"
+    },
+    {
+      "id": "T01正",
+      "title": "魔術師正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "魔術師",
+        "orientation": "正位"
+      },
+      "text": "擁有意志、技巧與資源，能把想法化為行動。問事時表示手上條件足夠，用對方法就做得成。"
+    },
+    {
+      "id": "T01逆",
+      "title": "魔術師逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "魔術師",
+        "orientation": "逆位"
+      },
+      "text": "有才能卻用錯方向，或虛張聲勢。問事時提醒檢視自己的動機，別把能力花在不對的地方。"
+    },
+    {
+      "id": "T02正",
+      "title": "女祭司正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "女祭司",
+        "orientation": "正位"
+      },
+      "text": "象徵靜默、直覺與尚未揭露的知識。問事時建議先觀察、少說話，相信內心的感受，答案還在醞釀。"
+    },
+    {
+      "id": "T02逆",
+      "title": "女祭司逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "女祭司",
+        "orientation": "逆位"
+      },
+      "text": "資訊不完整，或表面平靜下藏著隱情。問事時提醒不要急著下結論，也留意被忽略的直覺。"
+    },
+    {
+      "id": "T03正",
+      "title": "皇后正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "皇后",
+        "orientation": "正位"
+      },
+      "text": "代表豐盛、滋養與感官的享受，如同大地孕育萬物。問事時表示被好好照顧，事情有成長與收成的條件。"
+    },
+    {
+      "id": "T03逆",
+      "title": "皇后逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "皇后",
+        "orientation": "逆位"
+      },
+      "text": "過度依賴他人，或沉溺安逸而停滯。問事時提醒自己也要出力，別把主導權全交給別人。如枯萎的花園，提醒你要自己動手栽種才會結果。"
+    },
+    {
+      "id": "T04正",
+      "title": "皇帝正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "皇帝",
+        "orientation": "正位"
+      },
+      "text": "象徵秩序、權威與穩固的結構。問事時表示按規矩一步步來較穩，適合建立制度、承擔責任。"
+    },
+    {
+      "id": "T04逆",
+      "title": "皇帝逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "皇帝",
+        "orientation": "逆位"
+      },
+      "text": "權力用得過度，變得專斷僵化。問事時提醒放鬆控制，或留意身邊有人太強勢而讓事情卡住。"
+    },
+    {
+      "id": "T05正",
+      "title": "教皇正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "教皇",
+        "orientation": "正位"
+      },
+      "text": "代表傳統、信仰與教導，講求遵循既有的規範。問事時建議請教前輩或走正規管道，穩健行事。"
+    },
+    {
+      "id": "T05逆",
+      "title": "教皇逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "教皇",
+        "orientation": "逆位"
+      },
+      "text": "不願受規矩約束，或墨守成規卻失去本意。問事時表示可以另找路，但別為了反抗而反抗。"
+    },
+    {
+      "id": "T06正",
+      "title": "戀人正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "戀人",
+        "orientation": "正位"
+      },
+      "text": "象徵相互吸引與重要的抉擇，需要依價值觀做決定。問事時表示適合合作與感情交流，選定後要負責。"
+    },
+    {
+      "id": "T06逆",
+      "title": "戀人逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "戀人",
+        "orientation": "逆位"
+      },
+      "text": "抉擇上搖擺不定，或雙方價值觀有落差。問事時提醒先釐清自己要什麼，避免拖延讓關係失衡。"
+    },
+    {
+      "id": "T07正",
+      "title": "戰車正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "戰車",
+        "orientation": "正位"
+      },
+      "text": "象徵靠意志與自我控制取得勝利，朝目標前進。問事時表示只要方向明確、駕馭好自己，就衝得過去。"
+    },
+    {
+      "id": "T07逆",
+      "title": "戰車逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "戰車",
+        "orientation": "逆位"
+      },
+      "text": "方向不一、力氣分散，彼此拉扯。問事時提醒先整合想法，別同時往幾個方向用力。兩隻人面獅身各拉一邊，車子只會原地打轉。"
+    },
+    {
+      "id": "T08正",
+      "title": "力量正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "力量",
+        "orientation": "正位"
+      },
+      "text": "代表以溫柔與耐心馴服內在的野性，真正的力量不是蠻力。問事時表示用耐心與柔軟化解僵局。"
+    },
+    {
+      "id": "T08逆",
+      "title": "力量逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "力量",
+        "orientation": "逆位"
+      },
+      "text": "自信不足，或情緒與衝動壓過理智。問事時提醒先安頓內心，慢慢找回自己的底氣。獅子在身旁躁動，要先安撫自己才能談駕馭。"
+    },
+    {
+      "id": "T09正",
+      "title": "隱者正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "隱者",
+        "orientation": "正位"
+      },
+      "text": "象徵獨處、內省與尋找智慧，手持燈火照亮前路。問事時建議暫停腳步，把事情想清楚再決定。"
+    },
+    {
+      "id": "T09逆",
+      "title": "隱者逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "隱者",
+        "orientation": "逆位"
+      },
+      "text": "過度封閉自己，或孤立而不願求助。問事時提醒適度走出來與人交流，別一直躲在原地。燈火被遮住，路反而更看不清楚。"
+    },
+    {
+      "id": "T10正",
+      "title": "命運之輪正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "命運之輪",
+        "orientation": "正位"
+      },
+      "text": "象徵循環與轉折，運勢正在轉動。問事時表示轉機將至，順勢而為，把握變化帶來的機會。"
+    },
+    {
+      "id": "T10逆",
+      "title": "命運之輪逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "命運之輪",
+        "orientation": "逆位"
+      },
+      "text": "時機還沒到，或事情暫時不順。問事時提醒耐心等待，循環終會再轉，先穩住自己。輪子正往下轉，這只是循環中的一段，不代表一直如此。"
+    },
+    {
+      "id": "T11正",
+      "title": "正義正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "正義",
+        "orientation": "正位"
+      },
+      "text": "代表公平、因果與如實的判斷。問事時表示事情會依事實與責任處理，宜誠實面對、以理行事。"
+    },
+    {
+      "id": "T11逆",
+      "title": "正義逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "正義",
+        "orientation": "逆位"
+      },
+      "text": "判斷偏頗，或有人逃避責任、處理不公。問事時提醒重新檢視事實，別被偏見或情緒左右。"
+    },
+    {
+      "id": "T12正",
+      "title": "倒吊人正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "倒吊人",
+        "orientation": "正位"
+      },
+      "text": "象徵自願的暫停與換位思考，從不同角度看事情。問事時建議放下堅持，等待也是一種前進。"
+    },
+    {
+      "id": "T12逆",
+      "title": "倒吊人逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "倒吊人",
+        "orientation": "逆位"
+      },
+      "text": "白白空等而無所得，或不肯改變又不願讓步。問事時提醒若等待沒有意義，就該調整做法。"
+    },
+    {
+      "id": "T13正",
+      "title": "死神正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "死神",
+        "orientation": "正位"
+      },
+      "text": "代表舊階段的結束與新階段的開始，並非字面上的死亡。問事時表示該放下的就放下，轉變帶來重生。"
+    },
+    {
+      "id": "T13逆",
+      "title": "死神逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "死神",
+        "orientation": "逆位"
+      },
+      "text": "抗拒改變，緊抓已經過去的事物。問事時提醒越拖越難受，順著轉變走反而輕鬆。想挽留的舊事物，往往正是擋住新機會的那道牆。"
+    },
+    {
+      "id": "T14正",
+      "title": "節制正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "節制",
+        "orientation": "正位"
+      },
+      "text": "象徵調和、平衡與耐心，把不同的元素慢慢融合。問事時表示適合溫和折衷、循序漸進。天使雙腳一水一陸，提醒你兼顧理想與現實。"
+    },
+    {
+      "id": "T14逆",
+      "title": "節制逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "節制",
+        "orientation": "逆位"
+      },
+      "text": "兩邊失衡，過與不及。問事時提醒檢查哪方面用力過度，重新找回節奏與分寸。兩只杯子的水倒得不均，味道自然失衡。"
+    },
+    {
+      "id": "T15正",
+      "title": "惡魔正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "惡魔",
+        "orientation": "正位"
+      },
+      "text": "象徵被慾望、習慣或恐懼綁住，鎖鏈其實很鬆。問事時提醒留意自己是否沉迷或依賴某件事。"
+    },
+    {
+      "id": "T15逆",
+      "title": "惡魔逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "惡魔",
+        "orientation": "逆位"
+      },
+      "text": "開始察覺束縛並嘗試掙脫。問事時表示正在鬆綁，願意面對就有機會重拾自由。脖上的鎖鏈鬆開，是因為你終於伸手去解。"
+    },
+    {
+      "id": "T16正",
+      "title": "高塔正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "高塔",
+        "orientation": "正位"
+      },
+      "text": "象徵突如其來的變動，舊有的假象被打破。問事時提醒可能有意外或衝擊，但也是重建的機會。"
+    },
+    {
+      "id": "T16逆",
+      "title": "高塔逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "高塔",
+        "orientation": "逆位"
+      },
+      "text": "躲過一劫卻心神不寧，或仍抗拒必要的改變。問事時提醒面對問題，別只是把它延後。閃電雖未擊中，牆上的裂縫仍在，需要主動修補。"
+    },
+    {
+      "id": "T17正",
+      "title": "星星正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "星星",
+        "orientation": "正位"
+      },
+      "text": "代表希望、療癒與平靜的信心，在困難之後重新看見光。問事時表示方向是對的，慢慢會亮。"
+    },
+    {
+      "id": "T17逆",
+      "title": "星星逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "星星",
+        "orientation": "逆位"
+      },
+      "text": "希望變淡，容易灰心或失去信心。問事時提醒照顧好自己，從小事重新找回期待。夜空的星光被雲擋住，但星星並沒有消失。"
+    },
+    {
+      "id": "T18正",
+      "title": "月亮正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "月亮",
+        "orientation": "正位"
+      },
+      "text": "象徵不安、幻象與未明的事，光線朦朧難辨。問事時表示情況不明朗，有疑慮時先別急著決定。"
+    },
+    {
+      "id": "T18逆",
+      "title": "月亮逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "月亮",
+        "orientation": "逆位"
+      },
+      "text": "迷霧逐漸散去，真相慢慢浮現。問事時表示不安將減輕，但仍要確認細節再行動。月下犬狼的嚎叫漸停，藏著的恐懼開始顯形。"
+    },
+    {
+      "id": "T19正",
+      "title": "太陽正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "太陽",
+        "orientation": "正位"
+      },
+      "text": "代表活力、喜悅與明朗，一切攤在陽光下。問事時表示事情順利、前景光明，適合放心行動。"
+    },
+    {
+      "id": "T19逆",
+      "title": "太陽逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "太陽",
+        "orientation": "逆位"
+      },
+      "text": "好事稍有延後，或熱情被蒙上一層陰影。問事時提醒保持樂觀，結果只是來得慢一些。向日葵低了頭，等雲過去仍會朝向光。"
+    },
+    {
+      "id": "T20正",
+      "title": "審判正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "審判",
+        "orientation": "正位"
+      },
+      "text": "象徵覺醒、召喚與重新評估過去的選擇。問事時表示會被重新檢視，是做出總結並邁向新階段的時刻。"
+    },
+    {
+      "id": "T20逆",
+      "title": "審判逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "審判",
+        "orientation": "逆位"
+      },
+      "text": "猶豫不決，或不願面對過去的自己。問事時提醒誠實回顧，才能真正做出決定。號角響了卻沒起身，多半是怕面對過去。"
+    },
+    {
+      "id": "T21正",
+      "title": "世界正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "世界",
+        "orientation": "正位"
+      },
+      "text": "代表完成、整合與圓滿，一個階段畫下句點。問事時表示努力有成果，也準備迎接下一段旅程。"
+    },
+    {
+      "id": "T21逆",
+      "title": "世界逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "世界",
+        "orientation": "逆位"
+      },
+      "text": "差最後一步，或遲遲沒有收尾。問事時提醒補上未完成的部分，別在終點前放慢。花環留著一個缺口，補上才算完整。"
+    },
+    {
+      "id": "T22正",
+      "title": "權杖王牌正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖王牌",
+        "orientation": "正位"
+      },
+      "text": "象徵靈感與熱情的種子，新的創意或行動正在萌芽。問事時表示有動力開頭，是起步的好時機。"
+    },
+    {
+      "id": "T22逆",
+      "title": "權杖王牌逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖王牌",
+        "orientation": "逆位"
+      },
+      "text": "缺乏動力，或開頭就卡住。問事時提醒先找回初衷，別因一時受阻就放棄。雲中伸出的手握不穩杖，點子還停在半空。"
+    },
+    {
+      "id": "T23正",
+      "title": "權杖二正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖二",
+        "orientation": "正位"
+      },
+      "text": "站在高處規劃未來，手握選擇並準備踏出去。問事時表示要為長遠做打算，開始訂下一步。"
+    },
+    {
+      "id": "T23逆",
+      "title": "權杖二逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖二",
+        "orientation": "逆位"
+      },
+      "text": "猶豫不前，捨不得離開舒適圈。問事時提醒別讓恐懼卡住，小步嘗試比一直想更有幫助。手中的地球儀握了許久，卻遲遲沒有轉向外面。"
+    },
+    {
+      "id": "T24正",
+      "title": "權杖三正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖三",
+        "orientation": "正位"
+      },
+      "text": "看著遠方船隻，努力開始有回音，視野變寬。問事時表示事情在進展中，可以期待後續的成果與合作。"
+    },
+    {
+      "id": "T24逆",
+      "title": "權杖三逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖三",
+        "orientation": "逆位"
+      },
+      "text": "計畫延誤，期待暫時落空。問事時提醒檢視安排是否太樂觀，調整後再出發。遠方的船晚了靠岸，需要多等一陣。"
+    },
+    {
+      "id": "T25正",
+      "title": "權杖四正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖四",
+        "orientation": "正位"
+      },
+      "text": "象徵安穩的慶祝與家園的和諧。問事時表示階段性的成果值得被肯定，家中或團體氣氛融洽、事情順利。"
+    },
+    {
+      "id": "T25逆",
+      "title": "權杖四逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖四",
+        "orientation": "逆位"
+      },
+      "text": "氣氛不和，根基不夠穩。問事時提醒先處理內部的小摩擦，再談下一步。花環還沒掛好，家園的根基要先補強。"
+    },
+    {
+      "id": "T26正",
+      "title": "權杖五正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖五",
+        "orientation": "正位"
+      },
+      "text": "許多人各持己見，意見互相碰撞。問事時表示會有競爭或爭論，若保持良性，反而能激發彼此進步。"
+    },
+    {
+      "id": "T26逆",
+      "title": "權杖五逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖五",
+        "orientation": "逆位"
+      },
+      "text": "紛爭擴大，或想要迴避衝突。問事時提醒釐清真正的分歧，用溝通取代硬碰硬。五根杖亂揮一氣，爭執多半是誤會而非真仇。"
+    },
+    {
+      "id": "T27正",
+      "title": "權杖六正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖六",
+        "orientation": "正位"
+      },
+      "text": "象徵勝利凱旋，並被人公開肯定。問事時表示努力獲得認可，但仍要保持謙虛，別被掌聲沖昏頭。"
+    },
+    {
+      "id": "T27逆",
+      "title": "權杖六逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖六",
+        "orientation": "逆位"
+      },
+      "text": "名聲受損，或成果被他人搶走。問事時提醒留意自己的付出有沒有被看見，也別過度在意外界評價。"
+    },
+    {
+      "id": "T28正",
+      "title": "權杖七正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖七",
+        "orientation": "正位"
+      },
+      "text": "站在高處守住自己的位置，面對挑戰不退讓。問事時表示要站穩立場，守住已得的優勢。山坡上的人居高臨下，優勢來自先佔住位置。"
+    },
+    {
+      "id": "T28逆",
+      "title": "權杖七逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖七",
+        "orientation": "逆位"
+      },
+      "text": "招架不住，萌生放棄防守的念頭。問事時提醒評估自己的力量，必要時求援或調整策略。腳下山坡越站越滑，退讓前先想清楚底線。"
+    },
+    {
+      "id": "T29正",
+      "title": "權杖八正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖八",
+        "orientation": "正位"
+      },
+      "text": "許多權杖飛快劃過天空，象徵消息與行動加速。問事時表示事情快速推進，要把握時機、迅速回應。"
+    },
+    {
+      "id": "T29逆",
+      "title": "權杖八逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖八",
+        "orientation": "逆位"
+      },
+      "text": "進度被卡住，節奏被打亂。問事時提醒別硬趕，先理順優先順序再繼續。飛箭互相撞在一起，彼此牽制了速度。"
+    },
+    {
+      "id": "T30正",
+      "title": "權杖九正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖九",
+        "orientation": "正位"
+      },
+      "text": "身上帶傷卻仍撐著守住陣地。問事時表示已走過不少考驗，再撐一下就接近終點，但要留意體力。"
+    },
+    {
+      "id": "T30逆",
+      "title": "權杖九逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖九",
+        "orientation": "逆位"
+      },
+      "text": "撐到極限，心力耗盡。問事時提醒該休息就休息，也可以請人分擔，不必一個人硬扛。纏著繃帶的人搖搖欲墜，是該收兵休養的訊號。"
+    },
+    {
+      "id": "T31正",
+      "title": "權杖十正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖十",
+        "orientation": "正位"
+      },
+      "text": "背負沉重的一捆權杖，象徵責任過重。問事時表示事情繁重但仍在往前，提醒檢視哪些是真的必須扛的。"
+    },
+    {
+      "id": "T31逆",
+      "title": "權杖十逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖十",
+        "orientation": "逆位"
+      },
+      "text": "開始放下重擔，學會求助。問事時表示負擔有機會減輕，把責任分出去會輕鬆許多。捆好的杖散落一地，原來許多事不必獨自扛。"
+    },
+    {
+      "id": "T32正",
+      "title": "權杖侍者正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖侍者",
+        "orientation": "正位"
+      },
+      "text": "象徵帶來熱情的新點子與消息，想去探索。問事時表示有新的機會或靈感，適合試著行動並保持好奇。"
+    },
+    {
+      "id": "T32逆",
+      "title": "權杖侍者逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖侍者",
+        "orientation": "逆位"
+      },
+      "text": "三分鐘熱度，或消息延遲。問事時提醒不要只靠一時興致，堅持下去才看得到成果。站在沙漠中的少年，點子很多卻沒有落地。"
+    },
+    {
+      "id": "T33正",
+      "title": "權杖騎士正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖騎士",
+        "orientation": "正位"
+      },
+      "text": "象徵說走就走、行動力強的衝勁。問事時表示事情進展迅速，帶著熱情往前推進。駿馬揚蹄奔向遠方，目標一確定就不拖延。"
+    },
+    {
+      "id": "T33逆",
+      "title": "權杖騎士逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖騎士",
+        "orientation": "逆位"
+      },
+      "text": "魯莽急躁，衝過了頭。問事時提醒放慢一點，先想清楚路線再出發。馬跑得太快，連騎士也控制不住方向。"
+    },
+    {
+      "id": "T34正",
+      "title": "權杖皇后正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖皇后",
+        "orientation": "正位"
+      },
+      "text": "象徵自信、有魅力且熱情待人。問事時表示以溫暖的態度處事最能得人心，也有能力照顧身邊的人。"
+    },
+    {
+      "id": "T34逆",
+      "title": "權杖皇后逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖皇后",
+        "orientation": "逆位"
+      },
+      "text": "情緒起伏大，愛面子而鬧彆扭。問事時提醒留意是否因自尊而影響判斷，坦率一點會更好。"
+    },
+    {
+      "id": "T35正",
+      "title": "權杖國王正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "權杖國王",
+        "orientation": "正位"
+      },
+      "text": "象徵有遠見、能帶領他人往前衝的領導者。問事時表示適合承擔主導角色，用願景與魄力帶動大家。"
+    },
+    {
+      "id": "T35逆",
+      "title": "權杖國王逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "權杖國王",
+        "orientation": "逆位"
+      },
+      "text": "專斷霸道，脾氣一來就失控。問事時提醒聽聽別人的意見，別讓強勢壞了事情。火蜥蜴般的脾氣一上來，連自己的計畫也被燒亂。"
+    },
+    {
+      "id": "T36正",
+      "title": "聖杯王牌正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯王牌",
+        "orientation": "正位"
+      },
+      "text": "象徵新感情萌芽，心被溫暖填滿。問事時表示有新的情感或創意湧現，適合敞開心接受。聖杯上方降下白鴿，象徵恩典與情感的源頭。"
+    },
+    {
+      "id": "T36逆",
+      "title": "聖杯王牌逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯王牌",
+        "orientation": "逆位"
+      },
+      "text": "情緒壓抑，感情不太順。問事時提醒留意自己是否把感受藏太深，先正視心裡的需要。滿溢的杯子被倒空，好意難以流進心裡。"
+    },
+    {
+      "id": "T37正",
+      "title": "聖杯二正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯二",
+        "orientation": "正位"
+      },
+      "text": "兩人彼此相知、互相吸引的平等關係。問事時表示感情或合作有良好的默契，適合坦誠交流。"
+    },
+    {
+      "id": "T37逆",
+      "title": "聖杯二逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯二",
+        "orientation": "逆位"
+      },
+      "text": "關係失衡，溝通中斷。問事時提醒彼此需要重新對話，釐清期待，別累積誤會。兩杯之間的獅頭失了平衡，誰都不肯先開口。"
+    },
+    {
+      "id": "T38正",
+      "title": "聖杯三正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯三",
+        "orientation": "正位"
+      },
+      "text": "朋友相聚、一起歡慶的畫面。問事時表示有值得慶祝的事，人際支持強，適合與人共享喜悅。"
+    },
+    {
+      "id": "T38逆",
+      "title": "聖杯三逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯三",
+        "orientation": "逆位"
+      },
+      "text": "過度放縱，或小圈子鬧不合。問事時提醒留意聚會中的分寸，避免流言或排擠。舞圈散了，原本的歡聲變成各說各話。"
+    },
+    {
+      "id": "T39正",
+      "title": "聖杯四正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯四",
+        "orientation": "正位"
+      },
+      "text": "對眼前的杯子提不起勁，容易錯過旁邊遞來的機會。問事時提醒別因倦怠而忽略新的可能。"
+    },
+    {
+      "id": "T39逆",
+      "title": "聖杯四逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯四",
+        "orientation": "逆位"
+      },
+      "text": "重新振作，願意看見新的選項。問事時表示心態正在轉變，可以開始接受機會。雲中遞來的杯子終於被看見，可以伸手接下。"
+    },
+    {
+      "id": "T40正",
+      "title": "聖杯五正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯五",
+        "orientation": "正位"
+      },
+      "text": "望著打翻的杯子哀傷，卻沒看見身後仍立著的杯子。問事時表示正沉浸在失落中，需要時間消化。"
+    },
+    {
+      "id": "T40逆",
+      "title": "聖杯五逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯五",
+        "orientation": "逆位"
+      },
+      "text": "走出悲傷，開始看見還剩下的。問事時表示情緒逐漸平復，可以把目光轉向前方。轉身望向河對岸的屋子，意味著該往前走。"
+    },
+    {
+      "id": "T41正",
+      "title": "聖杯六正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯六",
+        "orientation": "正位"
+      },
+      "text": "象徵懷念舊時光、純真與善意。問事時表示可能與舊識或回憶有關，帶來溫暖與支持。孩子遞出滿盆的花，傳遞著不求回報的善意。"
+    },
+    {
+      "id": "T41逆",
+      "title": "聖杯六逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯六",
+        "orientation": "逆位"
+      },
+      "text": "活在過去，放不下回憶。問事時提醒珍惜回憶之餘，也要把重心放回現在。花盆裡的花已枯，過去的甜美不再能餵養現在。"
+    },
+    {
+      "id": "T42正",
+      "title": "聖杯七正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯七",
+        "orientation": "正位"
+      },
+      "text": "眼前杯中浮現各種幻想，選項多到眼花。問事時表示容易想得太美，提醒分辨什麼是真實可行的。"
+    },
+    {
+      "id": "T42逆",
+      "title": "聖杯七逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯七",
+        "orientation": "逆位"
+      },
+      "text": "看清現實，終於願意做決定。問事時表示迷霧散去，可以挑出最適合的一項行動。七個幻影收攏成一個，看清哪一杯才是真的。"
+    },
+    {
+      "id": "T43正",
+      "title": "聖杯八正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯八",
+        "orientation": "正位"
+      },
+      "text": "象徵離開不再合適的處境，去尋找更多。問事時表示該放下已經不滿足的事，走向更深的追求。"
+    },
+    {
+      "id": "T43逆",
+      "title": "聖杯八逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯八",
+        "orientation": "逆位"
+      },
+      "text": "想走又捨不得，或逃避現實。問事時提醒誠實面對內心，別讓猶豫拖成消耗。月下的行者回頭張望，離開前先想清楚要去哪。"
+    },
+    {
+      "id": "T44正",
+      "title": "聖杯九正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯九",
+        "orientation": "正位"
+      },
+      "text": "象徵願望成真、心滿意足。問事時表示所求有機會實現，可以好好享受已得的成果。男子雙臂交抱、神情自得，身後排滿杯子。"
+    },
+    {
+      "id": "T44逆",
+      "title": "聖杯九逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯九",
+        "orientation": "逆位"
+      },
+      "text": "自滿膨脹，不夠踏實。問事時提醒別只看表面的滿足，也要檢查是否真有內涵。滿桌杯子看似豐盛，卻掩不住內心的空缺。"
+    },
+    {
+      "id": "T45正",
+      "title": "聖杯十正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯十",
+        "orientation": "正位"
+      },
+      "text": "象徵家庭圓滿，情感上幸福安穩。問事時表示身邊關係融洽，感情與生活都有溫暖的依靠。"
+    },
+    {
+      "id": "T45逆",
+      "title": "聖杯十逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯十",
+        "orientation": "逆位"
+      },
+      "text": "家人失和，理想與現實有落差。問事時提醒面對關係中的缺口，用溝通慢慢修補。彩虹下的家人各看各的，需要重新牽起手。"
+    },
+    {
+      "id": "T46正",
+      "title": "聖杯侍者正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯侍者",
+        "orientation": "正位"
+      },
+      "text": "象徵感性的訊息與帶來驚喜的靈感。問事時表示可能收到溫暖的消息，或浮現創意與好奇。"
+    },
+    {
+      "id": "T46逆",
+      "title": "聖杯侍者逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯侍者",
+        "orientation": "逆位"
+      },
+      "text": "情緒幼稚，想法不切實際。問事時提醒別被一時的浪漫沖昏頭，先確認可行性。杯中魚傳來的訊息被誤解，別急著追問。"
+    },
+    {
+      "id": "T47正",
+      "title": "聖杯騎士正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯騎士",
+        "orientation": "正位"
+      },
+      "text": "象徵浪漫示好，順著心意追隨理想。問事時表示可能有邀約或提案出現，以真誠的心回應。"
+    },
+    {
+      "id": "T47逆",
+      "title": "聖杯騎士逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯騎士",
+        "orientation": "逆位"
+      },
+      "text": "情緒化，說得好聽卻做不到。問事時提醒留意承諾能否兌現，別被甜言蜜語帶著走。騎士捧杯的手在抖，話說出口時心意還沒準備好。"
+    },
+    {
+      "id": "T48正",
+      "title": "聖杯皇后正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯皇后",
+        "orientation": "正位"
+      },
+      "text": "象徵體貼溫柔、直覺敏銳的關懷者。問事時表示以同理心處事最能化解問題，聽從內心感受。"
+    },
+    {
+      "id": "T48逆",
+      "title": "聖杯皇后逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯皇后",
+        "orientation": "逆位"
+      },
+      "text": "過度敏感，情緒壓過理智。問事時提醒照顧自己的同時，也別讓情緒牽著判斷走。坐在海邊的她被浪頭淹沒，需要退一步保護自己。"
+    },
+    {
+      "id": "T49正",
+      "title": "聖杯國王正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "聖杯國王",
+        "orientation": "正位"
+      },
+      "text": "象徵成熟穩重、情緒收放自如。問事時表示能以冷靜和體貼處理難題，既顧感情也顧理智。"
+    },
+    {
+      "id": "T49逆",
+      "title": "聖杯國王逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "聖杯國王",
+        "orientation": "逆位"
+      },
+      "text": "壓抑感受，用冷淡來操控。問事時提醒別把情緒藏起來施壓，坦率溝通才有幫助。王座漂在水上，情緒翻騰卻硬撐出平靜。"
+    },
+    {
+      "id": "T50正",
+      "title": "寶劍王牌正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍王牌",
+        "orientation": "正位"
+      },
+      "text": "象徵想通了，頭腦清晰，真相浮現。問事時表示可以做出明確判斷，用理性與誠實切入核心。"
+    },
+    {
+      "id": "T50逆",
+      "title": "寶劍王牌逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍王牌",
+        "orientation": "逆位"
+      },
+      "text": "想法混亂，判斷模糊。問事時提醒先釐清資訊，暫時不要急著下決定。劍尖折了一角，想斬斷的事還沒真正分明。"
+    },
+    {
+      "id": "T51正",
+      "title": "寶劍二正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍二",
+        "orientation": "正位"
+      },
+      "text": "蒙眼持劍的人，在兩難之間暫時僵持。問事時表示尚未準備好選擇，先不動也是一種保護。"
+    },
+    {
+      "id": "T51逆",
+      "title": "寶劍二逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍二",
+        "orientation": "逆位"
+      },
+      "text": "逃避抉擇，壓力逐漸浮上來。問事時提醒別拖太久，面對真正的顧慮才能前進。蒙眼布被扯下，眼前的選擇一下子變得刺眼。"
+    },
+    {
+      "id": "T52正",
+      "title": "寶劍三正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍三",
+        "orientation": "正位"
+      },
+      "text": "心被劍刺穿，象徵心痛與真相帶來的傷。問事時表示會有難受的失落，但看清事實是療癒的起點。"
+    },
+    {
+      "id": "T52逆",
+      "title": "寶劍三逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍三",
+        "orientation": "逆位"
+      },
+      "text": "傷口慢慢癒合，開始走出痛苦。問事時表示情緒正在好轉，給自己時間復原。雨停了，心上的劍一支支慢慢被拔出。"
+    },
+    {
+      "id": "T53正",
+      "title": "寶劍四正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍四",
+        "orientation": "正位"
+      },
+      "text": "象徵先停下來休息，讓自己喘口氣。問事時建議暫時退後、整理思緒，養足精神再行動。石棺上的騎士雙手合十，在靜默中養精蓄銳。"
+    },
+    {
+      "id": "T53逆",
+      "title": "寶劍四逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍四",
+        "orientation": "逆位"
+      },
+      "text": "休息夠了，準備重新出發。問事時表示可以逐步回到節奏，帶著恢復的力量向前。躺著的人緩緩起身，彩色玻璃窗透進了光。"
+    },
+    {
+      "id": "T54正",
+      "title": "寶劍五正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍五",
+        "orientation": "正位"
+      },
+      "text": "贏了面子，卻輸了人心的局面。問事時提醒爭贏未必有益，代價可能是關係受損，要想清楚值不值得。"
+    },
+    {
+      "id": "T54逆",
+      "title": "寶劍五逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍五",
+        "orientation": "逆位"
+      },
+      "text": "想和解，願意承認自己的錯。問事時表示有機會化解衝突，放下輸贏會輕鬆許多。地上散落的劍被撿起，離去的人不再回頭爭論。"
+    },
+    {
+      "id": "T55正",
+      "title": "寶劍六正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍六",
+        "orientation": "正位"
+      },
+      "text": "小船載著人離開風浪，往平靜的水域前進。問事時表示正在度過難關，離開困境走向較穩的地方。"
+    },
+    {
+      "id": "T55逆",
+      "title": "寶劍六逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍六",
+        "orientation": "逆位"
+      },
+      "text": "走不開，困在原地。問事時提醒檢視是什麼拉住自己，找到可行的方法再出發。船舵被水草纏住，要先清掉牽絆才能前進。"
+    },
+    {
+      "id": "T56正",
+      "title": "寶劍七正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍七",
+        "orientation": "正位"
+      },
+      "text": "偷偷拿著劍離開，象徵暗中行事、避開正面。問事時提醒策略要謹慎，也留意是否有未說明的事。"
+    },
+    {
+      "id": "T56逆",
+      "title": "寶劍七逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍七",
+        "orientation": "逆位"
+      },
+      "text": "謊言被揭穿，良心不安。問事時提醒坦白面對，比繼續遮掩更能減輕壓力。偷來的劍被放回帳篷，坦白後反而睡得安穩。"
+    },
+    {
+      "id": "T57正",
+      "title": "寶劍八正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍八",
+        "orientation": "正位"
+      },
+      "text": "被縛住並蒙眼的人，其實是自己困住自己。問事時表示覺得無路可走，但限制多半來自想法。"
+    },
+    {
+      "id": "T57逆",
+      "title": "寶劍八逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍八",
+        "orientation": "逆位"
+      },
+      "text": "束縛鬆開，發現出口一直都在。問事時表示視野正在打開，可以邁出第一步。綁在身上的布條鬆落，才發現四周並沒有牆。"
+    },
+    {
+      "id": "T58正",
+      "title": "寶劍九正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍九",
+        "orientation": "正位"
+      },
+      "text": "深夜坐起身，焦慮與擔憂不停盤旋。問事時表示想太多讓自己睡不好，提醒把擔心說出來，別獨自承受。"
+    },
+    {
+      "id": "T58逆",
+      "title": "寶劍九逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍九",
+        "orientation": "逆位"
+      },
+      "text": "最糟的時刻過去，開始願意求助。問事時表示焦慮漸退，找人談談會有幫助。牆上的劍影漸淡，天亮之後恐懼會縮小。"
+    },
+    {
+      "id": "T59正",
+      "title": "寶劍十正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍十",
+        "orientation": "正位"
+      },
+      "text": "背上插滿劍，象徵痛到谷底、一個階段已經結束。問事時表示最壞的情況已到頭，之後會慢慢往回升。"
+    },
+    {
+      "id": "T59逆",
+      "title": "寶劍十逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍十",
+        "orientation": "逆位"
+      },
+      "text": "最壞已過，慢慢復原。問事時表示曙光出現，給自己時間重新站起來。天邊泛起曙光，倒下的人終於可以喘口氣。"
+    },
+    {
+      "id": "T60正",
+      "title": "寶劍侍者正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍侍者",
+        "orientation": "正位"
+      },
+      "text": "象徵好奇多問、想把事情看清楚的人。問事時表示適合蒐集資訊、提出疑問，保持敏銳觀察。"
+    },
+    {
+      "id": "T60逆",
+      "title": "寶劍侍者逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍侍者",
+        "orientation": "逆位"
+      },
+      "text": "話太多，說話帶刺。問事時提醒留意言詞，別把好奇變成挑剔或打探。高舉的劍揮向空中，說出口的話難以收回。"
+    },
+    {
+      "id": "T61正",
+      "title": "寶劍騎士正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍騎士",
+        "orientation": "正位"
+      },
+      "text": "象徵直接又快速、講求效率的行動。問事時表示事情可以迅速推進，用清楚的想法直接處理。"
+    },
+    {
+      "id": "T61逆",
+      "title": "寶劍騎士逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍騎士",
+        "orientation": "逆位"
+      },
+      "text": "衝動莽撞，言語傷人。問事時提醒先想再說，太急反而會讓事情失控。衝進狂風的馬匹失去方向，速度快反而誤事。"
+    },
+    {
+      "id": "T62正",
+      "title": "寶劍皇后正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍皇后",
+        "orientation": "正位"
+      },
+      "text": "象徵理性獨立，看事情清楚的人。問事時表示用冷靜與坦誠來判斷最有利，不被情緒牽著走。"
+    },
+    {
+      "id": "T62逆",
+      "title": "寶劍皇后逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍皇后",
+        "orientation": "逆位"
+      },
+      "text": "冷漠挑剔，因舊傷而封閉。問事時提醒放下防備，別用尖銳的態度把人推開。抬起的手掌收回胸前，心裡的牆築得很高。"
+    },
+    {
+      "id": "T63正",
+      "title": "寶劍國王正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "寶劍國王",
+        "orientation": "正位"
+      },
+      "text": "象徵邏輯公正，判斷有權威。問事時表示可依事實與原則做出決定，講理的態度能獲得信任。"
+    },
+    {
+      "id": "T63逆",
+      "title": "寶劍國王逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "寶劍國王",
+        "orientation": "逆位"
+      },
+      "text": "苛刻冷酷，濫用權力。問事時提醒留意是否過於嚴厲，多給一點彈性與人情味。手中的劍指向他人，權威變成壓迫的工具。"
+    },
+    {
+      "id": "T64正",
+      "title": "錢幣王牌正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣王牌",
+        "orientation": "正位"
+      },
+      "text": "象徵新的機會與財運起步，是務實的好開端。問事時表示有具體可以把握的機會，穩穩著手會有收穫。"
+    },
+    {
+      "id": "T64逆",
+      "title": "錢幣王牌逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣王牌",
+        "orientation": "逆位"
+      },
+      "text": "錯失機會，計畫落空。問事時提醒檢查規劃是否紮實，別草率投入或錯過時機。雲中的手縮了回去，機會從指縫溜走。"
+    },
+    {
+      "id": "T65正",
+      "title": "錢幣二正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣二",
+        "orientation": "正位"
+      },
+      "text": "同時顧著多件事，靈活調度。問事時表示需要在忙碌中保持平衡，彈性應變就能應付。人影雙手翻著錢幣，隨浪起伏仍穩穩站著。"
+    },
+    {
+      "id": "T65逆",
+      "title": "錢幣二逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣二",
+        "orientation": "逆位"
+      },
+      "text": "手忙腳亂，開銷失衡。問事時提醒減少同時進行的事，先理清輕重緩急。海浪推高又落下，帳目亂成一團需重新整理。"
+    },
+    {
+      "id": "T66正",
+      "title": "錢幣三正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣三",
+        "orientation": "正位"
+      },
+      "text": "象徵分工合作，技術被肯定。問事時表示團隊配合順利，專業能力受到認可，適合與人共同完成。"
+    },
+    {
+      "id": "T66逆",
+      "title": "錢幣三逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣三",
+        "orientation": "逆位"
+      },
+      "text": "各做各的，品質參差。問事時提醒加強溝通並訂出標準，避免合作中出現落差。工匠與修士意見不一，圖紙上的線條對不起來。"
+    },
+    {
+      "id": "T67正",
+      "title": "錢幣四正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣四",
+        "orientation": "正位"
+      },
+      "text": "緊抱著錢幣，守緊荷包、怕失去。問事時表示重視安全感與儲蓄，守成穩當，但別守得太僵。"
+    },
+    {
+      "id": "T67逆",
+      "title": "錢幣四逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣四",
+        "orientation": "逆位"
+      },
+      "text": "抓得太緊，捨不得花。問事時提醒過度保守也會錯失機會，適度放手讓資源流動。抱緊的錢幣放不下，手一鬆才發現沒有失去。"
+    },
+    {
+      "id": "T68正",
+      "title": "錢幣五正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣五",
+        "orientation": "正位"
+      },
+      "text": "在風雪中前行，象徵缺乏資源或感到孤立。問事時表示處境艱難，提醒別硬撐，向外尋求幫助。"
+    },
+    {
+      "id": "T68逆",
+      "title": "錢幣五逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣五",
+        "orientation": "逆位"
+      },
+      "text": "難關逐漸過去，有人伸出援手。問事時表示情況好轉，願意接受協助就會更順。窗內透出燈光，教堂的門其實一直開著。"
+    },
+    {
+      "id": "T69正",
+      "title": "錢幣六正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣六",
+        "orientation": "正位"
+      },
+      "text": "有人施予、有人接受，互相幫助。問事時表示資源流動，有給有收，提醒留意施與受是否公平。"
+    },
+    {
+      "id": "T69逆",
+      "title": "錢幣六逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣六",
+        "orientation": "逆位"
+      },
+      "text": "人情不對等，附帶條件。問事時提醒釐清幫助背後的條件，避免日後造成負擔。秤子傾向一邊，給予變成了一種施壓。"
+    },
+    {
+      "id": "T70正",
+      "title": "錢幣七正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣七",
+        "orientation": "正位"
+      },
+      "text": "靠著鋤頭看著作物，耐心等待收成。問事時表示正處於評估進度的階段，努力需要時間成長。"
+    },
+    {
+      "id": "T70逆",
+      "title": "錢幣七逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣七",
+        "orientation": "逆位"
+      },
+      "text": "白忙一場，成果不如預期。問事時提醒檢討方法，必要時調整方向，別只是一味等待。鋤頭擱在一旁，果實不如預期就要及時換作法。"
+    },
+    {
+      "id": "T71正",
+      "title": "錢幣八正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣八",
+        "orientation": "正位"
+      },
+      "text": "專心打造作品，一步步精進技藝。問事時表示踏實練習最有效，持續投入會慢慢累積成果。"
+    },
+    {
+      "id": "T71逆",
+      "title": "錢幣八逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣八",
+        "orientation": "逆位"
+      },
+      "text": "敷衍了事，做不出品質。問事時提醒回到專注與細心，別為了求快而犧牲水準。草草敲打的錢幣歪斜不齊，手藝沒磨就難以出師。"
+    },
+    {
+      "id": "T72正",
+      "title": "錢幣九正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣九",
+        "orientation": "正位"
+      },
+      "text": "獨自站在豐收的花園裡，獨立自主、享受成果。問事時表示靠自己的努力有不錯的生活，值得好好享受。"
+    },
+    {
+      "id": "T72逆",
+      "title": "錢幣九逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣九",
+        "orientation": "逆位"
+      },
+      "text": "過度依賴他人，或花得比賺的多。問事時提醒檢視收支與自立程度，別被表面的富足蒙蔽。"
+    },
+    {
+      "id": "T73正",
+      "title": "錢幣十正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣十",
+        "orientation": "正位"
+      },
+      "text": "象徵家業穩固、長久富足，世代相傳的安穩。問事時表示基礎扎實，家庭與財務有長遠的保障。"
+    },
+    {
+      "id": "T73逆",
+      "title": "錢幣十逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣十",
+        "orientation": "逆位"
+      },
+      "text": "財務不穩，家人有紛爭。問事時提醒妥善溝通與規劃，別讓金錢問題影響親情。老人與犬站在拱門下，家族的根基出現裂縫。"
+    },
+    {
+      "id": "T74正",
+      "title": "錢幣侍者正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣侍者",
+        "orientation": "正位"
+      },
+      "text": "象徵踏實學習，新機會萌芽。問事時表示適合從基礎做起，用耐心累積技能，慢慢會有成果。"
+    },
+    {
+      "id": "T74逆",
+      "title": "錢幣侍者逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣侍者",
+        "orientation": "逆位"
+      },
+      "text": "眼高手低，缺乏行動。問事時提醒別只停留在想像，從小處著手才會有進展。手中的錢幣只是被端詳，沒有真正放進土裡。"
+    },
+    {
+      "id": "T75正",
+      "title": "錢幣騎士正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣騎士",
+        "orientation": "正位"
+      },
+      "text": "象徵穩紮穩打、可靠負責。問事時表示進度或許不快，但一步一腳印，值得信賴。黑馬穩穩站在田野，不急不躁卻不會偏離目標。"
+    },
+    {
+      "id": "T75逆",
+      "title": "錢幣騎士逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣騎士",
+        "orientation": "逆位"
+      },
+      "text": "停滯固執，過度死板。問事時提醒適度調整做法，別因堅持舊方法而動彈不得。馬停在原地不動，固執讓田地長滿雜草。"
+    },
+    {
+      "id": "T76正",
+      "title": "錢幣皇后正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣皇后",
+        "orientation": "正位"
+      },
+      "text": "象徵務實持家、大方照顧人。問事時表示用實際的行動與資源去滋養身邊的人事，生活會更安穩。"
+    },
+    {
+      "id": "T76逆",
+      "title": "錢幣皇后逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣皇后",
+        "orientation": "逆位"
+      },
+      "text": "太重物質，顧此失彼。問事時提醒平衡金錢與情感，別因忙碌而忽略重要的人。懷中的錢幣越抱越緊，身旁的人感到被冷落。"
+    },
+    {
+      "id": "T77正",
+      "title": "錢幣國王正位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）占卜義",
+      "when": {
+        "card": "錢幣國王",
+        "orientation": "正位"
+      },
+      "text": "象徵富足穩重、事業有成。問事時表示有累積的實力與資源，用穩健的方式經營能維持成果。"
+    },
+    {
+      "id": "T77逆",
+      "title": "錢幣國王逆位",
+      "source": "A. E. Waite《The Pictorial Key to the Tarot》（1910）逆位義",
+      "when": {
+        "card": "錢幣國王",
+        "orientation": "逆位"
+      },
+      "text": "貪財固執，被物慾牽著走。問事時提醒別讓追求財富蒙蔽判斷，保持彈性與誠信。葡萄藤纏滿王座，貪取過多反而被拖累。"
+    }
+  ]
+}

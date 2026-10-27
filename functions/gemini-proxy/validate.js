@@ -32,7 +32,9 @@ export function isIsoDate(s) {
 }
 
 // 檢查 Claude 的回傳，通過回傳整理過的物件，不過回 null
-export function validateReading(out, tone) {
+// allowedCards：這次請求選出的知識卡；每段 cards 只能引用其中的 id
+export function validateReading(out, tone, allowedCards = []) {
+  const byId = new Map(allowedCards.map((c) => [c.id, c]));
   if (!isObj(out)) return null;
   if (!nonEmpty(out.verdict) || out.tone !== tone) return null;
   if (!Array.isArray(out.paragraphs) || out.paragraphs.length === 0) return null;
@@ -40,7 +42,12 @@ export function validateReading(out, tone) {
   for (const p of out.paragraphs) {
     if (!isObj(p) || !nonEmpty(p.title) || !nonEmpty(p.text)) return null;
     if (!Array.isArray(p.basis) || p.basis.length === 0 || !p.basis.every(nonEmpty)) return null;
-    paragraphs.push({ title: p.title, text: p.text, basis: p.basis });
+    if (!Array.isArray(p.cards) || p.cards.length === 0 || !p.cards.every((id) => nonEmpty(id) && byId.has(id))) return null;
+    const cards = [...new Set(p.cards)].map((id) => {
+      const c = byId.get(id);
+      return { id: c.id, title: c.title, source: c.source };
+    });
+    paragraphs.push({ title: p.title, text: p.text, basis: p.basis, cards });
   }
   const pr = out.prediction;
   if (!isObj(pr) || !nonEmpty(pr.claim) || !isIsoDate(pr.dueDate)) return null;

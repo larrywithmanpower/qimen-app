@@ -5,10 +5,12 @@ import { drawThree, templateReading } from '../tarot/engine'
 import { castByNumbers } from '../meihua/engine'
 import { buildChart, horoscope } from '../ziwei/engine'
 
+const CARD = { id: 'c-1', title: '測試卡', source: '測試來源' }
+
 const make = (over: Partial<AiReading> & { text?: string } = {}): AiReading => ({
   verdict: '先穩住',
   tone: '吉',
-  paragraphs: [{ title: '現在', text: over.text ?? '一般說明', basis: ['依據一條'] }],
+  paragraphs: [{ title: '現在', text: over.text ?? '一般說明', basis: ['依據一條'], cards: [CARD] }],
   prediction: { claim: '三週內有消息', dueDate: '2026-12-01' },
   ...over,
 })
@@ -36,8 +38,8 @@ describe('前端檢查：結構', () => {
   })
   it('basis 空陣列或含空字串 → 不過', () => {
     const base = make({ tone: tarot.tone })
-    expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...base, paragraphs: [{ title: 'a', text: 'b', basis: [] }] })).toBeNull()
-    expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...base, paragraphs: [{ title: 'a', text: 'b', basis: [' '] }] })).toBeNull()
+    expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...base, paragraphs: [{ title: 'a', text: 'b', basis: [], cards: [CARD] }] })).toBeNull()
+    expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...base, paragraphs: [{ title: 'a', text: 'b', basis: [' '], cards: [CARD] }] })).toBeNull()
   })
   it('缺欄位、dueDate 格式錯 → 不過', () => {
     const base = make({ tone: tarot.tone })
@@ -47,11 +49,83 @@ describe('前端檢查：結構', () => {
   })
 })
 
+describe('前端檢查：知識卡 cards', () => {
+  const t = () => tarot.tone
+  const withCards = (cards: unknown) => ({ ...make({ tone: t() }), paragraphs: [{ title: 'a', text: 'b', basis: ['x'], cards }] })
+  it('cards 欄位合法 → 通過並保留', () => {
+    const r = validateAiReading('tarot', tarot.facts, t(), withCards([CARD]))
+    expect(r?.paragraphs[0].cards).toEqual([CARD])
+  })
+  it('沒有 cards、空陣列 → 不過', () => {
+    expect(validateAiReading('tarot', tarot.facts, t(), { ...make({ tone: t() }), paragraphs: [{ title: 'a', text: 'b', basis: ['x'] }] })).toBeNull()
+    expect(validateAiReading('tarot', tarot.facts, t(), withCards([]))).toBeNull()
+    expect(validateAiReading('tarot', tarot.facts, t(), withCards('c-1'))).toBeNull()
+  })
+  it('元素缺 id／title／source 或是空字串、非物件 → 不過', () => {
+    for (const bad of [{ title: 't', source: 's' }, { id: 'a', source: 's' }, { id: 'a', title: 't' }, { id: ' ', title: 't', source: 's' }, { id: 'a', title: '', source: 's' }, { id: 'a', title: 't', source: 1 }, 'c-1', null]) {
+      expect(validateAiReading('tarot', tarot.facts, t(), withCards([CARD, bad]))).toBeNull()
+    }
+  })
+})
+
+describe('前端檢查：梅花爻位越界', () => {
+  const line = mei.moving
+  const nameOf = (n: number) => ['初', '二', '三', '四', '五', '上'][n - 1] + '爻'
+  const other = (line % 6) + 1
+  const ok = (text: string, extra: Partial<AiReading> = {}) => validateAiReading('meihua', meiFacts, mei.tone, make({ tone: mei.tone, text, ...extra })) !== null
+  it('提到動爻那一爻 → 通過（兩種寫法）', () => {
+    expect(ok(`${nameOf(line)}在動`)).toBe(true)
+    expect(ok(`第${line}爻在動`)).toBe(true)
+    expect(ok(`第${'一二三四五六'[line - 1]}爻在動`)).toBe(true)
+  })
+  it('提到別的爻 → 擋下（正文、依據、一句話、預測都查）', () => {
+    expect(ok(`${nameOf(other)}有變化`)).toBe(false)
+    expect(ok(`第${other}爻有變化`)).toBe(false)
+    expect(ok(`第${'一二三四五六'[other - 1]}爻有變化`)).toBe(false)
+    expect(validateAiReading('meihua', meiFacts, mei.tone, { ...make({ tone: mei.tone }), paragraphs: [{ title: 'a', text: 'b', basis: [`${nameOf(other)}動`], cards: [CARD] }] })).toBeNull()
+    expect(ok('一般說明', { verdict: `${nameOf(other)}為主` })).toBe(false)
+    expect(ok('一般說明', { prediction: { claim: `${nameOf(other)}應驗`, dueDate: '2026-12-01' } })).toBe(false)
+  })
+  it('「六爻」「動爻」「爻辭」不算提到某一爻；提到動爻又多提別爻照擋', () => {
+    expect(ok('六爻組成一個卦，動爻的爻辭值得看')).toBe(true)
+    expect(ok(`${nameOf(line)}與${nameOf(other)}`)).toBe(false)
+  })
+  it('第六爻＝上爻：動爻是 6 時通過，不是 6 時擋', () => {
+    const f6 = { ...meiFacts, movingLine: 6 }
+    const f1 = { ...meiFacts, movingLine: 1 }
+    const run = (f: Record<string, unknown>, text: string) => validateAiReading('meihua', f, mei.tone, make({ tone: mei.tone, text })) !== null
+    expect(run(f6, '上爻動')).toBe(true)
+    expect(run(f6, '第六爻動')).toBe(true)
+    expect(run(f1, '上爻動')).toBe(false)
+    expect(run(f1, '初爻動')).toBe(true)
+  })
+})
+
+describe('前端檢查：塔羅正逆位越界', () => {
+  const c0 = drawn[0]
+  const right = c0.reversed ? '逆位' : '正位'
+  const wrong = c0.reversed ? '正位' : '逆位'
+  const run = (text: string) => validateAiReading('tarot', tarot.facts, tarot.tone, make({ tone: tarot.tone, text })) !== null
+  it('方向和抽到的一致 → 通過（含「」框與不框）', () => {
+    expect(run(`${names[0]}${right}代表開始`)).toBe(true)
+    expect(run(`「${names[0]}」${right}代表開始`)).toBe(true)
+  })
+  it('方向相反 → 擋下（含「」框與不框）', () => {
+    expect(run(`${names[0]}${wrong}代表開始`)).toBe(false)
+    expect(run(`「${names[0]}」${wrong}代表開始`)).toBe(false)
+  })
+  it('牌名後面沒接正逆位，或另一張牌的方向沒錯 → 不誤擋', () => {
+    expect(run(`${names[0]}提醒你慢下來`)).toBe(true)
+    const c1 = drawn[1]
+    expect(run(`${names[1]}${c1.reversed ? '逆位' : '正位'}、${names[0]}${right}`)).toBe(true)
+  })
+})
+
 describe('前端檢查：提到盤上沒有的名稱', () => {
   it('塔羅：提到沒抽到的牌 → 不過（正文、依據、一句話都查）', () => {
     const base = make({ tone: tarot.tone })
-    expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...base, paragraphs: [{ title: 'a', text: `會遇到${otherCard}`, basis: ['x'] }] })).toBeNull()
-    expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...base, paragraphs: [{ title: 'a', text: 'b', basis: [`${otherCard}正位`] }] })).toBeNull()
+    expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...base, paragraphs: [{ title: 'a', text: `會遇到${otherCard}`, basis: ['x'], cards: [CARD] }] })).toBeNull()
+    expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...base, paragraphs: [{ title: 'a', text: 'b', basis: [`${otherCard}正位`], cards: [CARD] }] })).toBeNull()
     expect(validateAiReading('tarot', tarot.facts, tarot.tone, { ...base, verdict: `像${otherCard}` })).toBeNull()
   })
   it('塔羅：日常詞「世界」沒框起來不誤判，框起來當牌名就擋', () => {

@@ -22,3 +22,4 @@
 .ml-ai-title { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 700; }
 .ml-ai-text { margin: 0; font-size: var(--ml-fs-body); line-height: 1.85; color: var(--ml-ink-body); }
 .ml-ai-basis { font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); line-height: 1.6; }
+.ml-ai-cards { font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); line-height: 1.6; }

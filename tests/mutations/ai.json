@@ -204,5 +204,53 @@
   "find": "    if (cost) {",
   "replace": "    if (cost && status !== 'api_error') {",
   "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A22",
+  "desc": "後端：不檢查引用的卡號是否在清單內",
+  "file": "functions/gemini-proxy/validate.js",
+  "find": "p.cards.every((id) => nonEmpty(id) && byId.has(id))",
+  "replace": "p.cards.every((id) => nonEmpty(id))",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A23",
+  "desc": "前端：cards 可以是空陣列",
+  "file": "src/mingli/ai.ts",
+  "find": "if (!Array.isArray(q.cards) || q.cards.length === 0) return null",
+  "replace": "if (!Array.isArray(q.cards)) return null",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A24",
+  "desc": "前端：cards 元素只檢查 id，不檢查 title／source",
+  "file": "src/mingli/ai.ts",
+  "find": "if (!nonEmpty(r.id) || !nonEmpty(r.title) || !nonEmpty(r.source)) return null",
+  "replace": "if (!nonEmpty(r.id)) return null",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A25",
+  "desc": "前端：梅花爻位越界檢查失效",
+  "file": "src/mingli/ai.ts",
+  "find": "if (mentionedLines(text).some((n) => n !== facts.movingLine)) return null",
+  "replace": "if (mentionedLines(text).some((n) => n !== facts.movingLine) && false) return null",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A26",
+  "desc": "前端：塔羅正逆位越界檢查失效",
+  "file": "src/mingli/ai.ts",
+  "find": "drawn.has(m.name) && drawn.get(m.name) !== m.orientation",
+  "replace": "drawn.has(m.name) && false",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A27",
+  "desc": "後端：一張卡都選不到仍照常呼叫 Claude",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "if (selected.length === 0) {",
+  "replace": "if (false) {",
+  "test": "functions/gemini-proxy"
  }
 ]

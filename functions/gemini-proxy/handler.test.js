@@ -4,14 +4,43 @@ import { createHandler, taiwanDate } from './handler.js';
 const ORIGIN = 'https://mingli-yuxuan.web.app';
 const SECRET_Q = '我老闆的秘密問題XYZ';
 
+// 測試自己造的小卡片集（注入，不依賴 cards/*.json）
+const CARD_DB = {
+  tarot: [
+    { id: 'tarot-fool-up', title: '愚者正位', source: '測試來源甲', when: { card: '愚者', orientation: '正位' }, text: '新的開始' },
+    { id: 'tarot-fool-rev', title: '愚者逆位', source: '測試來源甲', when: { card: '愚者', orientation: '逆位' }, text: '魯莽' },
+    { id: 'tarot-magician-up', title: '魔術師正位', source: '測試來源甲', when: { card: '魔術師', orientation: '正位' }, text: '行動' },
+  ],
+  meihua: [{ id: 'mh-qian', title: '乾為天', source: '測試來源乙', when: { hexagram: '乾為天' }, text: '自強不息' }],
+  ziwei: [
+    { id: 'zw-soul', title: '命宮', source: '測試來源丙', when: { palace: '命宮' }, text: '命宮看自己' },
+    { id: 'zw-yearly', title: '流年', source: '測試來源丙', when: { focus: 'yearly' }, text: '流年看今年' },
+  ],
+};
+const FACTS = {
+  tarot: { cards: [{ name: '愚者', orientation: '正位', keyword: '新開始' }] },
+  meihua: { main: { name: '乾為天' }, mutual: { name: '乾為天' }, changed: { name: '乾為天' }, movingLine: 1 },
+  ziwei: { palaces: [{ name: '命宮', majorStars: [], minorStars: [] }] },
+};
+
 const goodReading = (tone = '吉') => ({
   verdict: '順著做',
   tone,
-  paragraphs: [{ title: '現在', text: '還不錯', basis: ['第 1 張 愚者正位'] }],
+  paragraphs: [{ title: '現在', text: '還不錯', basis: ['第 1 張 愚者正位'], cards: ['tarot-fool-up'] }],
   prediction: { claim: '三週內有消息', dueDate: '2026-12-01' },
 });
 
-const body = (over = {}) => ({ kind: 'tarot', question: SECRET_Q, facts: { cards: ['愚者'] }, tone: '吉', ...over });
+// facts 依 kind 自動換成對得到卡的盤面
+// 通過檢查後，每段 cards 會從 id 換成 { id, title, source }
+const withCardData = (r) => ({
+  ...r,
+  paragraphs: r.paragraphs.map((p) => ({ ...p, cards: [{ id: 'tarot-fool-up', title: '愚者正位', source: '測試來源甲' }] })),
+});
+
+const body = (over = {}) => {
+  const kind = over.kind ?? 'tarot';
+  return { kind, question: SECRET_Q, facts: FACTS[kind] ?? FACTS.tarot, tone: '吉', ...over };
+};
 
 function fakeRes() {
   const r = { code: 0, json: null, headers: {} };
@@ -33,7 +62,12 @@ const MODEL = 'claude-sonnet-5-5';
 
 // claudeImpl 只回 reading（或丟錯）；這裡包成 claude.js 的回傳形狀 { reading, usage, model }
 function setup({ env = {}, claudeImpl, consume, recordImpl } = {}) {
-  const impl = claudeImpl ?? (async () => goodReading());
+  // 預設回傳：引用 prompt <cards> 裡的第一張卡（紫微、梅花也合法）
+  const impl = claudeImpl ?? (async (_system, user) => {
+    const id = /<cards>\n([^｜\n]+)｜/.exec(user)?.[1];
+    const r = goodReading();
+    return { ...r, paragraphs: r.paragraphs.map((p) => ({ ...p, cards: [id] })) };
+  });
   const claude = vi.fn(async (...a) => ({ reading: await impl(...a), usage: USAGE, model: MODEL }));
   const usage = { consume: vi.fn(consume ?? (async () => true)) };
   const cost = { record: vi.fn(recordImpl ?? (async () => {})) };
@@ -41,6 +75,7 @@ function setup({ env = {}, claudeImpl, consume, recordImpl } = {}) {
     claude,
     usage,
     cost,
+    cards: CARD_DB,
     env: { ALLOWED_ORIGINS: `${ORIGIN},http://localhost:5180`, AI_ENABLED: 'true', ...env },
     now: () => Date.UTC(2026, 9, 21, 20, 0, 0), // UTC 20:00 = 台灣隔天 04:00
   });
@@ -171,7 +206,7 @@ describe('正常與格式檢查', () => {
     const { claude, call } = setup();
     const res = await call(fakeReq());
     expect(res.code).toBe(200);
-    expect(res.body).toEqual(goodReading());
+    expect(res.body).toEqual(withCardData(goodReading()));
     const [system, user] = claude.mock.calls[0];
     expect(user).toContain('愚者');
     expect(user).toContain('<tone>吉</tone>');
@@ -193,8 +228,11 @@ describe('正常與格式檢查', () => {
   it('逐項格式缺陷都擋下', async () => {
     const bads = [
       { ...goodReading(), paragraphs: [] },
-      { ...goodReading(), paragraphs: [{ title: 'a', text: 'b', basis: [] }] },
-      { ...goodReading(), paragraphs: [{ title: 'a', text: 'b', basis: [''] }] },
+      { ...goodReading(), paragraphs: [{ title: 'a', text: 'b', basis: [], cards: ['tarot-fool-up'] }] },
+      { ...goodReading(), paragraphs: [{ title: 'a', text: 'b', basis: [''], cards: ['tarot-fool-up'] }] },
+      { ...goodReading(), paragraphs: [{ title: 'a', text: 'b', basis: ['x'], cards: ['不存在的卡'] }] },
+      { ...goodReading(), paragraphs: [{ title: 'a', text: 'b', basis: ['x'], cards: [] }] },
+      { ...goodReading(), paragraphs: [{ title: 'a', text: 'b', basis: ['x'] }] },
       { ...goodReading(), prediction: { claim: 'x', dueDate: '2026/12/01' } },
       { ...goodReading(), prediction: { claim: 'x', dueDate: '2026-02-31' } },
       { ...goodReading(), prediction: { claim: '', dueDate: '2026-12-01' } },
@@ -205,6 +243,29 @@ describe('正常與格式檢查', () => {
       const { call } = setup({ claudeImpl: async () => bad });
       expect((await call(fakeReq())).code).toBe(502);
     }
+  });
+  it('prompt 帶 <cards>（id｜title｜text），只含這次盤面選到的卡', async () => {
+    const { claude, call } = setup();
+    await call(fakeReq());
+    const user = claude.mock.calls[0][1];
+    expect(user).toContain('<cards>\ntarot-fool-up｜愚者正位｜新的開始\n</cards>');
+    expect(user).not.toContain('tarot-fool-rev');
+    expect(claude.mock.calls[0][0]).toContain('cards');
+  });
+  it('回應附卡片資料；引用不在清單的卡 → 502', async () => {
+    const ok = setup();
+    const res = await ok.call(fakeReq());
+    expect(res.body.paragraphs[0].cards).toEqual([{ id: 'tarot-fool-up', title: '愚者正位', source: '測試來源甲' }]);
+    const bad = setup({ claudeImpl: async () => ({ ...goodReading(), paragraphs: [{ title: 'a', text: 'b', basis: ['x'], cards: ['tarot-fool-rev'] }] }) });
+    expect((await bad.call(fakeReq())).code).toBe(502);
+  });
+  it('一張卡都選不到 → 500 No cards，不呼叫 Claude、不耗額度', async () => {
+    const { claude, usage, call } = setup();
+    const res = await call(fakeReq({ data: body({ facts: { cards: [{ name: '高塔', orientation: '正位' }] } }) }));
+    expect(res.code).toBe(500);
+    expect(res.body).toEqual({ error: 'No cards' });
+    expect(claude).not.toHaveBeenCalled();
+    expect(usage.consume).not.toHaveBeenCalled();
   });
   it('Claude 丟錯 → 502 不重叫', async () => {
     const { claude, call } = setup({ claudeImpl: async () => { throw new Error('boom'); } });
@@ -285,7 +346,7 @@ describe('成本紀錄（ai_calls）', () => {
       throw new Error('boom');
     });
     const cost = { record: vi.fn(async () => {}) };
-    const handler = createHandler({ claude, usage: { consume: async () => true }, cost, env: { ALLOWED_ORIGINS: ORIGIN, AI_ENABLED: 'true' }, now: () => 0 });
+    const handler = createHandler({ claude, usage: { consume: async () => true }, cost, cards: CARD_DB, env: { ALLOWED_ORIGINS: ORIGIN, AI_ENABLED: 'true' }, now: () => 0 });
     const res = fakeRes();
     await handler(fakeReq(), res);
     const rec = cost.record.mock.calls[0][0];
@@ -297,7 +358,7 @@ describe('成本紀錄（ai_calls）', () => {
     const { call } = setup({ recordImpl: async () => { throw new Error('firestore down'); } });
     const res = await call(fakeReq());
     expect(res.code).toBe(200);
-    expect(res.body).toEqual(goodReading());
+    expect(res.body).toEqual(withCardData(goodReading()));
     expect(logs.join('\n')).toContain('cost record failed');
   });
   it('429、403、400 不呼叫 Claude 也不記成本', async () => {
@@ -310,7 +371,7 @@ describe('成本紀錄（ai_calls）', () => {
   });
   it('紀錄與日誌都不含 question、facts 的任何字串', async () => {
     const SECRET_F = '機密盤面ZZZ';
-    const data = body({ question: SECRET_Q, facts: { cards: [SECRET_F] } });
+    const data = body({ question: SECRET_Q, facts: { cards: [{ name: '愚者', orientation: '正位', keyword: SECRET_F }] } });
     const paths = [
       setup(),
       setup({ claudeImpl: async () => goodReading('凶') }),

@@ -76,12 +76,14 @@ const SPECS: Record<Kind, {
   },
 }
 
+const CARD = { id: 'test-card-1', title: '測試卡', source: '測試來源' }
+
 const reading = (kind: Kind, over: Record<string, unknown> = {}) => ({
   verdict: '這是 AI 寫的一句話',
   tone: SPECS[kind].tone,
   paragraphs: [
-    { title: '現在', text: SPECS[kind].goodText, basis: ['依據甲'] },
-    { title: '接下來', text: '慢慢來', basis: ['依據乙', '依據丙'] },
+    { title: '現在', text: SPECS[kind].goodText, basis: ['依據甲'], cards: [CARD] },
+    { title: '接下來', text: '慢慢來', basis: ['依據乙', '依據丙'], cards: [CARD, { id: 'test-card-2', title: '另一張', source: '來源二' }] },
   ],
   prediction: { claim: '三週內有消息', dueDate: '2099-01-01' },
   ...over,
@@ -123,6 +125,9 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
     await expect(ai).toContainText(spec.goodText)
     await expect(page.getByTestId('ml-ai-basis')).toHaveCount(2)
     await expect(page.getByTestId('ml-ai-basis').first()).toContainText('依據甲')
+    await expect(page.getByTestId('ml-ai-cards')).toHaveCount(2)
+    await expect(page.getByTestId('ml-ai-cards').first()).toHaveText('知識卡：test-card-1 測試卡')
+    await expect(page.getByTestId('ml-ai-cards').nth(1)).toHaveText('知識卡：test-card-1 測試卡；test-card-2 另一張')
     // 塔羅、梅花：範本整塊不見；紫微：按鈕消失，宮位說明仍是範本
     if (kind === 'ziwei') await expect(page.getByTestId('ml-ai-ziwei-btn')).toHaveCount(0)
     if (kind !== 'ziwei') {
@@ -148,11 +153,12 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
     ['後端 500', async (route) => { await route.fulfill({ status: 500, contentType: 'application/json', body: '{"error":"x"}' }) }],
     ['回壞 JSON', async (route) => { await route.fulfill({ status: 200, contentType: 'application/json', body: 'not json' }) }],
     ['tone 不一致', ok(reading(kind, { tone: SPECS[kind].tone === '凶' ? '吉' : '凶' }))],
-    ['basis 是空的', ok(reading(kind, { paragraphs: [{ title: 'a', text: 'b', basis: [] }] }))],
+    ['basis 是空的', ok(reading(kind, { paragraphs: [{ title: 'a', text: 'b', basis: [], cards: [CARD] }] }))],
+    ['cards 是空的', ok(reading(kind, { paragraphs: [{ title: 'a', text: 'b', basis: ['x'], cards: [] }] }))],
     ['連線被中斷', async (route) => { await route.abort('failed') }],
   ]
   if (spec.outOfBoundsText) {
-    failures.push(['提到盤上沒有的名稱', ok(reading(kind, { paragraphs: [{ title: 'a', text: spec.outOfBoundsText, basis: ['x'] }] }))])
+    failures.push(['提到盤上沒有的名稱', ok(reading(kind, { paragraphs: [{ title: 'a', text: spec.outOfBoundsText, basis: ['x'], cards: [CARD] }] }))])
   }
   for (const [name, handle] of failures) {
     test(`${kind}：${name} → ${kind === 'ziwei' ? '顯示錯誤訊息並可再按' : '退回範本並維持「範例」那行'}`, async ({ page }) => {

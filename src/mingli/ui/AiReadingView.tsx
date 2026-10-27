@@ -24,6 +24,7 @@ export function AiReadingView({ reading }: { reading: AiReading }) {
           <h2 className="ml-ai-title">{p.title}</h2>
           <p className="ml-ai-text">{p.text}</p>
           <span className="ml-ai-basis" data-testid="ml-ai-basis">依據：{p.basis.join('；')}</span>
+          <span className="ml-ai-cards" data-testid="ml-ai-cards">知識卡：{p.cards.map((c) => `${c.id} ${c.title}`).join('；')}</span>
         </div>
       ))}
     </div>

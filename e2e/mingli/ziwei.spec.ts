@@ -288,7 +288,7 @@ test('紫微問題欄：改了問題，已顯示的 AI 解讀清掉；切走再�
     (window as unknown as { __MINGLI_AI_URL__: string }).__MINGLI_AI_URL__ = '/__mock-ai'
   })
   await page.route('**/__mock-ai', async (route) => {
-    const body = { verdict: '一句話', tone: '平', paragraphs: [{ title: '現在', text: '慢慢來', basis: ['依據'] }], prediction: { claim: '三週內有消息', dueDate: '2099-01-01' } }
+    const body = { verdict: '一句話', tone: '平', paragraphs: [{ title: '現在', text: '慢慢來', basis: ['依據'], cards: [{ id: 'test-card', title: '測試卡', source: '測試來源' }] }], prediction: { claim: '三週內有消息', dueDate: '2099-01-01' } }
     await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) })
   })
   await page.emulateMedia({ reducedMotion: 'reduce' })

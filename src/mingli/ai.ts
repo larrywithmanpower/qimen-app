@@ -21,10 +21,18 @@ export interface AiRequest {
   focus?: AiFocus
 }
 
+// 該段依據的知識卡（後端查表後附上）
+export interface AiCardRef {
+  id: string
+  title: string
+  source: string
+}
+
 export interface AiParagraph {
   title: string
   text: string
   basis: string[]
+  cards: AiCardRef[]
 }
 
 export interface AiReading {
@@ -200,6 +208,25 @@ function nameSets(kind: AiKind, facts: Obj): { allowed: Set<string>; universe: r
   }
 }
 
+// ───────── 越界檢查：爻位、正逆位 ─────────
+
+const LINE_NUM: Record<string, number> = { 初: 1, 二: 2, 三: 3, 四: 4, 五: 5, 上: 6, 一: 1, 六: 6 }
+
+// 文字裡提到的爻位（1～6）：初爻、二～五爻、上爻、第N爻；「六爻」「動爻」「爻辭」不算
+export function mentionedLines(text: string): number[] {
+  const found: number[] = []
+  for (const m of text.matchAll(/([初二三四五上])爻/g)) found.push(LINE_NUM[m[1]])
+  for (const m of text.matchAll(/第\s*([1-6一二三四五六])\s*爻/g)) found.push(LINE_NUM[m[1]] ?? Number(m[1]))
+  return found
+}
+
+const CARD_ORIENT_RE = new RegExp(`「?(${[...new Set(CARDS.map((c) => c.zh))].sort((a, b) => b.length - a.length).join('|')})」?\\s*(正位|逆位)`, 'g')
+
+// 文字裡「牌名＋正位／逆位」的組合
+export function mentionedOrientations(text: string): { name: string; orientation: string }[] {
+  return [...text.matchAll(CARD_ORIENT_RE)].map((m) => ({ name: m[1], orientation: m[2] }))
+}
+
 const isIsoDate = (s: unknown): s is string => {
   if (typeof s !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return false
   const [y, m, d] = s.split('-').map(Number)
@@ -218,7 +245,14 @@ export function validateAiReading(kind: AiKind, facts: Obj, tone: AiTone, raw: u
     const q = asObj(p)
     if (!nonEmpty(q.title) || !nonEmpty(q.text)) return null
     if (!Array.isArray(q.basis) || q.basis.length === 0 || !q.basis.every(nonEmpty)) return null
-    paragraphs.push({ title: q.title, text: q.text, basis: q.basis as string[] })
+    if (!Array.isArray(q.cards) || q.cards.length === 0) return null
+    const cards: AiCardRef[] = []
+    for (const c of q.cards) {
+      const r = asObj(c)
+      if (!nonEmpty(r.id) || !nonEmpty(r.title) || !nonEmpty(r.source)) return null
+      cards.push({ id: r.id, title: r.title, source: r.source })
+    }
+    paragraphs.push({ title: q.title, text: q.text, basis: q.basis as string[], cards })
   }
   const pr = asObj(o.prediction)
   if (!nonEmpty(pr.claim) || !isIsoDate(pr.dueDate)) return null
@@ -230,6 +264,15 @@ export function validateAiReading(kind: AiKind, facts: Obj, tone: AiTone, raw: u
     .join('\n')
     .replaceAll('紫微斗數', '')
   if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null
+  // 梅花：只能提動爻那一爻
+  if (kind === 'meihua' && typeof facts.movingLine === 'number') {
+    if (mentionedLines(text).some((n) => n !== facts.movingLine)) return null
+  }
+  // 塔羅：牌名後面接的正逆位要和抽到的一致
+  if (kind === 'tarot') {
+    const drawn = new Map(asArr(facts.cards).map((c) => [str(asObj(c).name), str(asObj(c).orientation)]))
+    if (mentionedOrientations(text).some((m) => drawn.has(m.name) && drawn.get(m.name) !== m.orientation)) return null
+  }
   return reading
 }
 

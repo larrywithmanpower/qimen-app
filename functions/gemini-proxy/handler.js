@@ -1,6 +1,7 @@
 // 請求處理：Claude 與用量計數都由外面注入，測試時換成假的
 import { SYSTEM_PROMPT, buildUserMessage } from './prompt.js';
 import { sumUsage } from './cost.js';
+import { loadCards, selectCards } from './cards.js';
 import { validateReading, validateRequest } from './validate.js';
 
 // 台灣日期 YYYY-MM-DD（UTC+8）
@@ -9,8 +10,9 @@ export function taiwanDate(nowMs) {
 }
 
 // deps: { claude(system, user) => { reading, usage, model }, usage.consume(dateKey, limit) => boolean,
-//        cost.record(紀錄) => 寫成本（可省略；失敗只記日誌）, env, now() }
-export function createHandler({ claude, usage, cost, env = process.env, now = Date.now }) {
+//        cost.record(紀錄) => 寫成本（可省略；失敗只記日誌）, cards（知識卡 db，測試注入；預設啟動時讀檔）, env, now() }
+export function createHandler({ claude, usage, cost, cards, env = process.env, now = Date.now }) {
+  const cardDb = cards ?? loadCards();
   const allowed = new Set((env.ALLOWED_ORIGINS ?? '').split(',').map((o) => o.trim()).filter(Boolean));
   const limit = Number(env.DAILY_LIMIT) > 0 ? Number(env.DAILY_LIMIT) : 200;
 
@@ -47,6 +49,14 @@ export function createHandler({ claude, usage, cost, env = process.env, now = Da
     }
     const { kind, question = '', facts, tone, focus } = req.body;
 
+    // 一張卡都選不到就不呼叫 Claude，也不耗額度
+    const selected = selectCards(kind, facts, focus, cardDb);
+    if (selected.length === 0) {
+      console.error('no cards', { kind });
+      res.status(500).json({ error: 'No cards' });
+      return;
+    }
+
     try {
       if (!(await usage.consume(taiwanDate(now()), limit))) {
         res.status(429).json({ error: '今日 AI 解讀次數已滿' });
@@ -59,7 +69,7 @@ export function createHandler({ claude, usage, cost, env = process.env, now = Da
     }
 
     // 隱私：日誌不記錄 question 與 facts
-    const user = buildUserMessage({ kind, question, facts, tone, focus }, taiwanDate(now()));
+    const user = buildUserMessage({ kind, question, facts, tone, focus, cards: selected }, taiwanDate(now()));
     const startedAt = now();
     const usages = [];
     let model = 'unknown';
@@ -73,7 +83,7 @@ export function createHandler({ claude, usage, cost, env = process.env, now = Da
         const out = await claude(SYSTEM_PROMPT, user);
         if (out?.usage) usages.push(out.usage);
         if (out?.model) model = out.model;
-        const reading = validateReading(out?.reading, tone);
+        const reading = validateReading(out?.reading, tone, selected);
         if (reading) {
           status = 'ok';
           result = reading;
