@@ -374,3 +374,109 @@ export async function fetchSiteStatus(opts: { url?: string; fetchImpl?: typeof f
     return fallback
   }
 }
+
+// ───────── 紫微追問 ─────────
+
+export const MAX_FOLLOWUP_HISTORY = 8
+export const MAX_HISTORY_Q = 200
+export const MAX_HISTORY_A = 600
+
+export type FollowupFocus = Exclude<AiFocus, 'natal'>
+const FOLLOWUP_FOCUS: readonly FollowupFocus[] = ['decadal', 'yearly', 'monthly', 'daily']
+
+export interface FollowupTurn {
+  q: string
+  a: string
+}
+
+export interface FollowupRequest {
+  question: string
+  facts: Record<string, unknown>
+  focus: AiFocus
+  history: FollowupTurn[]
+}
+
+// 追問的回答：answer／cards 有依據與知識卡；recompute 要前端切到指定層與日期再問一次；refuse 是後端拒答
+export type FollowupResult =
+  | { action: 'answer' | 'cards'; text: string; basis: string[]; cards: AiCardRef[]; notice?: AiNotice[] }
+  | { action: 'recompute'; text: string; target: { focus: FollowupFocus; date: string } }
+  | { action: 'refuse'; text: string }
+
+const clipBy = (s: string, n: number) => [...s].slice(0, n).join('')
+
+// 對話串裡的一筆：解讀（按「AI 解讀這張盤」成功的那份）或追問
+export type ThreadEntry =
+  | { type: 'reading'; q: string; layer: AiFocus; date: string; reading: AiReading }
+  | { type: 'followup'; q: string; layer: AiFocus; date: string; result: FollowupResult }
+
+// 取整串最後 8 筆給後端當上下文：reading 的 q 空的寫「整體運勢」、a 是一句話＋各段文字；followup 的 a 是回答（recompute 是那句說明）
+export function buildHistory(entries: readonly ThreadEntry[]): FollowupTurn[] {
+  return entries.slice(-MAX_FOLLOWUP_HISTORY).map((e) => {
+    if (e.type === 'reading') {
+      const q = e.q.trim() || '整體運勢'
+      const a = [e.reading.verdict, ...e.reading.paragraphs.map((p) => p.text)].join('\n')
+      return { q: clipBy(q, MAX_HISTORY_Q), a: clipBy(a, MAX_HISTORY_A) }
+    }
+    return { q: clipBy(e.q, MAX_HISTORY_Q), a: clipBy(e.result.text, MAX_HISTORY_A) }
+  })
+}
+
+// 通過回傳整理過的回答，不過回 null
+export function validateFollowup(facts: Obj, raw: unknown, notice?: unknown): FollowupResult | null {
+  const o = asObj(raw)
+  if (!nonEmpty(o.text)) return null
+  if (o.action === 'refuse') return { action: 'refuse', text: o.text }
+  if (o.action === 'recompute') {
+    const t = asObj(o.target)
+    if (!FOLLOWUP_FOCUS.includes(t.focus as FollowupFocus) || !isIsoDate(t.date)) return null
+    return { action: 'recompute', text: o.text, target: { focus: t.focus as FollowupFocus, date: t.date } }
+  }
+  if (o.action !== 'answer' && o.action !== 'cards') return null
+  if (!Array.isArray(o.basis) || !o.basis.every(nonEmpty)) return null
+  if (!Array.isArray(o.cards)) return null
+  const cards: AiCardRef[] = []
+  for (const c of o.cards) {
+    const r = asObj(c)
+    if (!nonEmpty(r.id) || !nonEmpty(r.title) || !nonEmpty(r.source)) return null
+    cards.push({ id: r.id, title: r.title, source: r.source })
+  }
+  if (o.action === 'cards' && cards.length === 0) return null
+  // 提到的星名都必須在 facts 裡、不可有絕對化字眼
+  const { allowed, universe, common } = nameSets('ziwei', facts)
+  const text = [o.text, ...(o.basis as string[])].join('\n').replaceAll('紫微斗數', '')
+  if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null
+  if (findAbsolute(text).length > 0) return null
+  const result: FollowupResult = { action: o.action, text: o.text, basis: o.basis as string[], cards }
+  const nt = asArr(notice).filter((n): n is AiNotice => AI_NOTICES.includes(n as AiNotice))
+  if (nt.length > 0) result.notice = [...new Set(nt)]
+  return result
+}
+
+// 紫微追問：回傳通過檢查的回答、後端的婉拒（{ refusal }）或 null（沒網址、網路錯誤、非 200、逾時、格式不對、檢查沒過）
+export async function fetchFollowup(req: FollowupRequest, opts: FetchOptions = {}): Promise<FollowupResult | AiRefusal | null> {
+  const url = opts.url ?? proxyUrl()
+  if (!url) return null
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), opts.timeoutMs ?? AI_TIMEOUT_MS)
+  opts.signal?.addEventListener('abort', () => ctrl.abort(), { once: true })
+  try {
+    const history = req.history.slice(-MAX_FOLLOWUP_HISTORY).map((h) => ({ q: clipBy(h.q, MAX_HISTORY_Q), a: clipBy(h.a, MAX_HISTORY_A) }))
+    const res = await (opts.fetchImpl ?? fetch)(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'ziwei', mode: 'followup', question: clipQuestion(req.question), facts: req.facts, tone: '平', focus: req.focus, history }),
+      signal: ctrl.signal,
+    })
+    if (res.status !== 200) return null
+    const json = asObj(await res.json())
+    if ('refusal' in json) {
+      const rf = asObj(json.refusal)
+      return (rf.kind === 'death' || rf.kind === 'selfharm') && nonEmpty(rf.message) ? { refusal: { kind: rf.kind, message: rf.message } } : null
+    }
+    return validateFollowup(req.facts, json.followup, json.notice)
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timer)
+  }
+}

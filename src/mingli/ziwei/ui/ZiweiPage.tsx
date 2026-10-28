@@ -1,14 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import './ziwei.css'
 import { setRealm } from '../../ui/fx'
 import { clipQuestion, proxyUrl, ziweiFacts } from '../../ai'
-import { AiHelpLine, AiLoading, AiReadingView, AiRefusalView } from '../../ui/AiReadingView'
+import type { AiFocus } from '../../ai'
+import { AiHelpLine, AiLoading, AiRefusalView } from '../../ui/AiReadingView'
+import FollowupPanel from './FollowupPanel'
+import { useZiweiFollowup } from './useZiweiFollowup'
 import { useAiReading } from '../../ui/useAiReading'
 import { session, updateSession } from '../../ui/session'
 import { MAX_QUESTION_LEN } from '../../ui/QuestionBar'
 import DatePicker from '../../ui/DatePicker'
 import { clearBirth, loadBirth, saveBirth } from '../../storage/birth'
+import { clearThreadsOf, threadKey } from '../../storage/followup'
 import type { Birth } from '../../storage/birth'
 import { buildChart, candidates, horoscope, sortMinorStars } from '../engine'
 import type { Gender, HoroscopeFacts, HoroscopeLayer, HoroscopeLayerKey, ZiweiFacts, ZiweiPalace, ZiweiStar } from '../engine'
@@ -292,6 +296,37 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
     `${chartKey}#${askedN ?? 0}`,
   )
   const canAsk = proxyUrl() !== ''
+  // 追問：對話串存在本機，一張盤一串
+  const followup = useZiweiFollowup({
+    threadKey: birth && timeIndex !== null ? threadKey(birth.solarDate, timeIndex, birth.gender) : null,
+    factsFor: (l: AiFocus, date: string) => {
+      if (!birth || timeIndex === null || !facts) return null
+      try {
+        return ziweiFacts(facts, l === 'natal' ? undefined : horoscope({ solarDate: birth.solarDate, timeIndex, gender: birth.gender }, date), l)
+      } catch {
+        return null
+      }
+    },
+    layer,
+    date: queryDate,
+    goTo: (l, date) => {
+      setLayer(l)
+      setQueryDate(date)
+    },
+  })
+  // 解讀成功就加進對話串（同一次請求只加一次）
+  const addedReading = useRef(new Set<string>())
+  const readingKey = `${chartKey}#${askedN ?? 0}`
+  const okReading = ai.status === 'ok' ? ai.reading : null
+  useEffect(() => {
+    if (!okReading || addedReading.current.has(readingKey)) return
+    addedReading.current.add(readingKey)
+    followup.addReading({ type: 'reading', q: ask.trim(), layer, date: queryDate, reading: okReading })
+    // 只在解讀剛成功時加一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [okReading, readingKey])
+  // 對話串一直顯示：改了問題，舊解讀照樣留著並標出當時問的事，按鈕再出現可問新的
+  const showThread = followup.entries.length > 0
   const detail = useMemo(() => {
     if (!facts || !sel) return null
     if (layer === 'natal' || !hs) return palaceReadout(facts, sel)
@@ -318,6 +353,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
     setPhase('form')
   }
   const clear = async () => {
+    if (birth) await clearThreadsOf(birth)
     await clearBirth()
     setBirth(null)
     setPicked(null)
@@ -462,7 +498,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
             </div>
             <Chart facts={facts} gender={birth.gender} sel={sel} onSel={setSel} layer={layer} hs={hs} />
           </div>
-          <div className="ml-zside">
+          <div className="ml-zside" data-followup-loaded={followup.loaded}>
             <p className="ml-z-hint ml-z-hint-top">資料只存這台裝置・點任一宮看說明</p>
             {detail && (
               <div className="ml-pdetail" data-testid="ml-palace-detail" data-branch={sel}>
@@ -479,7 +515,16 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
               </div>
             )}
             {ai.status === 'loading' && <AiLoading />}
-            {ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
+            {showThread && (
+              <FollowupPanel
+                entries={followup.entries}
+                status={followup.status}
+                refusal={followup.refusal}
+                canAsk={canAsk}
+                onSend={followup.send}
+                onClear={followup.clear}
+              />
+            )}
             {ai.status === 'refused' && <AiRefusalView refusal={ai.refusal} />}
             {canAsk && (
               <label className="ml-zask">

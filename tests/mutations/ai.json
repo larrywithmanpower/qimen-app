@@ -75,16 +75,16 @@
   "id": "A10",
   "desc": "前端：越界名稱檢查失效（牌／卦／星都放行）",
   "file": "src/mingli/ai.ts",
-  "find": "if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null",
-  "replace": "if (mentionedNames(text, universe, common).some((n) => !allowed.has(n)) && false) return null",
+  "find": "    .replaceAll('紫微斗數', '')\n  if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null",
+  "replace": "    .replaceAll('紫微斗數', '')\n  if (mentionedNames(text, universe, common).some((n) => !allowed.has(n)) && false) return null",
   "test": "src/mingli/__tests__/ai.test.ts"
  },
  {
   "id": "A11",
   "desc": "前端：後端非 200 也照單全收",
   "file": "src/mingli/ai.ts",
-  "find": "if (res.status !== 200) return null",
-  "replace": "",
+  "find": "body: JSON.stringify({ ...req, question: clipQuestion(req.question) }),\n      signal: ctrl.signal,\n    })\n    if (res.status !== 200) return null",
+  "replace": "body: JSON.stringify({ ...req, question: clipQuestion(req.question) }),\n      signal: ctrl.signal,\n    })\n    ",
   "test": "src/mingli/__tests__/ai.test.ts"
  },
  {
@@ -225,8 +225,8 @@
   "id": "A24",
   "desc": "前端：cards 元素只檢查 id，不檢查 title／source",
   "file": "src/mingli/ai.ts",
-  "find": "if (!nonEmpty(r.id) || !nonEmpty(r.title) || !nonEmpty(r.source)) return null",
-  "replace": "if (!nonEmpty(r.id)) return null",
+  "find": "const r = asObj(c)\n      if (!nonEmpty(r.id) || !nonEmpty(r.title) || !nonEmpty(r.source)) return null",
+  "replace": "const r = asObj(c)\n      if (!nonEmpty(r.id)) return null",
   "test": "src/mingli/__tests__/ai.test.ts"
  },
  {
@@ -336,6 +336,72 @@
   "find": "{reading && ai.status === 'fail' && <AiHelpLine />}",
   "replace": "{reading && <AiHelpLine />}",
   "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A38",
+  "desc": "追問：answer 引用不在清單的知識卡也放行",
+  "file": "functions/gemini-proxy/validate.js",
+  "find": "!ids.every((id) => nonEmpty(id) && byId.has(id))",
+  "replace": "!ids.every((id) => nonEmpty(id))",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A39",
+  "desc": "追問：recompute 日期不檢查",
+  "file": "functions/gemini-proxy/validate.js",
+  "find": "if (!isIsoDate(out.targetDate) || out.targetDate < '1900-01-01' || out.targetDate > '2100-12-31') return fail('target_date');",
+  "replace": "",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A40",
+  "desc": "追問：後端絕對化字眼檢查失效",
+  "file": "functions/gemini-proxy/validate.js",
+  "find": "if (findAbsolute([out.text, ...basis",
+  "replace": "if (false && findAbsolute([out.text, ...basis",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A41",
+  "desc": "追問：塔羅也能帶 mode=followup",
+  "file": "functions/gemini-proxy/validate.js",
+  "find": "if (body.mode !== 'followup' || body.kind !== 'ziwei')",
+  "replace": "if (body.mode !== 'followup')",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A42",
+  "desc": "追問：送給 Claude 的是解讀用的 schema",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "await claude(FOLLOWUP_SYSTEM_PROMPT, user, FOLLOWUP_SCHEMA)",
+  "replace": "await claude(FOLLOWUP_SYSTEM_PROMPT, user)",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A43",
+  "desc": "追問：前端不查盤上沒有的星",
+  "file": "src/mingli/ai.ts",
+  "find": "(o.basis as string[])].join('\\n').replaceAll('紫微斗數', '')\n  if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null",
+  "replace": "(o.basis as string[])].join('\\n').replaceAll('紫微斗數', '')\n  ",
+  "test": "src/mingli/__tests__"
+ },
+ {
+  "id": "A44",
+  "desc": "追問：recompute 後不自動用新盤重送",
+  "file": "src/mingli/ziwei/ui/useZiweiFollowup.ts",
+  "find": "for (let attempt = 0; attempt < 2; attempt++)",
+  "replace": "for (let attempt = 0; attempt < 1; attempt++)",
+  "test": "e2e/mingli/followup.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A45",
+  "desc": "追問：清除生辰沒清掉對話",
+  "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
+  "find": "if (birth) await clearThreadsOf(birth)",
+  "replace": "",
+  "test": "e2e/mingli/followup.spec.ts",
   "runner": "playwright"
  }
 ]

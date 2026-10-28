@@ -1,8 +1,8 @@
 // 請求處理：Claude 與用量計數都由外面注入，測試時換成假的
-import { SYSTEM_PROMPT, buildUserMessage } from './prompt.js';
+import { FOLLOWUP_SCHEMA, FOLLOWUP_SYSTEM_PROMPT, SYSTEM_PROMPT, buildFollowupMessage, buildUserMessage } from './prompt.js';
 import { sumUsage } from './cost.js';
 import { loadCards, selectCards } from './cards.js';
-import { checkReading, validateRequest } from './validate.js';
+import { checkFollowup, checkReading, validateRequest } from './validate.js';
 import { REFUSAL_MESSAGES, classifyQuestion } from './safety.js';
 
 // 台灣日期 YYYY-MM-DD（UTC+8）
@@ -48,7 +48,8 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
       res.status(400).json({ error: bad });
       return;
     }
-    const { kind, question = '', facts, tone, focus } = req.body;
+    const { kind, question = '', facts, tone, focus, mode, history } = req.body;
+    const isFollowup = mode === 'followup';
 
     // 內容安全：該拒答的直接回，不呼叫 Claude、不扣額度、不記成本
     const { topics, refuse } = classifyQuestion(question);
@@ -83,7 +84,9 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
     }
 
     // 隱私：日誌不記錄 question 與 facts
-    const user = buildUserMessage({ kind, question, facts, tone, focus, cards: selected, topics }, taiwanDate(now()));
+    const user = isFollowup
+      ? buildFollowupMessage({ question, facts, focus, history, cards: selected, topics }, taiwanDate(now()))
+      : buildUserMessage({ kind, question, facts, tone, focus, cards: selected, topics }, taiwanDate(now()));
     const startedAt = now();
     const usages = [];
     let model = 'unknown';
@@ -94,7 +97,7 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
       // 格式不過重叫一次，再不過回 502；每一次呼叫（含重叫）都記 usage
       for (let attempt = 0; attempt < 2; attempt++) {
         attempts++;
-        const out = await claude(SYSTEM_PROMPT, user);
+        const out = isFollowup ? await claude(FOLLOWUP_SYSTEM_PROMPT, user, FOLLOWUP_SCHEMA) : await claude(SYSTEM_PROMPT, user);
         if (out?.usage) usages.push(out.usage);
         if (out?.model) model = out.model;
         // 第二道內容安全：關鍵字沒抓到的隱晦說法，由 Claude 判斷整句意思
@@ -104,16 +107,20 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
           result = { refusal: { kind: risk, message: REFUSAL_MESSAGES[risk] } };
           break;
         }
-        const { reading, problem } = checkReading(out?.reading, tone, selected);
+        const checked = isFollowup ? checkFollowup(out?.reading, selected) : checkReading(out?.reading, tone, selected);
+        const reading = isFollowup ? checked.followup : checked.reading;
+        const { problem } = checked;
         if (reading) {
           status = 'ok';
-          result = reading;
+          result = isFollowup ? { followup: reading } : reading;
           break;
         }
         // 只記沒過的是哪一條、不在清單的卡號、Claude 停止原因（不含問題與盤面）
         const allowedIds = new Set(selected.map((c) => c.id));
-        const unknownCards = (Array.isArray(out?.reading?.paragraphs) ? out.reading.paragraphs : [])
-          .flatMap((p) => (Array.isArray(p?.cards) ? p.cards : []))
+        const cited = isFollowup
+          ? (Array.isArray(out?.reading?.cards) ? out.reading.cards : [])
+          : (Array.isArray(out?.reading?.paragraphs) ? out.reading.paragraphs : []).flatMap((p) => (Array.isArray(p?.cards) ? p.cards : []));
+        const unknownCards = cited
           .filter((id) => !allowedIds.has(id)).slice(0, 10);
         console.warn('reading format rejected', { kind, attempt, problem, unknownCards, stopReason: out?.stopReason });
       }
@@ -131,6 +138,7 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
           date: taiwanDate(startedAt),
           kind,
           focus: kind === 'ziwei' ? focus ?? null : null,
+          ...(isFollowup ? { mode: 'followup' } : {}),
           model,
           attempts,
           usage: sumUsage(usages),

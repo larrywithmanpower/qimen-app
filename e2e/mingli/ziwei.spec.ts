@@ -287,7 +287,7 @@ test('紫微問題欄：帶入塔羅問過的問題，清除後送 AI 的 questi
   expect(JSON.stringify(bodies[1])).not.toContain(DEFAULT_QUESTION)
 })
 
-test('紫微問題欄：改了問題，已顯示的 AI 解讀清掉；切走再回來內容一致', async ({ page }) => {
+test('紫微問題欄：改了問題，舊解讀留在對話串並標出當時的問題、可再按解讀；切走再回來內容一致', async ({ page }) => {
   await page.addInitScript(() => {
     (window as unknown as { __MINGLI_AI_URL__: string }).__MINGLI_AI_URL__ = '/__mock-ai'
   })
@@ -303,8 +303,11 @@ test('紫微問題欄：改了問題，已顯示的 AI 解讀清掉；切走再�
   await input.fill('第一個問題')
   await page.getByTestId('ml-ai-ziwei-btn').click()
   await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await expect(page.getByTestId('ml-followup-reading-q')).toHaveText('問：第一個問題')
   await input.fill('第二個問題')
-  await expect(page.getByTestId('ml-ai-reading')).toHaveCount(0)
+  // 對話串不收起來：舊解讀還在、標著原本的問題；按鈕出現可問新的
+  await expect(page.getByTestId('ml-ai-reading')).toHaveCount(1)
+  await expect(page.getByTestId('ml-followup-reading-q')).toHaveText('問：第一個問題')
   await expect(page.getByTestId('ml-ai-ziwei-btn')).toBeVisible()
 
   await page.evaluate(() => { location.hash = '#/meihua' })

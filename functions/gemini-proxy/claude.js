@@ -4,7 +4,8 @@ import { MAX_TOKENS, MODEL, READING_TOOL } from './prompt.js';
 
 let client;
 
-export async function callClaude(system, user) {
+// schema 預設是解讀用的；追問傳 FOLLOWUP_SCHEMA
+export async function callClaude(system, user, schema = READING_TOOL.input_schema) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not configured');
   client ??= new Anthropic({ apiKey, timeout: 25_000, maxRetries: 1 });
@@ -13,7 +14,7 @@ export async function callClaude(system, user) {
     max_tokens: MAX_TOKENS,
     system,
     messages: [{ role: 'user', content: user }],
-    output_config: { format: { type: 'json_schema', schema: READING_TOOL.input_schema } },
+    output_config: { format: { type: 'json_schema', schema } },
   });
   const text = msg.content.find((b) => b.type === 'text')?.text;
   // usage 原樣取 API 回應；沒有的快取欄位算 0

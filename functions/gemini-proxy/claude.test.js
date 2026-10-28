@@ -2,13 +2,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // 假的 SDK：不碰網路，只回固定的 API 回應
 let apiResponse;
+let lastArgs;
 vi.mock('@anthropic-ai/sdk', () => ({
   default: class {
-    messages = { create: async () => apiResponse };
+    messages = { create: async (args) => { lastArgs = args; return apiResponse; } };
   },
 }));
 
 const { callClaude } = await import('./claude.js');
+const { READING_TOOL, FOLLOWUP_SCHEMA } = await import('./prompt.js');
 
 beforeEach(() => {
   process.env.ANTHROPIC_API_KEY = 'test-key-not-real';
@@ -40,5 +42,12 @@ describe('callClaude 回傳 { reading, usage, model }', () => {
     const out = await callClaude('s', 'u');
     expect(out.reading).toBeUndefined();
     expect(out.usage.input_tokens).toBe(9);
+  });
+  it('沒傳 schema 用解讀的；傳了就換成傳入的', async () => {
+    apiResponse = { model: 'm', content: [{ type: 'text', text: '{}' }], usage: {} };
+    await callClaude('s', 'u');
+    expect(lastArgs.output_config.format.schema).toBe(READING_TOOL.input_schema);
+    await callClaude('s', 'u', FOLLOWUP_SCHEMA);
+    expect(lastArgs.output_config.format.schema).toBe(FOLLOWUP_SCHEMA);
   });
 });

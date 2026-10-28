@@ -16,12 +16,13 @@ export function sumUsage(list) {
 // rec: { ts(ms), date, kind, focus, model, attempts, usage(加總後), status, latencyMs }
 export async function recordFirestore(rec) {
   db ??= new Firestore();
-  const { ts, date, kind, focus, model, attempts, usage, status, latencyMs } = rec;
+  const { ts, date, kind, focus, mode, model, attempts, usage, status, latencyMs } = rec;
   await db.collection('ai_calls').add({
     ts: new Date(ts),
     date,
     kind,
     focus: focus ?? null,
+    ...(mode ? { mode } : {}),
     model,
     attempts,
     ...usage,
