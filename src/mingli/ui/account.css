@@ -1,0 +1,11 @@
+/* 「我的」頁帳號區 */
+.ml-account {
+  width: 100%; max-width: 680px; box-sizing: border-box; margin: var(--ml-space-4) auto 0; min-width: 0;
+  padding: 16px 18px; border-radius: var(--ml-radius-card); border: 1px solid var(--ml-line-strong); background: var(--ml-night-glass);
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--ml-space-2);
+}
+.ml-account[data-status="loading"] { min-height: 72px; }
+.ml-account-line { margin: 0; line-height: 1.8; color: var(--ml-ink-body); font-size: var(--ml-fs-body-sm); }
+.ml-account-who { font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 700; overflow-wrap: anywhere; max-width: 100%; }
+.ml-account-mail { font-size: var(--ml-fs-caption); color: var(--ml-ink-muted); overflow-wrap: anywhere; max-width: 100%; }
+.ml-account-left { font-size: var(--ml-fs-body-sm); color: var(--ml-ink-body); }

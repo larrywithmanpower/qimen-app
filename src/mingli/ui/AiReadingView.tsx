@@ -1,6 +1,7 @@
 import './ai.css'
 import { AI_NOTICE_TEXT } from '../ai'
-import type { AiReading, AiRefusal } from '../ai'
+import type { AiLimit, AiReading, AiRefusal } from '../ai'
+import { signIn } from '../auth'
 
 // 讀取中
 export function AiLoading() {
@@ -51,6 +52,24 @@ export function AiRefusalView({ refusal }: { refusal: AiRefusal['refusal'] }) {
   return (
     <div className="ml-ai-refusal" data-testid="ml-ai-refusal" data-kind={refusal.kind} role="note">
       <p>{refusal.message}</p>
+    </div>
+  )
+}
+
+// 額度用完：放在原本放解讀的位置（1925 專線另外照樣顯示）。
+// anon 多一顆登入鈕；塔羅、梅花後面還有範本可看，紫微沒有，所以紫微版不提「下面先看範例解讀」
+export function AiLimitNotice({ limit, noSample = false }: { limit: AiLimit; noSample?: boolean }) {
+  const text = {
+    user: `今天的 AI 解讀次數用完了，明天再來。${noSample ? '' : '下面先看範例解讀。'}`,
+    anon: '未登入的共用次數今天用完了。用 Google 登入後，每人每天有自己的次數。',
+    budget: '今天的 AI 解讀額度已用完，明天再來。',
+  }[limit]
+  return (
+    <div className="ml-ai-limit" data-testid="ml-ai-limit" data-limit={limit} role="status">
+      <p>{text}</p>
+      {limit === 'anon' && (
+        <button type="button" className="ml-ghost" data-testid="ml-ai-limit-signin" onClick={() => { void signIn() }}>用 Google 登入</button>
+      )}
     </div>
   )
 }

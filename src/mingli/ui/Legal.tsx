@@ -57,6 +57,15 @@ const PRIVACY_SECTIONS: Section[] = [
     ],
   },
   {
+    head: '會員登入',
+    items: [
+      '登入用你的 Google 帳號，登入是選擇性的，不登入也能使用。',
+      '我們只存 Firebase 給的帳號編號，和你每天用了幾次 AI 解讀。',
+      '不存你的生日，也不存你問的問題內容。',
+      'Google 登入時的名字與信箱由 Firebase Authentication 保管，只顯示在你自己的畫面。',
+    ],
+  },
+  {
     head: '伺服器記什麼',
     items: [
       '每次呼叫只記 token 數、算法項目、成功或失敗的狀態、花了多久。',

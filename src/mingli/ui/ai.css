@@ -39,3 +39,11 @@
   max-width: 680px; width: 100%; margin: 6px auto 0; box-sizing: border-box;
   color: var(--ml-ink-muted); font-size: var(--ml-fs-caption); line-height: 1.7; text-align: center;
 }
+
+.ml-ai-limit {
+  max-width: 680px; width: 100%; margin: 6px auto 0; padding: 14px 18px; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--ml-space-3);
+  border-radius: var(--ml-radius-card); border: 1px solid var(--ml-line-strong); background: var(--ml-night-glass);
+  color: var(--ml-ink-body); font-size: var(--ml-fs-body-sm); line-height: 1.8;
+}
+.ml-ai-limit p { margin: 0; }

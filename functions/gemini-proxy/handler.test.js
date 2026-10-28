@@ -54,14 +54,20 @@ const fakeReq = (opts = {}) => ({
   method: opts.method ?? 'POST',
   body: 'data' in opts ? opts.data : body(),
   // 明確傳 origin: undefined 代表沒帶 Origin
-  get: (h) => (h === 'Origin' ? ('origin' in opts ? opts.origin : ORIGIN) : undefined),
+  get: (h) => {
+    if (h === 'Origin') return 'origin' in opts ? opts.origin : ORIGIN;
+    if (h === 'Authorization') return opts.auth;
+    return undefined;
+  },
 });
+// 帶登入 token 的請求
+const authed = (token, opts = {}) => fakeReq({ ...opts, auth: `Bearer ${token}` });
 
 const USAGE = { input_tokens: 1000, output_tokens: 200, cache_creation_input_tokens: 30, cache_read_input_tokens: 4 };
 const MODEL = 'claude-sonnet-5-5';
 
 // claudeImpl 只回 reading（或丟錯）；這裡包成 claude.js 的回傳形狀 { reading, usage, model }
-function setup({ env = {}, claudeImpl, consume, recordImpl } = {}) {
+function setup({ env = {}, claudeImpl, consume, recordImpl, spentUsd = 0, usedImpl } = {}) {
   // 預設回傳：引用 prompt <cards> 裡的第一張卡（紫微、梅花也合法）
   const impl = claudeImpl ?? (async (_system, user) => {
     const id = /<cards>\n([^｜\n]+)｜/.exec(user)?.[1];
@@ -69,18 +75,38 @@ function setup({ env = {}, claudeImpl, consume, recordImpl } = {}) {
     return { ...r, paragraphs: r.paragraphs.map((p) => ({ ...p, cards: [id] })) };
   });
   const claude = vi.fn(async (...a) => ({ reading: await impl(...a), usage: USAGE, model: MODEL }));
-  const usage = { consume: vi.fn(consume ?? (async () => true)) };
+  // 假用量：照上限判斷、依 uid（null 為未登入）分別計數；consume 可整個覆寫
+  const counts = new Map();
+  const slot = (dateKey, uid) => `${dateKey}|${uid ?? 'anon'}`;
+  const usage = {
+    consume: vi.fn(consume ?? (async (dateKey, { uid, limit }) => {
+      const k = slot(dateKey, uid);
+      const n = counts.get(k) ?? 0;
+      if (n >= limit) return false;
+      counts.set(k, n + 1);
+      return true;
+    })),
+    used: vi.fn(usedImpl ?? (async (dateKey, { uid }) => counts.get(slot(dateKey, uid)) ?? 0)),
+    spentUsd: vi.fn(async () => spentUsd),
+  };
+  // 假驗證：tok-A → uidA、tok-B → uidB，其他一律當無效
+  const auth = { verify: vi.fn(async (token) => {
+    const uid = { 'tok-A': 'uidA', 'tok-B': 'uidB' }[token];
+    if (!uid) throw new Error('invalid token');
+    return uid;
+  }) };
   const cost = { record: vi.fn(recordImpl ?? (async () => {})) };
   const handler = createHandler({
     claude,
     usage,
+    auth,
     cost,
     cards: CARD_DB,
     env: { ALLOWED_ORIGINS: `${ORIGIN},http://localhost:5180`, AI_ENABLED: 'true', ...env },
     now: () => Date.UTC(2026, 9, 21, 20, 0, 0), // UTC 20:00 = 台灣隔天 04:00
   });
   const call = async (req) => { const res = fakeRes(); await handler(req, res); return res; };
-  return { claude, usage, cost, call };
+  return { claude, usage, auth, cost, call, counts };
 }
 
 let logs;
@@ -128,16 +154,20 @@ describe('緊急開關與每日上限', () => {
     const { claude, call } = setup({ consume: async () => false });
     const res = await call(fakeReq());
     expect(res.code).toBe(429);
-    expect(res.body).toEqual({ error: '今日 AI 解讀次數已滿' });
+    expect(res.body).toEqual({ error: '未登入的共用次數今天用完了', limit: 'anon' });
     expect(claude).not.toHaveBeenCalled();
   });
-  it('用台灣日期與預設上限 200 計數；DAILY_LIMIT 可覆寫', async () => {
+  it('用台灣日期與預設上限計數（未登入 10、會員 5）；環境變數可覆寫', async () => {
     const a = setup();
     await a.call(fakeReq());
-    expect(a.usage.consume).toHaveBeenCalledWith('2026-10-22', 200);
-    const b = setup({ env: { DAILY_LIMIT: '5' } });
+    await a.call(authed('tok-A'));
+    expect(a.usage.consume).toHaveBeenCalledWith('2026-10-22', { uid: null, limit: 10 });
+    expect(a.usage.consume).toHaveBeenCalledWith('2026-10-22', { uid: 'uidA', limit: 5 });
+    const b = setup({ env: { ANON_DAILY_LIMIT: '3', USER_DAILY_LIMIT: '2' } });
     await b.call(fakeReq());
-    expect(b.usage.consume).toHaveBeenCalledWith('2026-10-22', 5);
+    await b.call(authed('tok-A'));
+    expect(b.usage.consume).toHaveBeenCalledWith('2026-10-22', { uid: null, limit: 3 });
+    expect(b.usage.consume).toHaveBeenCalledWith('2026-10-22', { uid: 'uidA', limit: 2 });
   });
   it('壞請求不消耗額度', async () => {
     const { usage, call } = setup();
@@ -346,7 +376,7 @@ describe('成本紀錄（ai_calls）', () => {
       throw new Error('boom');
     });
     const cost = { record: vi.fn(async () => {}) };
-    const handler = createHandler({ claude, usage: { consume: async () => true }, cost, cards: CARD_DB, env: { ALLOWED_ORIGINS: ORIGIN, AI_ENABLED: 'true' }, now: () => 0 });
+    const handler = createHandler({ claude, usage: { consume: async () => true, spentUsd: async () => 0 }, cost, cards: CARD_DB, env: { ALLOWED_ORIGINS: ORIGIN, AI_ENABLED: 'true' }, now: () => 0 });
     const res = fakeRes();
     await handler(fakeReq(), res);
     const rec = cost.record.mock.calls[0][0];
@@ -512,23 +542,131 @@ describe('內容安全：絕對化字眼', () => {
 });
 
 describe('GET 狀態端點', () => {
-  it('回 ai 與 maintenance，不扣額度、不呼叫 Claude', async () => {
+  it('回 ai、maintenance 與 quota，不扣額度、不呼叫 Claude', async () => {
     const { claude, usage, cost, call } = setup({ env: { MAINTENANCE: 'true' } });
     const res = await call(fakeReq({ method: 'GET' }));
     expect(res.code).toBe(200);
-    expect(res.body).toEqual({ ai: true, maintenance: true });
+    expect(res.body).toEqual({ ai: true, maintenance: true, quota: { used: 0, limit: 10, signedIn: false } });
     expect(res.headers['Access-Control-Allow-Origin']).toBe(ORIGIN);
     expect(claude).not.toHaveBeenCalled();
     expect(usage.consume).not.toHaveBeenCalled();
     expect(cost.record).not.toHaveBeenCalled();
   });
   it('MAINTENANCE 沒設等於 false；AI_ENABLED 不是 true → ai:false', async () => {
-    expect((await setup().call(fakeReq({ method: 'GET' }))).body).toEqual({ ai: true, maintenance: false });
-    expect((await setup({ env: { AI_ENABLED: 'false' } }).call(fakeReq({ method: 'GET' }))).body).toEqual({ ai: false, maintenance: false });
+    expect((await setup().call(fakeReq({ method: 'GET' }))).body).toMatchObject({ ai: true, maintenance: false });
+    expect((await setup({ env: { AI_ENABLED: 'false' } }).call(fakeReq({ method: 'GET' }))).body).toMatchObject({ ai: false, maintenance: false });
   });
   it('GET 的 Origin 規則照舊：沒帶或不在名單 → 403', async () => {
     const { call } = setup();
     expect((await call(fakeReq({ method: 'GET', origin: undefined }))).code).toBe(403);
     expect((await call(fakeReq({ method: 'GET', origin: 'https://evil.example' }))).code).toBe(403);
+  });
+});
+
+describe('登入、每人上限與每日預算', () => {
+  it('沒帶 token 走 anon 計數，不驗 token', async () => {
+    const { auth, call, counts } = setup();
+    expect((await call(fakeReq())).code).toBe(200);
+    expect(counts.get('2026-10-22|anon')).toBe(1);
+    expect(auth.verify).not.toHaveBeenCalled();
+  });
+  it('帶有效 token 走該 uid 計數，不動 anon', async () => {
+    const { call, counts } = setup();
+    expect((await call(authed('tok-A'))).code).toBe(200);
+    expect(counts.get('2026-10-22|uidA')).toBe(1);
+    expect(counts.has('2026-10-22|anon')).toBe(false);
+  });
+  it('uid A 用滿 5 次 → 第 6 次 429 user；uid B 照常', async () => {
+    const { claude, call } = setup();
+    for (let i = 0; i < 5; i++) expect((await call(authed('tok-A'))).code).toBe(200);
+    const full = await call(authed('tok-A'));
+    expect(full.code).toBe(429);
+    expect(full.body).toEqual({ error: '今天的 AI 解讀次數用完了', limit: 'user' });
+    expect(claude).toHaveBeenCalledTimes(5);
+    expect((await call(authed('tok-B'))).code).toBe(200);
+    expect(claude).toHaveBeenCalledTimes(6);
+  });
+  it('anon 滿 10 次 → 第 11 次 429 anon', async () => {
+    const { call } = setup();
+    for (let i = 0; i < 10; i++) expect((await call(fakeReq())).code).toBe(200);
+    const full = await call(fakeReq());
+    expect(full.code).toBe(429);
+    expect(full.body).toEqual({ error: '未登入的共用次數今天用完了', limit: 'anon' });
+  });
+  it('預算超過 → 429 budget，不呼叫 Claude、不扣次數；登入者也一樣', async () => {
+    // 預設 10 台幣 / 32.5：0.31 美金約 10.075 台幣
+    const { claude, usage, call } = setup({ spentUsd: 0.31 });
+    for (const req of [fakeReq(), authed('tok-A')]) {
+      const res = await call(req);
+      expect(res.code).toBe(429);
+      expect(res.body).toEqual({ error: '今日 AI 解讀額度已用完', limit: 'budget' });
+    }
+    expect(claude).not.toHaveBeenCalled();
+    expect(usage.consume).not.toHaveBeenCalled();
+  });
+  it('預算未達 → 照常；DAILY_BUDGET_TWD 與 USD_TWD 可覆寫', async () => {
+    expect((await setup({ spentUsd: 0.3 }).call(fakeReq())).code).toBe(200);
+    expect((await setup({ spentUsd: 0.3, env: { USD_TWD: '40' } }).call(fakeReq())).code).toBe(429);
+    expect((await setup({ spentUsd: 0.31, env: { DAILY_BUDGET_TWD: '20' } }).call(fakeReq())).code).toBe(200);
+  });
+  it('無效 token（偽造、格式錯）→ 401，不呼叫 Claude、不扣額度', async () => {
+    const { claude, usage, call } = setup();
+    for (const req of [authed('forged'), fakeReq({ auth: 'Basic abc' }), fakeReq({ auth: 'Bearer' })]) {
+      const res = await call(req);
+      expect(res.code).toBe(401);
+      expect(res.body).toEqual({ error: '登入已失效' });
+    }
+    expect(claude).not.toHaveBeenCalled();
+    expect(usage.consume).not.toHaveBeenCalled();
+  });
+  it('selfharm 關鍵字題就算帶無效 token 也回 refusal', async () => {
+    const { claude, call } = setup();
+    const res = await call(authed('forged', { data: body({ question: '我想死' }) }));
+    expect(res.code).toBe(200);
+    expect(res.body.refusal.kind).toBe('selfharm');
+    expect(claude).not.toHaveBeenCalled();
+  });
+  it('AI 關閉時，無效 token 的一般題先拿 503（驗 token 在 AI_ENABLED 之後）', async () => {
+    const { call } = setup({ env: { AI_ENABLED: 'false' } });
+    expect((await call(authed('forged'))).code).toBe(503);
+  });
+  it('GET 登入者回自己的 quota，不扣額度', async () => {
+    const { usage, call } = setup();
+    await call(authed('tok-A'));
+    await call(authed('tok-A'));
+    const consumed = usage.consume.mock.calls.length;
+    const res = await call(authed('tok-A', { method: 'GET' }));
+    expect(res.code).toBe(200);
+    expect(res.body.quota).toEqual({ used: 2, limit: 5, signedIn: true });
+    expect(usage.consume.mock.calls.length).toBe(consumed);
+  });
+  it('GET 未登入回 anon quota；登入者的用量不混進來', async () => {
+    const { call } = setup();
+    await call(fakeReq());
+    await call(authed('tok-A'));
+    const res = await call(fakeReq({ method: 'GET' }));
+    expect(res.body.quota).toEqual({ used: 1, limit: 10, signedIn: false });
+  });
+  it('GET 帶無效 token → 401', async () => {
+    const res = await setup().call(authed('forged', { method: 'GET' }));
+    expect(res.code).toBe(401);
+    expect(res.body).toEqual({ error: '登入已失效' });
+  });
+  it('GET 讀 quota 失敗 → 回不帶 quota 的 { ai, maintenance }', async () => {
+    const { call } = setup({ usedImpl: async () => { throw new Error('firestore down'); } });
+    const res = await call(fakeReq({ method: 'GET' }));
+    expect(res.code).toBe(200);
+    expect(res.body).toEqual({ ai: true, maintenance: false });
+  });
+  it('CORS 允許標頭含 Authorization', async () => {
+    const res = await setup().call(fakeReq({ method: 'OPTIONS' }));
+    expect(res.headers['Access-Control-Allow-Headers']).toContain('Authorization');
+  });
+  it('日誌不含 token 與 uid 以外的帳號資料', async () => {
+    const { call } = setup({ claudeImpl: async () => { throw new Error('boom'); } });
+    await call(authed('tok-A'));
+    await call(authed('forged'));
+    expect(logs.join('\n')).not.toContain('tok-A');
+    expect(logs.join('\n')).not.toContain('forged');
   });
 });

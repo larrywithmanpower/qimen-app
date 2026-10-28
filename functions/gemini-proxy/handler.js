@@ -10,12 +10,41 @@ export function taiwanDate(nowMs) {
   return new Date(nowMs + 8 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
-// deps: { claude(system, user) => { reading, usage, model }, usage.consume(dateKey, limit) => boolean,
+// 環境變數轉正數，不合法用預設
+const positive = (v, fallback) => (Number(v) > 0 ? Number(v) : fallback);
+
+// 取 Authorization：沒帶 → null；帶了但不是 Bearer 格式 → ''（視為無效）
+function bearerToken(req) {
+  const h = req.get('Authorization');
+  if (!h) return null;
+  return /^Bearer\s+(\S+)$/i.exec(h)?.[1] ?? '';
+}
+
+// deps: { claude(system, user) => { reading, usage, model },
+//        usage: { consume(dateKey, { uid, limit }) => boolean（uid 為 null 代表未登入共用計數）,
+//                 used(dateKey, { uid }) => 今日已用次數, spentUsd(dateKey) => 今日累計美金 },
+//        auth.verify(token) => uid（無效丟錯）,
 //        cost.record(紀錄) => 寫成本（可省略；失敗只記日誌）, cards（知識卡 db，測試注入；預設啟動時讀檔）, env, now() }
-export function createHandler({ claude, usage, cost, cards, env = process.env, now = Date.now }) {
+export function createHandler({ claude, usage, auth, cost, cards, env = process.env, now = Date.now }) {
   const cardDb = cards ?? loadCards();
   const allowed = new Set((env.ALLOWED_ORIGINS ?? '').split(',').map((o) => o.trim()).filter(Boolean));
-  const limit = Number(env.DAILY_LIMIT) > 0 ? Number(env.DAILY_LIMIT) : 200;
+  const userLimit = positive(env.USER_DAILY_LIMIT, 5);
+  const anonLimit = positive(env.ANON_DAILY_LIMIT, 10);
+  const budgetTwd = positive(env.DAILY_BUDGET_TWD, 10);
+  const usdTwd = positive(env.USD_TWD, 32.5);
+
+  // 驗 token：沒帶 → { uid: null }；有效 → { uid }；帶了但無效 → { invalid: true }。日誌不記 token
+  async function identify(req) {
+    const token = bearerToken(req);
+    if (token === null) return { uid: null };
+    if (!token || !auth) return { invalid: true };
+    try {
+      const uid = await auth.verify(token);
+      return uid ? { uid } : { invalid: true };
+    } catch {
+      return { invalid: true };
+    }
+  }
 
   return async (req, res) => {
     const origin = req.get('Origin');
@@ -27,7 +56,7 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
     res.set('Access-Control-Allow-Origin', origin);
     res.set('Vary', 'Origin');
     res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.set('Access-Control-Allow-Headers', 'Content-Type');
+    res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     res.set('Access-Control-Max-Age', '3600');
 
     if (req.method === 'OPTIONS') {
@@ -36,7 +65,20 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
     }
     // 狀態端點：給前端判斷 AI 是否開著、是否維護中；不扣額度
     if (req.method === 'GET') {
-      res.status(200).json({ ai: env.AI_ENABLED === 'true', maintenance: env.MAINTENANCE === 'true' });
+      const who = await identify(req);
+      if (who.invalid) {
+        res.status(401).json({ error: '登入已失效' });
+        return;
+      }
+      const status = { ai: env.AI_ENABLED === 'true', maintenance: env.MAINTENANCE === 'true' };
+      // 讀額度失敗就回不帶 quota 的狀態，不擋使用者
+      try {
+        const used = await usage.used(taiwanDate(now()), { uid: who.uid });
+        status.quota = { used, limit: who.uid ? userLimit : anonLimit, signedIn: Boolean(who.uid) };
+      } catch (error) {
+        console.error('quota read failed', error?.message);
+      }
+      res.status(200).json(status);
       return;
     }
     if (req.method !== 'POST') {
@@ -63,6 +105,14 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
       return;
     }
 
+    // 驗登入（放在拒答與 AI 開關之後）：帶了 token 但無效 → 401，不呼叫 Claude、不扣額度
+    const who = await identify(req);
+    if (who.invalid) {
+      res.status(401).json({ error: '登入已失效' });
+      return;
+    }
+    const { uid } = who;
+
     // 一張卡都選不到就不呼叫 Claude，也不耗額度
     const selected = selectCards(kind, facts, focus, cardDb);
     if (selected.length === 0) {
@@ -72,8 +122,16 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
     }
 
     try {
-      if (!(await usage.consume(taiwanDate(now()), limit))) {
-        res.status(429).json({ error: '今日 AI 解讀次數已滿' });
+      // 先查每日預算（略為超出可接受，不與計數放同一個 transaction），再查次數
+      const spentTwd = (await usage.spentUsd(taiwanDate(now()))) * usdTwd;
+      if (spentTwd >= budgetTwd) {
+        res.status(429).json({ error: '今日 AI 解讀額度已用完', limit: 'budget' });
+        return;
+      }
+      if (!(await usage.consume(taiwanDate(now()), { uid, limit: uid ? userLimit : anonLimit }))) {
+        res.status(429).json(uid
+          ? { error: '今天的 AI 解讀次數用完了', limit: 'user' }
+          : { error: '未登入的共用次數今天用完了', limit: 'anon' });
         return;
       }
     } catch (error) {

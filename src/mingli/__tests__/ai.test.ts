@@ -185,7 +185,7 @@ describe('fetchAiReading 失敗一律回 null（畫面退回範本）', () => {
       url: 'http://x',
       fetchImpl: (async (_u: unknown, init: RequestInit) => { sent = JSON.parse(String(init.body)); return new Response(JSON.stringify(good)) }) as typeof fetch,
     })
-    expect(r && !isAiRefusal(r) ? r.verdict : null).toBe('先穩住')
+    expect(r && 'verdict' in r ? r.verdict : null).toBe('先穩住')
     expect(Object.keys(sent).sort()).toEqual(['facts', 'kind', 'question', 'tone'])
   })
   it('網路錯誤、500、429、壞 JSON、檢查沒過 → 都是 null', async () => {
@@ -327,5 +327,59 @@ describe('fetchSiteStatus', () => {
     expect(await fetchSiteStatus({ url: 'http://x', fetchImpl: reply(500, { ai: false, maintenance: true }) })).toEqual(ok)
     expect(await fetchSiteStatus({ url: 'http://x', fetchImpl: reply(200, 'not json') })).toEqual(ok)
     expect(await fetchSiteStatus({ url: 'http://x', fetchImpl: reply(200, { ai: 'yes' }) })).toEqual(ok)
+  })
+})
+
+describe('登入 token 與額度（429）', () => {
+  const req: AiRequest = { kind: 'tarot', question: '問題', facts: tarot.facts, tone: tarot.tone }
+  const good = make({ tone: tarot.tone, text: `第一張是${names[0]}` })
+  const capture = (status: number, body: unknown) => {
+    const seen: { headers: Record<string, string> }[] = []
+    const fetchImpl = (async (_u: unknown, init: RequestInit) => {
+      seen.push({ headers: init.headers as Record<string, string> })
+      return new Response(typeof body === 'string' ? body : JSON.stringify(body), { status })
+    }) as typeof fetch
+    return { seen, fetchImpl }
+  }
+
+  it('有 token → POST 帶 Authorization: Bearer', async () => {
+    const { seen, fetchImpl } = capture(200, good)
+    await fetchAiReading(req, { url: 'http://x', fetchImpl, getToken: async () => 'tok-1' })
+    expect(seen[0].headers.Authorization).toBe('Bearer tok-1')
+  })
+  it('沒 token（或取 token 失敗）→ 不帶 Authorization', async () => {
+    const a = capture(200, good)
+    await fetchAiReading(req, { url: 'http://x', fetchImpl: a.fetchImpl, getToken: async () => null })
+    expect('Authorization' in a.seen[0].headers).toBe(false)
+    const b = capture(200, good)
+    await fetchAiReading(req, { url: 'http://x', fetchImpl: b.fetchImpl, getToken: async () => { throw new Error('boom') } })
+    expect('Authorization' in b.seen[0].headers).toBe(false)
+  })
+  it('429 的 limit 是 user／anon／budget → 各回對的 { limited }', async () => {
+    for (const limit of ['user', 'anon', 'budget'] as const) {
+      const r = await fetchAiReading(req, { url: 'http://x', fetchImpl: capture(429, { error: '額度', limit }).fetchImpl, getToken: async () => null })
+      expect(r).toEqual({ limited: limit })
+    }
+  })
+  it('429 沒 limit、亂寫、壞 JSON → null', async () => {
+    for (const body of [{ error: '額度' }, { error: '額度', limit: 'weird' }, { limit: 3 }, 'not json']) {
+      expect(await fetchAiReading(req, { url: 'http://x', fetchImpl: capture(429, body).fetchImpl, getToken: async () => null })).toBeNull()
+    }
+  })
+  it('401 登入已失效 → null', async () => {
+    expect(await fetchAiReading(req, { url: 'http://x', fetchImpl: capture(401, { error: '登入已失效' }).fetchImpl, getToken: async () => 'bad' })).toBeNull()
+  })
+  it('fetchSiteStatus：有 token 才帶 Authorization，並解析 quota', async () => {
+    const withTok = capture(200, { ai: true, maintenance: false, quota: { used: 2, limit: 5, signedIn: true } })
+    expect(await fetchSiteStatus({ url: 'http://x', fetchImpl: withTok.fetchImpl, getToken: async () => 'tok-2' }))
+      .toEqual({ ai: true, maintenance: false, quota: { used: 2, limit: 5, signedIn: true } })
+    expect(withTok.seen[0].headers.Authorization).toBe('Bearer tok-2')
+    const noTok = capture(200, { ai: true, maintenance: false })
+    expect(await fetchSiteStatus({ url: 'http://x', fetchImpl: noTok.fetchImpl, getToken: async () => null })).toEqual({ ai: true, maintenance: false })
+    expect('Authorization' in noTok.seen[0].headers).toBe(false)
+  })
+  it('fetchSiteStatus：quota 格式不對就當沒有', async () => {
+    const r = await fetchSiteStatus({ url: 'http://x', fetchImpl: capture(200, { ai: true, maintenance: false, quota: { used: '2' } }).fetchImpl, getToken: async () => null })
+    expect(r.quota).toBeUndefined()
   })
 })

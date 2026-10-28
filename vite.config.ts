@@ -36,6 +36,10 @@ export default defineConfig({
           }
         ]
       },
+      // /__/auth/handler 是 Firebase 登入頁，不能被換成 index.html
+      workbox: {
+        navigateFallbackDenylist: [/^\/__\//],
+      },
       devOptions: {
         enabled: true,
         type: 'module'

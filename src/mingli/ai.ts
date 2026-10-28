@@ -5,6 +5,7 @@ import type { DrawnCard } from './tarot/engine'
 import { hexagramName } from './meihua/engine'
 import type { MeihuaResult, Trigram } from './meihua/engine'
 import { MAJOR_STAR_NAMES } from './ziwei/engine'
+import { getIdToken } from './auth'
 import type { HoroscopeFacts, HoroscopeLayer, ZiweiFacts } from './ziwei/engine'
 
 export type AiKind = 'tarot' | 'meihua' | 'ziwei'
@@ -56,7 +57,15 @@ export interface AiReading {
 export interface AiRefusal {
   refusal: { kind: 'death' | 'selfharm'; message: string }
 }
-export const isAiRefusal = (r: AiReading | AiRefusal): r is AiRefusal => 'refusal' in r
+export const isAiRefusal = (r: AiReading | AiRefusal | AiLimited): r is AiRefusal => 'refusal' in r
+
+// 後端 429：user＝這個人今天次數用完、anon＝未登入共用次數用完、budget＝全站今天預算用完
+export type AiLimit = 'user' | 'anon' | 'budget'
+export const AI_LIMITS: readonly AiLimit[] = ['user', 'anon', 'budget']
+export interface AiLimited {
+  limited: AiLimit
+}
+export const isAiLimited = (r: AiReading | AiRefusal | AiLimited): r is AiLimited => 'limited' in r
 
 // 超過這麼久沒回就退回範本
 export const AI_TIMEOUT_MS = 30_000
@@ -320,12 +329,21 @@ export function validateAiReading(kind: AiKind, facts: Obj, tone: AiTone, raw: u
 export interface FetchOptions {
   url?: string
   fetchImpl?: typeof fetch
+  // 取登入 token（沒登入回 null）；預設走 auth.ts，測試可換掉
+  getToken?: () => Promise<string | null>
   timeoutMs?: number
   signal?: AbortSignal
 }
 
-// 回傳通過檢查的解讀，或後端的婉拒（{ refusal }）；沒網址、網路錯誤、非 200、逾時、檢查沒過一律回 null
-export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): Promise<AiReading | AiRefusal | null> {
+// 登入才帶 Authorization
+async function authHeaders(getToken: () => Promise<string | null>): Promise<Record<string, string>> {
+  const token = await getToken().catch(() => null)
+  return token ? { Authorization: `Bearer ${token}` } : {}
+}
+
+// 回傳通過檢查的解讀、後端的婉拒（{ refusal }）或額度用完（{ limited }）；
+// 沒網址、網路錯誤、其他非 200（含 401 登入失效）、逾時、檢查沒過一律回 null
+export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): Promise<AiReading | AiRefusal | AiLimited | null> {
   const url = opts.url ?? proxyUrl()
   if (!url) return null
   const ctrl = new AbortController()
@@ -334,10 +352,14 @@ export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): P
   try {
     const res = await (opts.fetchImpl ?? fetch)(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(await authHeaders(opts.getToken ?? getIdToken)) },
       body: JSON.stringify({ ...req, question: clipQuestion(req.question) }),
       signal: ctrl.signal,
     })
+    if (res.status === 429) {
+      const limit = asObj(await res.json()).limit
+      return AI_LIMITS.includes(limit as AiLimit) ? { limited: limit as AiLimit } : null
+    }
     if (res.status !== 200) return null
     const json: unknown = await res.json()
     const rf = asObj(asObj(json).refusal)
@@ -357,19 +379,25 @@ export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): P
 export interface SiteStatus {
   ai: boolean
   maintenance: boolean
+  // 今天的 AI 次數（後端可能沒給）
+  quota?: { used: number; limit: number; signedIn: boolean }
 }
 
 // GET 代理網址拿 AI 開關與維護狀態；沒網址、網路錯誤、非 200、格式不對一律當作正常，不擋使用者
-export async function fetchSiteStatus(opts: { url?: string; fetchImpl?: typeof fetch } = {}): Promise<SiteStatus> {
+export async function fetchSiteStatus(opts: { url?: string; fetchImpl?: typeof fetch; getToken?: () => Promise<string | null> } = {}): Promise<SiteStatus> {
   const fallback: SiteStatus = { ai: true, maintenance: false }
   const url = opts.url ?? proxyUrl()
   if (!url) return fallback
   try {
-    const res = await (opts.fetchImpl ?? fetch)(url, { method: 'GET' })
+    const res = await (opts.fetchImpl ?? fetch)(url, { method: 'GET', headers: await authHeaders(opts.getToken ?? getIdToken) })
     if (res.status !== 200) return fallback
     const j = asObj(await res.json())
     if (typeof j.ai !== 'boolean' || typeof j.maintenance !== 'boolean') return fallback
-    return { ai: j.ai, maintenance: j.maintenance }
+    const q = asObj(j.quota)
+    const quota = typeof q.used === 'number' && typeof q.limit === 'number' && typeof q.signedIn === 'boolean'
+      ? { used: q.used, limit: q.limit, signedIn: q.signedIn }
+      : undefined
+    return { ai: j.ai, maintenance: j.maintenance, ...(quota ? { quota } : {}) }
   } catch {
     return fallback
   }

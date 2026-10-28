@@ -6,7 +6,7 @@ import { burstAt, lightTrigrams, prefersReduced, setRealm } from '../../ui/fx'
 import QuestionBar, { NEED_QUESTION } from '../../ui/QuestionBar'
 import { session, updateSession } from '../../ui/session'
 import { clipQuestion, meihuaFacts } from '../../ai'
-import { AiHelpLine, AiLoading, AiReadingView, AiRefusalView } from '../../ui/AiReadingView'
+import { AiHelpLine, AiLimitNotice, AiLoading, AiReadingView, AiRefusalView } from '../../ui/AiReadingView'
 import { useAiReading } from '../../ui/useAiReading'
 import { castByNumbers, castByTime, lunarNumbersOf, templateReading } from '../engine'
 import type { MeihuaResult } from '../engine'
@@ -277,6 +277,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
           {ai.status === 'loading' && <AiLoading />}
           {ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
           {ai.status === 'refused' && <AiRefusalView refusal={ai.refusal} />}
+          {ai.status === 'fail' && ai.limited && <AiLimitNotice limit={ai.limited} />}
           {ai.status === 'fail' && <AiHelpLine />}
           {tpl && (
             <>

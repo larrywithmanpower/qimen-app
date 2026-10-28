@@ -5,6 +5,7 @@ import './ui/legal.css'
 import Background from './ui/Background'
 import { Bagua, BrushFilters } from './ui/Bagua'
 import Home from './ui/Home'
+import AccountCard from './ui/AccountCard'
 import { SoonPage } from './ui/Pages'
 import { LegalFooter, MaintenancePage, PrivacyPage, TermsPage } from './ui/Legal'
 import { fetchSiteStatus } from './ai'
@@ -70,7 +71,7 @@ export default function MingliApp() {
       page = <SoonPage testid="ml-accuracy" title="準度" line="之後能回頭對答案，看每種算法和實際發生的差多少。" />
       break
     case '/me':
-      page = <ZiweiPage params={route.params} testid="ml-me" />
+      page = <><AccountCard /><ZiweiPage params={route.params} testid="ml-me" /></>
       break
     case '/privacy':
       page = <PrivacyPage />
