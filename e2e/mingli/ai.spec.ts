@@ -172,13 +172,18 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
       // AI 沒判斷到的隱晦輕生說法，靠這行專線補位
       await expect(page.getByTestId('ml-ai-help')).toContainText('1925')
       await expect(page.getByTestId('ml-ai-help')).toContainText('1995')
+      // 429 要講清楚是次數用完，其他失敗才說「暫時無法」
+      const limited = name.includes('429')
+      const LIMIT = '今天的 AI 次數用完了，台灣時間午夜重置'
       if (kind === 'ziwei') {
-        await expect(page.getByTestId('ml-ai-error')).toHaveText('AI 暫時無法解讀，稍後再試')
+        await expect(page.getByTestId('ml-ai-error')).toHaveText(limited ? LIMIT : 'AI 暫時無法解讀，稍後再試')
         await expect(page.getByTestId('ml-ai-reading')).toHaveCount(0)
         await expect(page.getByTestId('ml-ai-loading')).toHaveCount(0)
         await expect(page.getByTestId('ml-ai-ziwei-btn')).toBeEnabled()
         return
       }
+      if (limited) await expect(page.getByTestId('ml-ai-limit')).toHaveText(LIMIT)
+      else await expect(page.getByTestId('ml-ai-limit')).toHaveCount(0)
       const tpl = page.getByTestId(spec.templateTestId)
       await expect(tpl).toBeVisible()
       await expect(tpl).toContainText(spec.template!)

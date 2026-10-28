@@ -56,7 +56,11 @@ export interface AiReading {
 export interface AiRefusal {
   refusal: { kind: 'death' | 'selfharm'; message: string }
 }
-export const isAiRefusal = (r: AiReading | AiRefusal): r is AiRefusal => 'refusal' in r
+export const isAiRefusal = (r: object): r is AiRefusal => 'refusal' in r
+// 後端回 429：今天的全站次數用完（跟其他失敗分開，畫面才講得清楚）
+export interface AiLimited { limited: true }
+export const isAiLimited = (r: object): r is AiLimited => 'limited' in r
+export const AI_LIMIT_TEXT = '今天的 AI 次數用完了，台灣時間午夜重置'
 
 // 超過這麼久沒回就退回範本
 export const AI_TIMEOUT_MS = 30_000
@@ -325,7 +329,7 @@ export interface FetchOptions {
 }
 
 // 回傳通過檢查的解讀，或後端的婉拒（{ refusal }）；沒網址、網路錯誤、非 200、逾時、檢查沒過一律回 null
-export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): Promise<AiReading | AiRefusal | null> {
+export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): Promise<AiReading | AiRefusal | AiLimited | null> {
   const url = opts.url ?? proxyUrl()
   if (!url) return null
   const ctrl = new AbortController()
@@ -338,6 +342,7 @@ export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): P
       body: JSON.stringify({ ...req, question: clipQuestion(req.question) }),
       signal: ctrl.signal,
     })
+    if (res.status === 429) return { limited: true }
     if (res.status !== 200) return null
     const json: unknown = await res.json()
     const rf = asObj(asObj(json).refusal)
@@ -453,7 +458,7 @@ export function validateFollowup(facts: Obj, raw: unknown, notice?: unknown): Fo
 }
 
 // 紫微追問：回傳通過檢查的回答、後端的婉拒（{ refusal }）或 null（沒網址、網路錯誤、非 200、逾時、格式不對、檢查沒過）
-export async function fetchFollowup(req: FollowupRequest, opts: FetchOptions = {}): Promise<FollowupResult | AiRefusal | null> {
+export async function fetchFollowup(req: FollowupRequest, opts: FetchOptions = {}): Promise<FollowupResult | AiRefusal | AiLimited | null> {
   const url = opts.url ?? proxyUrl()
   if (!url) return null
   const ctrl = new AbortController()
@@ -467,6 +472,7 @@ export async function fetchFollowup(req: FollowupRequest, opts: FetchOptions = {
       body: JSON.stringify({ kind: 'ziwei', mode: 'followup', question: clipQuestion(req.question), facts: req.facts, tone: '平', focus: req.focus, history }),
       signal: ctrl.signal,
     })
+    if (res.status === 429) return { limited: true }
     if (res.status !== 200) return null
     const json = asObj(await res.json())
     if ('refusal' in json) {

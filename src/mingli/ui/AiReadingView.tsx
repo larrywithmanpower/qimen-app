@@ -1,5 +1,5 @@
 import './ai.css'
-import { AI_NOTICE_TEXT } from '../ai'
+import { AI_LIMIT_TEXT, AI_NOTICE_TEXT } from '../ai'
 import type { AiReading, AiRefusal } from '../ai'
 
 // 讀取中
@@ -35,6 +35,11 @@ export function AiReadingView({ reading }: { reading: AiReading }) {
       ))}
     </div>
   )
+}
+
+// 今天次數用完：講清楚原因，不要只說「暫時無法」
+export function AiLimitLine() {
+  return <p className="ml-ai-help" data-testid="ml-ai-limit" role="status">{AI_LIMIT_TEXT}</p>
 }
 
 // AI 沒辦法解讀時（額度用完、緊急開關關掉、連線失敗）隱晦的輕生說法沒人判斷，固定附求助專線

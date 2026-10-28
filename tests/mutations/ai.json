@@ -83,8 +83,8 @@
   "id": "A11",
   "desc": "前端：後端非 200 也照單全收",
   "file": "src/mingli/ai.ts",
-  "find": "body: JSON.stringify({ ...req, question: clipQuestion(req.question) }),\n      signal: ctrl.signal,\n    })\n    if (res.status !== 200) return null",
-  "replace": "body: JSON.stringify({ ...req, question: clipQuestion(req.question) }),\n      signal: ctrl.signal,\n    })\n    ",
+  "find": "    if (res.status === 429) return { limited: true }\n    if (res.status !== 200) return null\n    const json: unknown",
+  "replace": "    if (res.status === 429) return { limited: true }\n    const json: unknown",
   "test": "src/mingli/__tests__/ai.test.ts"
  },
  {
@@ -401,6 +401,51 @@
   "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
   "find": "if (birth) await clearThreadsOf(birth)",
   "replace": "",
+  "test": "e2e/mingli/followup.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A46",
+  "desc": "429 當成一般失敗（不回 limited）",
+  "file": "src/mingli/ai.ts",
+  "find": "    if (res.status === 429) return { limited: true }\n    if (res.status !== 200) return null\n    const json: unknown",
+  "replace": "    if (res.status !== 200) return null\n    const json: unknown",
+  "test": "src/mingli/__tests__/ai.test.ts",
+  "runner": "vitest"
+ },
+ {
+  "id": "A47",
+  "desc": "塔羅：429 不顯示次數用完",
+  "file": "src/mingli/tarot/TarotPage.tsx",
+  "find": "{reading && ai.status === 'fail' && ai.limited && <AiLimitLine />}",
+  "replace": "",
+  "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A48",
+  "desc": "梅花：429 不顯示次數用完",
+  "file": "src/mingli/meihua/ui/MeihuaPage.tsx",
+  "find": "{ai.status === 'fail' && ai.limited && <AiLimitLine />}",
+  "replace": "",
+  "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A49",
+  "desc": "紫微：429 仍說暫時無法解讀",
+  "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
+  "find": "{ai.limited ? AI_LIMIT_TEXT : 'AI 暫時無法解讀，稍後再試'}",
+  "replace": "{'AI 暫時無法解讀，稍後再試'}",
+  "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A50",
+  "desc": "追問：429 當成一般失敗",
+  "file": "src/mingli/ziwei/ui/useZiweiFollowup.ts",
+  "find": "patch(key, { status: 'limited' })",
+  "replace": "patch(key, { status: 'fail' })",
   "test": "e2e/mingli/followup.spec.ts",
   "runner": "playwright"
  }

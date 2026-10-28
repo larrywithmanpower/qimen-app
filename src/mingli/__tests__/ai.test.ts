@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fetchAiReading, fetchSiteStatus, findAbsolute, isAiRefusal, meihuaFacts, tarotFacts, validateAiReading, ziweiFacts } from '../ai'
+import { fetchAiReading, fetchSiteStatus, findAbsolute, isAiLimited, isAiRefusal, meihuaFacts, tarotFacts, validateAiReading, ziweiFacts } from '../ai'
 import type { AiReading, AiRequest } from '../ai'
 import { drawThree, templateReading } from '../tarot/engine'
 import { castByNumbers } from '../meihua/engine'
@@ -185,15 +185,17 @@ describe('fetchAiReading 失敗一律回 null（畫面退回範本）', () => {
       url: 'http://x',
       fetchImpl: (async (_u: unknown, init: RequestInit) => { sent = JSON.parse(String(init.body)); return new Response(JSON.stringify(good)) }) as typeof fetch,
     })
-    expect(r && !isAiRefusal(r) ? r.verdict : null).toBe('先穩住')
+    expect(r && !isAiRefusal(r) && !isAiLimited(r) ? r.verdict : null).toBe('先穩住')
     expect(Object.keys(sent).sort()).toEqual(['facts', 'kind', 'question', 'tone'])
   })
-  it('網路錯誤、500、429、壞 JSON、檢查沒過 → 都是 null', async () => {
+  it('429 → { limited: true }（今天次數用完，畫面要講清楚）', async () => {
+    expect(await fetchAiReading(req, { url: 'http://x', fetchImpl: reply(429, { error: 'x' }) })).toEqual({ limited: true })
+  })
+  it('網路錯誤、500、壞 JSON、檢查沒過 → 都是 null', async () => {
     const cases: typeof fetch[] = [
       (async () => { throw new TypeError('network') }) as typeof fetch,
       reply(500, { error: 'x' }),
       reply(500, good), // 狀態碼不是 200，內容再漂亮也不收
-      reply(429, { error: 'x' }),
       reply(200, 'not json'),
       reply(200, make({ tone: tarot.tone === '凶' ? '吉' : '凶' })),
       reply(200, make({ tone: tarot.tone, text: `會遇到${otherCard}` })),

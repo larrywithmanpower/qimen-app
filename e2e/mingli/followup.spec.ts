@@ -190,6 +190,19 @@ test('追問失敗（格式不對）：顯示錯誤與 1925 專線，問題保�
   await expect(page.getByTestId('ml-ai-help')).toHaveCount(0)
 })
 
+test.describe(() => {
+  test.use({ consoleAllow: [/status of 429/] })
+  test('追問 429：講清楚是次數用完並附 1925，問題保留', async ({ page }) => {
+    await setup(page, [json({ error: 'x' }, 429)])
+    await openWithReading(page)
+    await ask(page, '那明年呢')
+    await expect(page.getByTestId('ml-followup-error')).toHaveText('今天的 AI 次數用完了，台灣時間午夜重置')
+    await expect(page.getByTestId('ml-ai-help')).toContainText('1925')
+    await expect(page.getByTestId('ml-followup-item')).toHaveCount(0)
+    await expect(page.getByTestId('ml-followup-input')).toHaveValue('那明年呢')
+  })
+})
+
 test('送出中停用並顯示讀取中', async ({ page }) => {
   await setup(page, [async (route) => { await new Promise((r) => setTimeout(r, 600)); await json(answer('慢慢回'))(route) }])
   await openWithReading(page)

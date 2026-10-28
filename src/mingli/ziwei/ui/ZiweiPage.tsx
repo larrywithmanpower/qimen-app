@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import './ziwei.css'
 import { setRealm } from '../../ui/fx'
-import { clipQuestion, proxyUrl, ziweiFacts } from '../../ai'
+import { AI_LIMIT_TEXT, clipQuestion, proxyUrl, ziweiFacts } from '../../ai'
 import type { AiFocus } from '../../ai'
 import { AiHelpLine, AiLoading, AiRefusalView } from '../../ui/AiReadingView'
 import FollowupPanel from './FollowupPanel'
@@ -547,7 +547,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
             )}
             {canAsk && ai.status !== 'ok' && ai.status !== 'refused' && (
               <>
-                {ai.status === 'fail' && <p className="ml-z-hint" data-testid="ml-ai-error" role="status">AI 暫時無法解讀，稍後再試</p>}
+                {ai.status === 'fail' && <p className="ml-z-hint" data-testid="ml-ai-error" role="status">{ai.limited ? AI_LIMIT_TEXT : 'AI 暫時無法解讀，稍後再試'}</p>}
                 {ai.status === 'fail' && <AiHelpLine />}
                 <button
                   type="button"

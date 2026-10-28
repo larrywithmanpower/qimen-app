@@ -2,10 +2,12 @@ import { test as base, expect } from 'playwright/test';
 import type { Page } from 'playwright/test';
 
 // 所有命理畫面測試共用：頁面 console 出現 error 或 pageerror 就判失敗
-export const test = base.extend<{ consoleGuard: void }>({
-  consoleGuard: [async ({ page }, use) => {
+// 個別測試預期會出現的 error（例如故意回 429 時瀏覽器自己印的載入失敗）用 consoleAllow 放行
+export const test = base.extend<{ consoleAllow: RegExp[]; consoleGuard: void }>({
+  consoleAllow: [[], { option: true }],
+  consoleGuard: [async ({ page, consoleAllow }, use) => {
     const errors: string[] = [];
-    page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
+    page.on('console', m => { if (m.type() === 'error' && !consoleAllow.some(r => r.test(m.text()))) errors.push(m.text()); });
     page.on('pageerror', e => errors.push(`pageerror: ${e.message}`));
     await use();
     expect(errors, '頁面 console 不可有 error').toEqual([]);

@@ -67,6 +67,7 @@ describe('fetchFollowup', () => {
     ]
     for (const b of bad) expect(await run(reply(b)), JSON.stringify(b)).toBeNull()
     expect(await run(reply({ followup: { action: 'refuse', text: 'x' } }, 500))).toBeNull()
+    expect(await run(reply({ error: 'x' }, 429))).toEqual({ limited: true })
     expect(await run(vi.fn(async () => { throw new Error('net') }) as unknown as typeof fetch)).toBeNull()
   })
   it('星名不在 facts 裡 → null（用只有一顆星的假 facts）', () => {

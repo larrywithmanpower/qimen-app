@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import './followup.css'
-import { AI_NOTICE_TEXT, MAX_QUESTION } from '../../ai'
+import { AI_LIMIT_TEXT, AI_NOTICE_TEXT, MAX_QUESTION } from '../../ai'
 import type { AiRefusal, FollowupResult, ThreadEntry } from '../../ai'
 import { AiHelpLine, AiLoading, AiReadingView, AiRefusalView } from '../../ui/AiReadingView'
 import type { FollowupStatus } from './useZiweiFollowup'
@@ -66,9 +66,9 @@ export default function FollowupPanel({ entries, status, refusal, canAsk, onSend
       </div>
       {loading && <AiLoading />}
       {refusal && <AiRefusalView refusal={refusal} />}
-      {status === 'fail' && (
+      {(status === 'fail' || status === 'limited') && (
         <>
-          <p className="ml-z-hint" data-testid="ml-followup-error" role="status">AI 暫時無法回答，稍後再試</p>
+          <p className="ml-z-hint" data-testid="ml-followup-error" role="status">{status === 'limited' ? AI_LIMIT_TEXT : 'AI 暫時無法回答，稍後再試'}</p>
           <AiHelpLine />
         </>
       )}

@@ -4,7 +4,7 @@ import { buildHistory, fetchFollowup } from '../../ai'
 import type { AiFocus, AiRefusal, FollowupResult, ThreadEntry } from '../../ai'
 import { capThread, clearThread, loadThread, saveThread } from '../../storage/followup'
 
-export type FollowupStatus = 'idle' | 'loading' | 'fail'
+export type FollowupStatus = 'idle' | 'loading' | 'fail' | 'limited'
 
 interface Options {
   // null＝還沒有盤，沒有對話串
@@ -106,6 +106,10 @@ export function useZiweiFollowup(opts: Options) {
       if (ctrl.signal.aborted || keyRef.current !== key) return false
       if (!res) {
         patch(key, { status: 'fail' })
+        return false
+      }
+      if ('limited' in res) {
+        patch(key, { status: 'limited' })
         return false
       }
       if ('refusal' in res) {
