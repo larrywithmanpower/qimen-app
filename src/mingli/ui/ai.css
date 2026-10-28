@@ -35,3 +35,7 @@
   color: var(--ml-ink-body); font-size: var(--ml-fs-body); line-height: 1.85;
 }
 .ml-ai-refusal p { margin: 0; }
+.ml-ai-help {
+  max-width: 680px; width: 100%; margin: 6px auto 0; box-sizing: border-box;
+  color: var(--ml-ink-muted); font-size: var(--ml-fs-caption); line-height: 1.7; text-align: center;
+}

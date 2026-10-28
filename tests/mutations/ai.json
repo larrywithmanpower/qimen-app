@@ -301,5 +301,41 @@
   "find": "想(去)?死(?!你|記|背|守|心)/",
   "replace": "想死(?!你|記|背|守|心)/",
   "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A34",
+  "desc": "塔羅：AI 失敗退範本時不附求助專線",
+  "file": "src/mingli/tarot/TarotPage.tsx",
+  "find": "{reading && ai.status === 'fail' && <AiHelpLine />}",
+  "replace": "",
+  "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A35",
+  "desc": "梅花：AI 失敗退範本時不附求助專線",
+  "file": "src/mingli/meihua/ui/MeihuaPage.tsx",
+  "find": "{ai.status === 'fail' && <AiHelpLine />}",
+  "replace": "",
+  "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A36",
+  "desc": "紫微：AI 失敗時不附求助專線",
+  "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
+  "find": "{ai.status === 'fail' && <AiHelpLine />}",
+  "replace": "",
+  "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A37",
+  "desc": "求助專線不分狀態一律顯示（AI 成功也出現）",
+  "file": "src/mingli/tarot/TarotPage.tsx",
+  "find": "{reading && ai.status === 'fail' && <AiHelpLine />}",
+  "replace": "{reading && <AiHelpLine />}",
+  "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
  }
 ]

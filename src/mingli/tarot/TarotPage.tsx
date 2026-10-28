@@ -7,7 +7,7 @@ import { session, updateSession } from '../ui/session'
 import { CARDS } from './cards'
 import { BACK_SRC, BACK_SM_SRC, faceSrc } from './cardArt'
 import { clipQuestion, tarotFacts } from '../ai'
-import { AiLoading, AiReadingView, AiRefusalView } from '../ui/AiReadingView'
+import { AiHelpLine, AiLoading, AiReadingView, AiRefusalView } from '../ui/AiReadingView'
 import { useAiReading } from '../ui/useAiReading'
 import { drawThree, nextSeed, SEED_RANGE, seedFrom, shuffle, templateReading } from './engine'
 
@@ -315,6 +315,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
       {drawn && ai.status === 'loading' && <AiLoading />}
       {drawn && ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
       {drawn && ai.status === 'refused' && <AiRefusalView refusal={ai.refusal} />}
+      {reading && ai.status === 'fail' && <AiHelpLine />}
       {reading && (ai.status === 'idle' || ai.status === 'fail') && (
         <div className="ml-reading" data-testid="ml-reading">
           <div className="ml-verdict" data-testid="ml-verdict">

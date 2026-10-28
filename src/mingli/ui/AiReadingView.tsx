@@ -37,6 +37,15 @@ export function AiReadingView({ reading }: { reading: AiReading }) {
   )
 }
 
+// AI 沒辦法解讀時（額度用完、緊急開關關掉、連線失敗）隱晦的輕生說法沒人判斷，固定附求助專線
+export function AiHelpLine() {
+  return (
+    <p className="ml-ai-help" data-testid="ml-ai-help" role="note">
+      如果最近心裡很難受，可以打安心專線 1925（24 小時免費）或生命線 1995。
+    </p>
+  )
+}
+
 // 後端婉拒：放在原本放解讀的位置，不退範本、不顯示「範例解讀」
 export function AiRefusalView({ refusal }: { refusal: AiRefusal['refusal'] }) {
   return (

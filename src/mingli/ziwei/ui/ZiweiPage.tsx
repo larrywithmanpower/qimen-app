@@ -3,7 +3,7 @@ import type { CSSProperties, FormEvent } from 'react'
 import './ziwei.css'
 import { setRealm } from '../../ui/fx'
 import { clipQuestion, proxyUrl, ziweiFacts } from '../../ai'
-import { AiLoading, AiReadingView, AiRefusalView } from '../../ui/AiReadingView'
+import { AiHelpLine, AiLoading, AiReadingView, AiRefusalView } from '../../ui/AiReadingView'
 import { useAiReading } from '../../ui/useAiReading'
 import { session, updateSession } from '../../ui/session'
 import { MAX_QUESTION_LEN } from '../../ui/QuestionBar'
@@ -503,6 +503,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
             {canAsk && ai.status !== 'ok' && ai.status !== 'refused' && (
               <>
                 {ai.status === 'fail' && <p className="ml-z-hint" data-testid="ml-ai-error" role="status">AI 暫時無法解讀，稍後再試</p>}
+                {ai.status === 'fail' && <AiHelpLine />}
                 <button
                   type="button"
                   className="ml-ghost"

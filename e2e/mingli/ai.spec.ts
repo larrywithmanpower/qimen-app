@@ -123,6 +123,7 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
     const ai = page.getByTestId('ml-ai-reading')
     await expect(ai).toBeVisible()
     await expect(page.getByTestId('ml-ai-loading')).toHaveCount(0)
+    await expect(page.getByTestId('ml-ai-help')).toHaveCount(0)
     await expect(page.getByTestId('ml-ai-verdict')).toHaveText(/這是 AI 寫的一句話/)
     await expect(ai).toContainText(spec.goodText)
     await expect(page.getByTestId('ml-ai-basis')).toHaveCount(2)
@@ -158,6 +159,8 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
     ['basis 是空的', ok(reading(kind, { paragraphs: [{ title: 'a', text: 'b', basis: [], cards: [CARD] }] }))],
     ['cards 是空的', ok(reading(kind, { paragraphs: [{ title: 'a', text: 'b', basis: ['x'], cards: [] }] }))],
     ['連線被中斷', async (route) => { await route.abort('failed') }],
+    ['今日額度用完 429', async (route) => { await route.fulfill({ status: 429, contentType: 'application/json', body: '{"error":"x"}' }) }],
+    ['AI 緊急關閉 503', async (route) => { await route.fulfill({ status: 503, contentType: 'application/json', body: '{"error":"x"}' }) }],
   ]
   if (spec.outOfBoundsText) {
     failures.push(['提到盤上沒有的名稱', ok(reading(kind, { paragraphs: [{ title: 'a', text: spec.outOfBoundsText, basis: ['x'], cards: [CARD] }] }))])
@@ -166,6 +169,9 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
     test(`${kind}：${name} → ${kind === 'ziwei' ? '顯示錯誤訊息並可再按' : '退回範本並維持「範例」那行'}`, async ({ page }) => {
       await setup(page, handle)
       await spec.open(page)
+      // AI 沒判斷到的隱晦輕生說法，靠這行專線補位
+      await expect(page.getByTestId('ml-ai-help')).toContainText('1925')
+      await expect(page.getByTestId('ml-ai-help')).toContainText('1995')
       if (kind === 'ziwei') {
         await expect(page.getByTestId('ml-ai-error')).toHaveText('AI 暫時無法解讀，稍後再試')
         await expect(page.getByTestId('ml-ai-reading')).toHaveCount(0)
@@ -196,6 +202,7 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
     await expect(page.getByText('範例解讀')).toHaveCount(0)
     if (kind !== 'ziwei') await expect(page.getByTestId('ml-reading')).toHaveCount(0)
     if (kind === 'ziwei') await expect(page.getByTestId('ml-ai-error')).toHaveCount(0)
+    await expect(page.getByTestId('ml-ai-help')).toHaveCount(0)
   })
 
   test(`${kind}：解讀帶 notice → 最上面顯示提醒 ml-ai-notice，解讀照常顯示`, async ({ page }) => {
