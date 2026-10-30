@@ -15,6 +15,8 @@ interface Options {
   date: string
   // 頁面切到指定層與日期（用頁面既有的切換）
   goTo: (layer: Exclude<AiFocus, 'natal'>, date: string) => void
+  // 使用者補充的近況（選填）
+  context?: string
 }
 
 interface View {
@@ -101,7 +103,7 @@ export function useZiweiFollowup(opts: Options) {
     for (let attempt = 0; attempt < 2; attempt++) {
       const facts = optsRef.current.factsFor(layer, date)
       const res = facts
-        ? await fetchFollowup({ question, facts, focus: layer, history: buildHistory(entriesRef.current) }, { signal: ctrl.signal })
+        ? await fetchFollowup({ kind: 'ziwei', question, facts, focus: layer, history: buildHistory(entriesRef.current), context: optsRef.current.context }, { signal: ctrl.signal })
         : null
       if (ctrl.signal.aborted || keyRef.current !== key) return false
       if (!res) {

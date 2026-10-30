@@ -75,8 +75,8 @@
   "id": "A10",
   "desc": "前端：越界名稱檢查失效（牌／卦／星都放行）",
   "file": "src/mingli/ai.ts",
-  "find": "    .replaceAll('紫微斗數', '')\n  if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null",
-  "replace": "    .replaceAll('紫微斗數', '')\n  if (mentionedNames(text, universe, common).some((n) => !allowed.has(n)) && false) return null",
+  "find": "if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return false",
+  "replace": "if (mentionedNames(text, universe, common).some((n) => !allowed.has(n)) && false) return false",
   "test": "src/mingli/__tests__/ai.test.ts"
  },
  {
@@ -144,16 +144,16 @@
   "id": "A18",
   "desc": "前端：請求不送 focus",
   "file": "src/mingli/ai.ts",
-  "find": "body: JSON.stringify({ ...req, question: clipQuestion(req.question) }),",
-  "replace": "body: JSON.stringify({ kind: req.kind, facts: req.facts, tone: req.tone, question: clipQuestion(req.question) }),",
+  "find": "body: JSON.stringify({ ...req, question: clipQuestion(req.question), context: clipContext(req.context) }),",
+  "replace": "body: JSON.stringify({ kind: req.kind, facts: req.facts, tone: req.tone, question: clipQuestion(req.question), context: clipContext(req.context) }),",
   "test": "src/mingli/__tests__/ai.test.ts"
  },
  {
   "id": "A19",
   "desc": "畫面：紫微請求不帶 focus（Playwright）",
   "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
-  "find": "tone: '平', focus: layer }",
-  "replace": "tone: '平' }",
+  "find": "tone: '平', focus: layer, context: clipContext(context) }",
+  "replace": "tone: '平', context: clipContext(context) }",
   "test": "e2e/mingli/ziwei.spec.ts",
   "runner": "playwright"
  },
@@ -233,8 +233,8 @@
   "id": "A25",
   "desc": "前端：梅花爻位越界檢查失效",
   "file": "src/mingli/ai.ts",
-  "find": "if (mentionedLines(text).some((n) => n !== facts.movingLine)) return null",
-  "replace": "if (mentionedLines(text).some((n) => n !== facts.movingLine) && false) return null",
+  "find": "if (mentionedLines(text).some((n) => n !== facts.movingLine)) return false",
+  "replace": "if (mentionedLines(text).some((n) => n !== facts.movingLine) && false) return false",
   "test": "src/mingli/__tests__/ai.test.ts"
  },
  {
@@ -364,26 +364,26 @@
  },
  {
   "id": "A41",
-  "desc": "追問：塔羅也能帶 mode=followup",
+  "desc": "追問：塔羅、梅花也接受換時間重排（recompute）",
   "file": "functions/gemini-proxy/validate.js",
-  "find": "if (body.mode !== 'followup' || body.kind !== 'ziwei')",
-  "replace": "if (body.mode !== 'followup')",
+  "find": "if (out.action === 'recompute' && kind !== 'ziwei') return fail('action');",
+  "replace": "",
   "test": "functions/gemini-proxy"
  },
  {
   "id": "A42",
   "desc": "追問：送給 Claude 的是解讀用的 schema",
   "file": "functions/gemini-proxy/handler.js",
-  "find": "await claude(FOLLOWUP_SYSTEM_PROMPT, user, FOLLOWUP_SCHEMA)",
-  "replace": "await claude(FOLLOWUP_SYSTEM_PROMPT, user)",
+  "find": "await claude(followupSystemPrompt(kind), user, followupSchema(kind))",
+  "replace": "await claude(followupSystemPrompt(kind), user)",
   "test": "functions/gemini-proxy"
  },
  {
   "id": "A43",
-  "desc": "追問：前端不查盤上沒有的星",
+  "desc": "追問：前端不查越界名稱、正逆位、爻位",
   "file": "src/mingli/ai.ts",
-  "find": "(o.basis as string[])].join('\\n').replaceAll('紫微斗數', '')\n  if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null",
-  "replace": "(o.basis as string[])].join('\\n').replaceAll('紫微斗數', '')\n  ",
+  "find": "if (!textAllowed(kind, facts, [o.text, ...(o.basis as string[])].join('\\n'))) return null",
+  "replace": "",
   "test": "src/mingli/__tests__"
  },
  {
@@ -447,6 +447,131 @@
   "find": "patch(key, { status: 'limited' })",
   "replace": "patch(key, { status: 'fail' })",
   "test": "e2e/mingli/followup.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A51",
+  "desc": "後端：近況長度不檢查",
+  "file": "functions/gemini-proxy/validate.js",
+  "find": "[...body.context].length > MAX_CONTEXT",
+  "replace": "false",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A52",
+  "desc": "後端：近況不進內容安全分類",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "classifyQuestion(`${question}｜${context}`)",
+  "replace": "classifyQuestion(question)",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A53",
+  "desc": "後端：問題與近況直接接起來（會湊出關鍵字）",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "classifyQuestion(`${question}｜${context}`)",
+  "replace": "classifyQuestion(`${question}${context}`)",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A54",
+  "desc": "後端：解讀的 prompt 沒放近況",
+  "file": "functions/gemini-proxy/prompt.js",
+  "find": "`<question>${question || '（未提問）'}</question>`,\n    ...contextLines(context),",
+  "replace": "`<question>${question || '（未提問）'}</question>`,",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A55",
+  "desc": "後端：塔羅、梅花追問也送紫微 schema（含 recompute）",
+  "file": "functions/gemini-proxy/prompt.js",
+  "find": "export const followupSchema = (kind) => (kind === 'ziwei' ? FOLLOWUP_SCHEMA : FOLLOWUP_SCHEMA_SIMPLE);",
+  "replace": "export const followupSchema = () => FOLLOWUP_SCHEMA;",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A56",
+  "desc": "後端：追問 system prompt 一律用紫微版",
+  "file": "functions/gemini-proxy/handler.js",
+  "find": "await claude(followupSystemPrompt(kind), user, followupSchema(kind))",
+  "replace": "await claude(followupSystemPrompt('ziwei'), user, followupSchema(kind))",
+  "test": "functions/gemini-proxy"
+ },
+ {
+  "id": "A57",
+  "desc": "前端：追問一律送 kind=ziwei",
+  "file": "src/mingli/ai.ts",
+  "find": "        kind: req.kind,\n        mode: 'followup',",
+  "replace": "        kind: 'ziwei',\n        mode: 'followup',",
+  "test": "src/mingli/__tests__/followup.test.ts"
+ },
+ {
+  "id": "A58",
+  "desc": "前端：塔羅、梅花追問也接受 recompute",
+  "file": "src/mingli/ai.ts",
+  "find": "    if (kind !== 'ziwei') return null\n",
+  "replace": "",
+  "test": "src/mingli/__tests__/followup.test.ts"
+ },
+ {
+  "id": "A59",
+  "desc": "前端：近況不去頭尾空白",
+  "file": "src/mingli/ai.ts",
+  "find": "const t = [...(c ?? '').trim()]",
+  "replace": "const t = [...(c ?? '')]",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A60",
+  "desc": "前端：近況空的也送",
+  "file": "src/mingli/ai.ts",
+  "find": "return t === '' ? undefined : t",
+  "replace": "return t",
+  "test": "src/mingli/__tests__/ai.test.ts"
+ },
+ {
+  "id": "A61",
+  "desc": "畫面：塔羅沒有追問框（Playwright）",
+  "file": "src/mingli/tarot/TarotPage.tsx",
+  "find": "{drawn && ai.status === 'ok' && (\n        <FollowupPanel",
+  "replace": "{false && (\n        <FollowupPanel",
+  "test": "e2e/mingli/followup-more.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A62",
+  "desc": "畫面：追問 history 順序顛倒（Playwright）",
+  "file": "src/mingli/ui/useFollowup.ts",
+  "find": "const history = buildHistory([{ type: 'reading', q: o.question, layer: 'natal', date: '', reading: o.reading }, ...prior])",
+  "replace": "const history = buildHistory([{ type: 'reading', q: o.question, layer: 'natal', date: '', reading: o.reading }, ...[...prior].reverse()])",
+  "test": "e2e/mingli/followup-more.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A63",
+  "desc": "畫面：重新抽牌後舊追問還在（Playwright）",
+  "file": "src/mingli/ui/useFollowup.ts",
+  "find": "const cur = view.key === key ? view : EMPTY(key)",
+  "replace": "const cur = view",
+  "test": "e2e/mingli/followup-more.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A64",
+  "desc": "畫面：抽牌後近況還能改（Playwright）",
+  "file": "src/mingli/tarot/TarotPage.tsx",
+  "find": "<ContextField value={context} canEdit={picks.length === 0 && !busy}",
+  "replace": "<ContextField value={context} canEdit",
+  "test": "e2e/mingli/followup-more.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A65",
+  "desc": "畫面：紫微改近況不清掉解讀（key 不含近況，Playwright）",
+  "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
+  "find": "JSON.stringify([ask.trim(), clipContext(context) ?? '', aiFacts])",
+  "replace": "JSON.stringify([ask.trim(), aiFacts])",
+  "test": "e2e/mingli/followup-more.spec.ts",
   "runner": "playwright"
  }
 ]

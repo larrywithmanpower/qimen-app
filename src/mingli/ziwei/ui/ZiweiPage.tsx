@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties, FormEvent } from 'react'
 import './ziwei.css'
 import { setRealm } from '../../ui/fx'
-import { AI_LIMIT_TEXT, clipQuestion, proxyUrl, ziweiFacts } from '../../ai'
+import { AI_LIMIT_TEXT, clipContext, clipQuestion, proxyUrl, ziweiFacts } from '../../ai'
 import type { AiFocus } from '../../ai'
 import { AiHelpLine, AiLoading, AiRefusalView } from '../../ui/AiReadingView'
 import FollowupPanel from './FollowupPanel'
@@ -10,6 +10,7 @@ import { useZiweiFollowup } from './useZiweiFollowup'
 import { useAiReading } from '../../ui/useAiReading'
 import { session, updateSession } from '../../ui/session'
 import { MAX_QUESTION_LEN } from '../../ui/QuestionBar'
+import ContextField from '../../ui/ContextField'
 import DatePicker from '../../ui/DatePicker'
 import { clearBirth, loadBirth, saveBirth } from '../../storage/birth'
 import { clearThreadsOf, threadKey } from '../../storage/followup'
@@ -280,18 +281,24 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
     setAsk(v)
     updateSession({ question: v })
   }
+  // 補充近況（選填）：跟問題一樣只影響 AI
+  const [context, setContext] = useState(session.context)
+  const changeContext = (v: string) => {
+    setContext(v)
+    updateSession({ context: v })
+  }
   const aiFacts = useMemo(() => (facts ? ziweiFacts(facts, hs ?? undefined, layer) : null), [facts, hs, layer])
   // 今天以外的日期，按鈕與說明改用「那一年」這類說法
   const isToday = queryDate === todayIso()
   const word = (k: LayerChoice) => periodWord(k, isToday)
-  // 問題也算進 key：改了問題，已顯示的解讀就清掉、回到按鈕狀態
-  const chartKey = aiFacts ? JSON.stringify([ask.trim(), aiFacts]) : ''
+  // 問題與近況也算進 key：改了，已顯示的解讀就清掉、回到按鈕狀態
+  const chartKey = aiFacts ? JSON.stringify([ask.trim(), clipContext(context) ?? '', aiFacts]) : ''
   // 按鈕才呼叫：asked[盤] 是這張盤按過幾次（重試會加一）；換盤後沒按過，自然回到按鈕狀態
   const [asked, setAsked] = useState<Record<string, number>>({})
   const askedN = asked[chartKey]
   const ai = useAiReading(
     aiFacts && askedN !== undefined
-      ? { kind: 'ziwei', question: clipQuestion(ask.trim()), facts: aiFacts, tone: '平', focus: layer }
+      ? { kind: 'ziwei', question: clipQuestion(ask.trim()), facts: aiFacts, tone: '平', focus: layer, context: clipContext(context) }
       : null,
     `${chartKey}#${askedN ?? 0}`,
   )
@@ -309,6 +316,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
     },
     layer,
     date: queryDate,
+    context: clipContext(context),
     goTo: (l, date) => {
       setLayer(l)
       setQueryDate(date)
@@ -545,6 +553,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
                 </span>
               </label>
             )}
+            {canAsk && <ContextField value={context} canEdit onChange={changeContext} />}
             {canAsk && ai.status !== 'ok' && ai.status !== 'refused' && (
               <>
                 {ai.status === 'fail' && <p className="ml-z-hint" data-testid="ml-ai-error" role="status">{ai.limited ? AI_LIMIT_TEXT : 'AI 暫時無法解讀，稍後再試'}</p>}

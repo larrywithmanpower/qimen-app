@@ -21,7 +21,7 @@ const CARD = { id: 'c1', title: '卡一', source: '來源' }
 
 const reply = (body: unknown, status = 200) => vi.fn(async () => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch
 const run = (fetchImpl: typeof fetch) =>
-  fetchFollowup({ question: '那明年呢', facts, focus: 'yearly', history: [{ q: 'a', a: 'b' }] }, { url: 'http://x', fetchImpl })
+  fetchFollowup({ kind: 'ziwei', question: '那明年呢', facts, focus: 'yearly', history: [{ q: 'a', a: 'b' }] }, { url: 'http://x', fetchImpl })
 
 describe('fetchFollowup', () => {
   it('answer 與 cards 解析正確，notice 一併帶回', async () => {
@@ -41,7 +41,7 @@ describe('fetchFollowup', () => {
   })
   it('請求內容：mode、history 截斷、tone 固定平', async () => {
     const fetchImpl = reply({ followup: { action: 'refuse', text: 'x' } })
-    await fetchFollowup({ question: 'q'.repeat(300), facts, focus: 'yearly', history: [{ q: 'q'.repeat(300), a: 'a'.repeat(900) }] }, { url: 'http://x', fetchImpl })
+    await fetchFollowup({ kind: 'ziwei', question: 'q'.repeat(300), facts, focus: 'yearly', history: [{ q: 'q'.repeat(300), a: 'a'.repeat(900) }] }, { url: 'http://x', fetchImpl })
     const body = JSON.parse((vi.mocked(fetchImpl).mock.calls[0][1] as RequestInit).body as string)
     expect(body.kind).toBe('ziwei')
     expect(body.mode).toBe('followup')
@@ -143,5 +143,36 @@ describe('本機對話紀錄', () => {
     await clearThreadsOf({ solarDate: '1990-07-05', gender: '男' })
     expect(await loadThread(b)).toEqual([])
     expect(await loadThread(other)).toHaveLength(1)
+  })
+})
+
+describe('塔羅、梅花追問與近況', () => {
+  const tFacts = { cards: [{ position: '過去', name: '愚者', orientation: '正位' }, { position: '現在', name: '女祭司', orientation: '逆位' }] }
+  const mFacts = { main: { name: '乾為天' }, mutual: { name: '乾為天' }, changed: { name: '天風姤' }, movingLine: 1 }
+  const ans = (text: string) => ({ action: 'answer', text, basis: ['依據'], cards: [CARD] })
+
+  it('塔羅請求：kind、tone 照帶，不帶 focus；近況去空白、空的不送', async () => {
+    const fetchImpl = reply({ followup: ans('「愚者」正位代表新開始') })
+    const r = await fetchFollowup({ kind: 'tarot', question: '那我該怎麼做', facts: tFacts, tone: '吉', history: [{ q: 'a', a: 'b' }], context: '  剛換工作  ' }, { url: 'http://x', fetchImpl })
+    expect(r).not.toBeNull()
+    const body = JSON.parse((vi.mocked(fetchImpl).mock.calls[0][1] as RequestInit).body as string)
+    expect(body).toMatchObject({ kind: 'tarot', mode: 'followup', tone: '吉', context: '剛換工作' })
+    expect('focus' in body).toBe(false)
+    const f2 = reply({ followup: ans('x') })
+    await fetchFollowup({ kind: 'tarot', question: 'q', facts: tFacts, tone: '吉', history: [{ q: 'a', a: 'b' }], context: '   ' }, { url: 'http://x', fetchImpl: f2 })
+    expect('context' in JSON.parse((vi.mocked(f2).mock.calls[0][1] as RequestInit).body as string)).toBe(false)
+  })
+  it('塔羅：沒抽到的牌、正逆位講錯、recompute → null', () => {
+    expect(validateFollowup(tFacts, ans('「愚者」正位，女祭司逆位'), undefined, 'tarot')).not.toBeNull()
+    expect(validateFollowup(tFacts, ans('「魔術師」代表行動'), undefined, 'tarot')).toBeNull()
+    expect(validateFollowup(tFacts, ans('「愚者」逆位'), undefined, 'tarot')).toBeNull()
+    const re = { action: 'recompute', text: 'x', target: { focus: 'yearly', date: '2027-01-01' } }
+    expect(validateFollowup(tFacts, re, undefined, 'tarot')).toBeNull()
+    expect(validateFollowup(tFacts, re, undefined, 'meihua')).toBeNull()
+  })
+  it('梅花：只能提動爻、不能提沒出現的卦', () => {
+    expect(validateFollowup(mFacts, ans('初爻動，乾為天變天風姤'), undefined, 'meihua')).not.toBeNull()
+    expect(validateFollowup(mFacts, ans('三爻是關鍵'), undefined, 'meihua')).toBeNull()
+    expect(validateFollowup(mFacts, ans('坤為地代表包容'), undefined, 'meihua')).toBeNull()
   })
 })

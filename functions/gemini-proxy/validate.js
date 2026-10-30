@@ -9,6 +9,8 @@ export const MAX_QUESTION = 200;
 export const MAX_FACTS = 8000;
 export const MAX_HISTORY = 8;
 export const MAX_HISTORY_A = 600;
+// 使用者補充的近況（選填）
+export const MAX_CONTEXT = 300;
 
 const isObj = (v) => typeof v === 'object' && v !== null && !Array.isArray(v);
 const nonEmpty = (v) => typeof v === 'string' && v.trim().length > 0;
@@ -24,8 +26,9 @@ export function validateRequest(body) {
   if (body.focus !== undefined && (body.kind !== 'ziwei' || !FOCUSES.includes(body.focus))) return 'Invalid focus';
   if (!isObj(body.facts)) return 'Invalid facts';
   if (JSON.stringify(body.facts).length > MAX_FACTS) return 'Facts too long';
+  if (body.context !== undefined && (typeof body.context !== 'string' || [...body.context].length > MAX_CONTEXT)) return 'Invalid context';
   if (body.mode !== undefined) {
-    if (body.mode !== 'followup' || body.kind !== 'ziwei') return 'Invalid mode';
+    if (body.mode !== 'followup') return 'Invalid mode';
     if (!nonEmpty(q)) return 'Missing question';
     const h = body.history;
     if (!Array.isArray(h) || h.length < 1 || h.length > MAX_HISTORY) return 'Invalid history';
@@ -88,12 +91,13 @@ export function validateReading(out, tone, allowedCards = []) {
 }
 
 // 檢查追問的回傳：通過回 { followup }，不過回 { problem }
-// allowedCards：這次請求選出的知識卡；cards 只能引用其中的 id
-export function checkFollowup(out, allowedCards = []) {
+// allowedCards：這次請求選出的知識卡；cards 只能引用其中的 id。換時間重排（recompute）只有紫微有
+export function checkFollowup(out, allowedCards = [], kind = 'ziwei') {
   const byId = new Map(allowedCards.map((c) => [c.id, c]));
   const fail = (problem) => ({ followup: null, problem });
   if (!isObj(out)) return fail('not_json');
   if (!FOLLOWUP_ACTIONS.includes(out.action)) return fail('action');
+  if (out.action === 'recompute' && kind !== 'ziwei') return fail('action');
   if (!nonEmpty(out.text)) return fail('text');
   const basis = Array.isArray(out.basis) ? out.basis : [];
   let followup;

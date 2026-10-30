@@ -19,6 +19,8 @@ export interface AiRequest {
   tone: AiTone
   // 只有紫微會帶：使用者想看哪一段時間（natal＝一生）
   focus?: AiFocus
+  // 使用者補充的近況（選填）
+  context?: string
 }
 
 // 該段依據的知識卡（後端查表後附上）
@@ -77,6 +79,13 @@ export function proxyUrl(): string {
 }
 
 export const clipQuestion = (q: string) => [...q].slice(0, MAX_QUESTION).join('')
+
+// 近況：去頭尾空白、最多 300 字；空的就不送
+export const MAX_CONTEXT = 300
+export const clipContext = (c: string | undefined): string | undefined => {
+  const t = [...(c ?? '').trim()].slice(0, MAX_CONTEXT).join('')
+  return t === '' ? undefined : t
+}
 
 // ───────── 組盤面事實 ─────────
 
@@ -299,24 +308,28 @@ export function validateAiReading(kind: AiKind, facts: Obj, tone: AiTone, raw: u
   const notice = asArr(o.notice).filter((n): n is AiNotice => AI_NOTICES.includes(n as AiNotice))
   if (notice.length > 0) reading.notice = [...new Set(notice)]
 
+  const text = [reading.verdict, reading.prediction.claim, ...paragraphs.flatMap((p) => [p.title, p.text, ...p.basis])].join('\n')
+  return textAllowed(kind, facts, text) ? reading : null
+}
+
+// 解讀與追問共用的文字檢查：沒越界回 true
+function textAllowed(kind: AiKind, facts: Obj, raw: string): boolean {
+  const text = raw.replaceAll('紫微斗數', '')
   // 提到的牌名／卦名／星名都必須在 facts 裡
   const { allowed, universe, common } = nameSets(kind, facts)
-  const text = [reading.verdict, reading.prediction.claim, ...paragraphs.flatMap((p) => [p.title, p.text, ...p.basis])]
-    .join('\n')
-    .replaceAll('紫微斗數', '')
-  if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null
+  if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return false
   // 絕對化字眼視同檢查沒過
-  if (findAbsolute(text).length > 0) return null
+  if (findAbsolute(text).length > 0) return false
   // 梅花：只能提動爻那一爻
   if (kind === 'meihua' && typeof facts.movingLine === 'number') {
-    if (mentionedLines(text).some((n) => n !== facts.movingLine)) return null
+    if (mentionedLines(text).some((n) => n !== facts.movingLine)) return false
   }
   // 塔羅：牌名後面接的正逆位要和抽到的一致
   if (kind === 'tarot') {
     const drawn = new Map(asArr(facts.cards).map((c) => [str(asObj(c).name), str(asObj(c).orientation)]))
-    if (mentionedOrientations(text).some((m) => drawn.has(m.name) && drawn.get(m.name) !== m.orientation)) return null
+    if (mentionedOrientations(text).some((m) => drawn.has(m.name) && drawn.get(m.name) !== m.orientation)) return false
   }
-  return reading
+  return true
 }
 
 // ───────── 呼叫代理 ─────────
@@ -339,7 +352,7 @@ export async function fetchAiReading(req: AiRequest, opts: FetchOptions = {}): P
     const res = await (opts.fetchImpl ?? fetch)(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...req, question: clipQuestion(req.question) }),
+      body: JSON.stringify({ ...req, question: clipQuestion(req.question), context: clipContext(req.context) }),
       signal: ctrl.signal,
     })
     if (res.status === 429) return { limited: true }
@@ -380,7 +393,7 @@ export async function fetchSiteStatus(opts: { url?: string; fetchImpl?: typeof f
   }
 }
 
-// ───────── 紫微追問 ─────────
+// ───────── 追問（三個術數共用；換時間重排只有紫微有）─────────
 
 export const MAX_FOLLOWUP_HISTORY = 8
 export const MAX_HISTORY_Q = 200
@@ -395,10 +408,15 @@ export interface FollowupTurn {
 }
 
 export interface FollowupRequest {
+  kind: AiKind
   question: string
   facts: Record<string, unknown>
-  focus: AiFocus
+  // 紫微才帶
+  focus?: AiFocus
+  // 塔羅、梅花帶解讀時的吉凶；紫微固定「平」
+  tone?: AiTone
   history: FollowupTurn[]
+  context?: string
 }
 
 // 追問的回答：answer／cards 有依據與知識卡；recompute 要前端切到指定層與日期再問一次；refuse 是後端拒答
@@ -427,11 +445,12 @@ export function buildHistory(entries: readonly ThreadEntry[]): FollowupTurn[] {
 }
 
 // 通過回傳整理過的回答，不過回 null
-export function validateFollowup(facts: Obj, raw: unknown, notice?: unknown): FollowupResult | null {
+export function validateFollowup(facts: Obj, raw: unknown, notice?: unknown, kind: AiKind = 'ziwei'): FollowupResult | null {
   const o = asObj(raw)
   if (!nonEmpty(o.text)) return null
   if (o.action === 'refuse') return { action: 'refuse', text: o.text }
   if (o.action === 'recompute') {
+    if (kind !== 'ziwei') return null
     const t = asObj(o.target)
     if (!FOLLOWUP_FOCUS.includes(t.focus as FollowupFocus) || !isIsoDate(t.date)) return null
     return { action: 'recompute', text: o.text, target: { focus: t.focus as FollowupFocus, date: t.date } }
@@ -446,18 +465,15 @@ export function validateFollowup(facts: Obj, raw: unknown, notice?: unknown): Fo
     cards.push({ id: r.id, title: r.title, source: r.source })
   }
   if (o.action === 'cards' && cards.length === 0) return null
-  // 提到的星名都必須在 facts 裡、不可有絕對化字眼
-  const { allowed, universe, common } = nameSets('ziwei', facts)
-  const text = [o.text, ...(o.basis as string[])].join('\n').replaceAll('紫微斗數', '')
-  if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return null
-  if (findAbsolute(text).length > 0) return null
+  // 提到的名稱都必須在 facts 裡、不可有絕對化字眼、塔羅正逆位與梅花爻位不可越界
+  if (!textAllowed(kind, facts, [o.text, ...(o.basis as string[])].join('\n'))) return null
   const result: FollowupResult = { action: o.action, text: o.text, basis: o.basis as string[], cards }
   const nt = asArr(notice).filter((n): n is AiNotice => AI_NOTICES.includes(n as AiNotice))
   if (nt.length > 0) result.notice = [...new Set(nt)]
   return result
 }
 
-// 紫微追問：回傳通過檢查的回答、後端的婉拒（{ refusal }）或 null（沒網址、網路錯誤、非 200、逾時、格式不對、檢查沒過）
+// 追問：回傳通過檢查的回答、後端的婉拒（{ refusal }）或 null（沒網址、網路錯誤、非 200、逾時、格式不對、檢查沒過）
 export async function fetchFollowup(req: FollowupRequest, opts: FetchOptions = {}): Promise<FollowupResult | AiRefusal | AiLimited | null> {
   const url = opts.url ?? proxyUrl()
   if (!url) return null
@@ -469,7 +485,16 @@ export async function fetchFollowup(req: FollowupRequest, opts: FetchOptions = {
     const res = await (opts.fetchImpl ?? fetch)(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind: 'ziwei', mode: 'followup', question: clipQuestion(req.question), facts: req.facts, tone: '平', focus: req.focus, history }),
+      body: JSON.stringify({
+        kind: req.kind,
+        mode: 'followup',
+        question: clipQuestion(req.question),
+        facts: req.facts,
+        tone: req.tone ?? '平',
+        ...(req.kind === 'ziwei' ? { focus: req.focus } : {}),
+        history,
+        context: clipContext(req.context),
+      }),
       signal: ctrl.signal,
     })
     if (res.status === 429) return { limited: true }
@@ -479,7 +504,7 @@ export async function fetchFollowup(req: FollowupRequest, opts: FetchOptions = {
       const rf = asObj(json.refusal)
       return (rf.kind === 'death' || rf.kind === 'selfharm') && nonEmpty(rf.message) ? { refusal: { kind: rf.kind, message: rf.message } } : null
     }
-    return validateFollowup(req.facts, json.followup, json.notice)
+    return validateFollowup(req.facts, json.followup, json.notice, req.kind)
   } catch {
     return null
   } finally {

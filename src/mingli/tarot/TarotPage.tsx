@@ -6,7 +6,10 @@ import QuestionBar, { NEED_QUESTION } from '../ui/QuestionBar'
 import { session, updateSession } from '../ui/session'
 import { CARDS } from './cards'
 import { BACK_SRC, BACK_SM_SRC, faceSrc } from './cardArt'
-import { clipQuestion, tarotFacts } from '../ai'
+import { clipContext, clipQuestion, proxyUrl, tarotFacts } from '../ai'
+import ContextField from '../ui/ContextField'
+import FollowupPanel from '../ziwei/ui/FollowupPanel'
+import { useFollowup } from '../ui/useFollowup'
 import { AiHelpLine, AiLimitLine, AiLoading, AiReadingView, AiRefusalView } from '../ui/AiReadingView'
 import { useAiReading } from '../ui/useAiReading'
 import { drawThree, nextSeed, SEED_RANGE, seedFrom, shuffle, templateReading } from './engine'
@@ -34,6 +37,7 @@ const initialSeed = (param: string | null, question: string) => validSeed(param)
 
 export default function TarotPage({ seedParam }: { seedParam: string | null }) {
   const [question, setQuestion] = useState(session.question)
+  const [context, setContext] = useState(session.context)
   const [seed, setSeed] = useState(() => initialSeed(seedParam, question))
   // 網址指定了牌序時，第一次填問題不換牌序（測試與分享連結要固定）
   const pinnedSeed = useRef(validSeed(seedParam) !== null)
@@ -220,9 +224,19 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
   const reading = drawn ? templateReading(drawn) : null
   // AI 解讀：吉凶沿用範本算出來的 tone；沒設網址時 ai.status 一律是 idle，直接顯示範本
   const ai = useAiReading(
-    drawn && reading ? { kind: 'tarot', question: clipQuestion(question), facts: tarotFacts(drawn), tone: reading.tone } : null,
+    drawn && reading ? { kind: 'tarot', question: clipQuestion(question), facts: tarotFacts(drawn), tone: reading.tone, context: clipContext(context) } : null,
     `${seed}-${picks.join(',')}`,
   )
+  // 解讀成功後可以接著問（換牌就清掉）
+  const followup = useFollowup({
+    kind: 'tarot',
+    key: drawn ? `${seed}-${picks.join(',')}` : null,
+    facts: drawn ? tarotFacts(drawn) : null,
+    tone: reading?.tone ?? '平',
+    question: clipQuestion(question),
+    context: clipContext(context),
+    reading: ai.status === 'ok' ? ai.reading : null,
+  })
 
   return (
     <section className="ml-view ml-tarot" data-testid="ml-tarot" data-read={read}>
@@ -230,6 +244,9 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
         <div className="ml-tarot-head">
           <span className="ml-tarot-sub">The Three-Card Spread</span>
           <QuestionBar question={question} canEdit={picks.length === 0 && !busy} titleClass="ml-tarot-question" onCommit={commitQuestion} />
+          {proxyUrl() !== '' && (
+            <ContextField value={context} canEdit={picks.length === 0 && !busy} onChange={(v) => { setContext(v); updateSession({ context: v }) }} />
+          )}
         </div>
         <div className="ml-slots">
           {SLOT_LABELS.map(([zh, en], i) => {
@@ -314,6 +331,18 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
       </div>
       {drawn && ai.status === 'loading' && <AiLoading />}
       {drawn && ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
+      {drawn && ai.status === 'ok' && (
+        <FollowupPanel
+          entries={followup.entries}
+          status={followup.status}
+          refusal={followup.refusal}
+          canAsk
+          hideReadings
+          placeholder="接著問，例如：現在那張再講細一點？那我該怎麼做？"
+          onSend={followup.send}
+          onClear={followup.clear}
+        />
+      )}
       {drawn && ai.status === 'refused' && <AiRefusalView refusal={ai.refusal} />}
       {reading && ai.status === 'fail' && ai.limited && <AiLimitLine />}
       {reading && ai.status === 'fail' && <AiHelpLine />}

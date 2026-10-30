@@ -188,6 +188,16 @@ describe('fetchAiReading 失敗一律回 null（畫面退回範本）', () => {
     expect(r && !isAiRefusal(r) && !isAiLimited(r) ? r.verdict : null).toBe('先穩住')
     expect(Object.keys(sent).sort()).toEqual(['facts', 'kind', 'question', 'tone'])
   })
+  it('近況：有填才送、去頭尾空白、最多 300 字', async () => {
+    let sent: Record<string, unknown> = {}
+    const fetchImpl = (async (_u: unknown, init: RequestInit) => { sent = JSON.parse(String(init.body)); return new Response(JSON.stringify(good)) }) as typeof fetch
+    await fetchAiReading({ ...req, context: '  剛換工作  ' }, { url: 'http://x', fetchImpl })
+    expect(sent.context).toBe('剛換工作')
+    await fetchAiReading({ ...req, context: '近'.repeat(350) }, { url: 'http://x', fetchImpl })
+    expect([...String(sent.context)]).toHaveLength(300)
+    await fetchAiReading({ ...req, context: '   ' }, { url: 'http://x', fetchImpl })
+    expect('context' in sent).toBe(false)
+  })
   it('429 → { limited: true }（今天次數用完，畫面要講清楚）', async () => {
     expect(await fetchAiReading(req, { url: 'http://x', fetchImpl: reply(429, { error: 'x' }) })).toEqual({ limited: true })
   })

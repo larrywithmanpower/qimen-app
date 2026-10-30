@@ -1,5 +1,5 @@
 // 請求處理：Claude 與用量計數都由外面注入，測試時換成假的
-import { FOLLOWUP_SCHEMA, FOLLOWUP_SYSTEM_PROMPT, SYSTEM_PROMPT, buildFollowupMessage, buildUserMessage } from './prompt.js';
+import { SYSTEM_PROMPT, buildFollowupMessage, buildUserMessage, followupSchema, followupSystemPrompt } from './prompt.js';
 import { sumUsage } from './cost.js';
 import { loadCards, selectCards } from './cards.js';
 import { checkFollowup, checkReading, validateRequest } from './validate.js';
@@ -48,11 +48,11 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
       res.status(400).json({ error: bad });
       return;
     }
-    const { kind, question = '', facts, tone, focus, mode, history } = req.body;
+    const { kind, question = '', facts, tone, focus, mode, history, context = '' } = req.body;
     const isFollowup = mode === 'followup';
 
-    // 內容安全：該拒答的直接回，不呼叫 Claude、不扣額度、不記成本
-    const { topics, refuse } = classifyQuestion(question);
+    // 內容安全：問題與近況一起看（中間夾全形符號，避免兩段接起來湊出關鍵字）；該拒答的直接回，不呼叫 Claude、不扣額度、不記成本
+    const { topics, refuse } = classifyQuestion(`${question}｜${context}`);
     if (refuse) {
       res.status(200).json({ refusal: { kind: refuse, message: REFUSAL_MESSAGES[refuse] } });
       return;
@@ -85,8 +85,8 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
 
     // 隱私：日誌不記錄 question 與 facts
     const user = isFollowup
-      ? buildFollowupMessage({ question, facts, focus, history, cards: selected, topics }, taiwanDate(now()))
-      : buildUserMessage({ kind, question, facts, tone, focus, cards: selected, topics }, taiwanDate(now()));
+      ? buildFollowupMessage({ kind, question, facts, focus, context, history, cards: selected, topics }, taiwanDate(now()))
+      : buildUserMessage({ kind, question, facts, tone, focus, context, cards: selected, topics }, taiwanDate(now()));
     const startedAt = now();
     const usages = [];
     let model = 'unknown';
@@ -97,7 +97,7 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
       // 格式不過重叫一次，再不過回 502；每一次呼叫（含重叫）都記 usage
       for (let attempt = 0; attempt < 2; attempt++) {
         attempts++;
-        const out = isFollowup ? await claude(FOLLOWUP_SYSTEM_PROMPT, user, FOLLOWUP_SCHEMA) : await claude(SYSTEM_PROMPT, user);
+        const out = isFollowup ? await claude(followupSystemPrompt(kind), user, followupSchema(kind)) : await claude(SYSTEM_PROMPT, user);
         if (out?.usage) usages.push(out.usage);
         if (out?.model) model = out.model;
         // 第二道內容安全：關鍵字沒抓到的隱晦說法，由 Claude 判斷整句意思
@@ -107,7 +107,7 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
           result = { refusal: { kind: risk, message: REFUSAL_MESSAGES[risk] } };
           break;
         }
-        const checked = isFollowup ? checkFollowup(out?.reading, selected) : checkReading(out?.reading, tone, selected);
+        const checked = isFollowup ? checkFollowup(out?.reading, selected, kind) : checkReading(out?.reading, tone, selected);
         const reading = isFollowup ? checked.followup : checked.reading;
         const { problem } = checked;
         if (reading) {

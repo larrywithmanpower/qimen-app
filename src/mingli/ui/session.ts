@@ -3,8 +3,10 @@ export type Method = 'tarot' | 'meihua' | 'ziwei'
 
 export const SAMPLE_QUESTION = '這週提的企劃會不會過？'
 
-export const session: { question: string; method: Method } = {
+// context：使用者補充的近況（選填），只放記憶體、不存
+export const session: { question: string; method: Method; context: string } = {
   question: '',
+  context: '',
   method: 'tarot',
 }
 

@@ -12,3 +12,17 @@
 .ml-qedit-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--ml-space-2); }
 .ml-qedit-btn { align-self: center; min-height: 44px; padding: 0 var(--ml-space-4); font-size: var(--ml-fs-caption); }
 .ml-qedit-need { margin: 0; font-size: var(--ml-fs-caption); color: var(--ml-cinnabar-text); text-align: center; }
+
+/* 補充近況（選填）：三個術數共用 */
+.ml-ctx-open { align-self: center; min-height: 44px; padding: 0 var(--ml-space-4); font-size: var(--ml-fs-caption); }
+.ml-ctx { display: flex; flex-direction: column; gap: var(--ml-space-1); width: 100%; min-width: 0; text-align: left; }
+.ml-ctx-k { font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); }
+.ml-ctx-input {
+  display: block; width: 100%; box-sizing: border-box; padding: var(--ml-space-2);
+  border: 1px solid var(--ml-line-strong); border-radius: 8px; background: transparent; resize: vertical;
+  color: var(--ml-ink); font-family: inherit; font-size: var(--ml-fs-body); line-height: 1.6;
+}
+.ml-ctx-input::placeholder { color: var(--ml-ink-faint); }
+.ml-ctx-input:focus-visible { outline: none; border-color: var(--ml-paper); }
+.ml-ctx-hint { font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); }
+.ml-ctx-view { margin: 0; font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); overflow-wrap: anywhere; text-align: center; }

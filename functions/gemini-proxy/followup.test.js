@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createHandler } from './handler.js';
-import { FOLLOWUP_SCHEMA } from './prompt.js';
+import { FOLLOWUP_SCHEMA, FOLLOWUP_SCHEMA_SIMPLE } from './prompt.js';
 import { checkFollowup } from './validate.js';
 
 const ORIGIN = 'https://mingli-yuxuan.web.app';
 const CARD_DB = {
-  tarot: [],
-  meihua: [],
+  tarot: [{ id: 'tr-fool', title: '愚者', source: '測試來源甲', when: { card: '愚者' }, text: '愚者是新的開始' }],
+  meihua: [{ id: 'mh-qian', title: '乾為天', source: '測試來源乙', when: { hexagram: '乾為天' }, text: '乾卦剛健' }],
   ziwei: [
     { id: 'zw-soul', title: '命宮', source: '測試來源丙', when: { palace: '命宮' }, text: '命宮看自己' },
     { id: 'zw-yearly', title: '流年', source: '測試來源丙', when: { focus: 'yearly' }, text: '流年看今年' },
@@ -49,7 +49,6 @@ beforeEach(() => {
 
 describe('追問請求格式', () => {
   it.each([
-    ['塔羅帶 mode', { kind: 'tarot', focus: undefined }],
     ['mode 不是 followup', { mode: 'other' }],
     ['question 空', { question: '  ' }],
     ['history 缺', { history: undefined }],
@@ -193,5 +192,80 @@ describe('追問 prompt 與 schema', () => {
     const { call, claude } = setup([{ verdict: 'v' }]);
     await call({ kind: 'ziwei', question: '', facts: FACTS, tone: '平' });
     expect(claude.mock.calls[0]).toHaveLength(2);
+  });
+});
+
+describe('塔羅、梅花追問', () => {
+  const tarotBody = (over = {}) => body({ kind: 'tarot', focus: undefined, facts: { cards: [{ name: '愚者' }] }, tone: '吉', ...over });
+  const tarotGood = (over = {}) => good({ basis: ['過去 愚者正位'], cards: ['tr-fool'], ...over });
+  it('塔羅 answer → 200，送簡化 schema，system 講塔羅、沒有 recompute', async () => {
+    const { call, claude, cost } = setup([tarotGood()]);
+    const res = await call(tarotBody());
+    expect(res.code).toBe(200);
+    expect(res.body.followup.cards.map((c) => c.id)).toEqual(['tr-fool']);
+    const [system, user, schema] = claude.mock.calls[0];
+    expect(schema).toBe(FOLLOWUP_SCHEMA_SIMPLE);
+    expect(schema.properties.action.enum).not.toContain('recompute');
+    expect(system).toContain('塔羅三張牌陣');
+    expect(system).not.toContain('recompute');
+    expect(user).not.toContain('<focus>');
+    expect(cost.record.mock.calls[0][0]).toMatchObject({ kind: 'tarot', focus: null, mode: 'followup', status: 'ok' });
+  });
+  it('梅花 answer → 200，system 講梅花', async () => {
+    const { call, claude } = setup([good({ basis: ['本卦乾為天'], cards: ['mh-qian'] })]);
+    const res = await call(body({ kind: 'meihua', focus: undefined, facts: { main: { name: '乾為天' } }, tone: '平' }));
+    expect(res.code).toBe(200);
+    expect(claude.mock.calls[0][0]).toContain('梅花易數');
+  });
+  it('塔羅回 recompute → 重叫，再錯 502，problem 是 action', async () => {
+    const warn = vi.spyOn(console, 'warn');
+    const { call, claude } = setup([tarotGood({ action: 'recompute', basis: [], cards: [], targetFocus: 'yearly', targetDate: '2027-01-01' })]);
+    const res = await call(tarotBody());
+    expect(claude).toHaveBeenCalledTimes(2);
+    expect(res.code).toBe(502);
+    expect(JSON.stringify(warn.mock.calls)).toContain('"problem":"action"');
+  });
+  it('checkFollowup：紫微可 recompute、塔羅梅花不行', () => {
+    const r = good({ action: 'recompute', basis: [], cards: [], targetFocus: 'yearly', targetDate: '2027-01-01' });
+    expect(checkFollowup(r, [], 'ziwei').problem).toBeNull();
+    expect(checkFollowup(r, [], 'tarot').problem).toBe('action');
+    expect(checkFollowup(r, [], 'meihua').problem).toBe('action');
+  });
+});
+
+describe('近況（context）', () => {
+  it('超過 300 字 → 400；剛好 300 可以；不是字串 → 400', async () => {
+    const { call } = setup([good()]);
+    expect((await call(body({ context: '近'.repeat(301) }))).code).toBe(400);
+    expect((await call(body({ context: 1 }))).code).toBe(400);
+    expect((await call(body({ context: '近'.repeat(300) }))).code).toBe(200);
+  });
+  it('有填：追問與解讀的 user 都有 <context> 與使用規則；沒填就沒有', async () => {
+    const { call, claude } = setup([good()]);
+    await call(body({ context: '剛換工作三個月' }));
+    expect(claude.mock.calls[0][1]).toContain('<context>剛換工作三個月</context>');
+    expect(claude.mock.calls[0][1]).toContain('basis 不可以寫近況內容');
+    await call(body({ context: '   ' }));
+    expect(claude.mock.calls[1][1]).not.toContain('<context>');
+    const r = setup([{ verdict: 'v' }]);
+    await r.call({ kind: 'tarot', question: '工作', facts: { cards: [{ name: '愚者' }] }, tone: '吉', context: '主管很嚴' });
+    expect(r.claude.mock.calls[0][1]).toContain('<context>主管很嚴</context>');
+  });
+  it('近況含輕生關鍵字 → 直接 refusal，不呼叫 Claude', async () => {
+    const { call, claude } = setup([good()]);
+    const res = await call(body({ question: '工作順嗎', context: '最近很想自殺' }));
+    expect(res.body.refusal.kind).toBe('selfharm');
+    expect(claude).not.toHaveBeenCalled();
+  });
+  it('近況有醫療話題 → notice', async () => {
+    const { call } = setup([good()]);
+    const res = await call(body({ question: '工作順嗎', context: '最近在住院' }));
+    expect(res.body.notice).toEqual(['medical']);
+  });
+  it('問題結尾與近況開頭不會接成關鍵字', async () => {
+    const { call, claude } = setup([good()]);
+    const res = await call(body({ question: '我想', context: '死了也要愛的歌很好聽' }));
+    expect(res.code).toBe(200);
+    expect(claude).toHaveBeenCalled();
   });
 });

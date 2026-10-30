@@ -5,7 +5,10 @@ import './meihua.css'
 import { burstAt, lightTrigrams, prefersReduced, setRealm } from '../../ui/fx'
 import QuestionBar, { NEED_QUESTION } from '../../ui/QuestionBar'
 import { session, updateSession } from '../../ui/session'
-import { clipQuestion, meihuaFacts } from '../../ai'
+import { clipContext, clipQuestion, meihuaFacts, proxyUrl } from '../../ai'
+import ContextField from '../../ui/ContextField'
+import FollowupPanel from '../../ziwei/ui/FollowupPanel'
+import { useFollowup } from '../../ui/useFollowup'
 import { AiHelpLine, AiLimitLine, AiLoading, AiReadingView, AiRefusalView } from '../../ui/AiReadingView'
 import { useAiReading } from '../../ui/useAiReading'
 import { castByNumbers, castByTime, lunarNumbersOf, templateReading } from '../engine'
@@ -54,6 +57,7 @@ function MiniHex({ res }: { res: MeihuaResult }) {
 
 export default function MeihuaPage({ params }: { params: URLSearchParams }) {
   const [question, setQuestion] = useState(session.question)
+  const [context, setContext] = useState(session.context)
   const pa = parseNum(params.get('a') ?? '')
   const pb = parseNum(params.get('b') ?? '')
   const direct = pa !== null && pb !== null
@@ -149,9 +153,19 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
   const reading = res ? templateReading(res) : null
   // AI 解讀：按「看解讀」才送；吉凶沿用範本算出來的 tone
   const ai = useAiReading(
-    res && reading && read ? { kind: 'meihua', question: clipQuestion(question), facts: meihuaFacts(res), tone: reading.tone } : null,
+    res && reading && read ? { kind: 'meihua', question: clipQuestion(question), facts: meihuaFacts(res), tone: reading.tone, context: clipContext(context) } : null,
     String(cast?.key ?? 0),
   )
+  // 解讀成功後可以接著問（重新起卦就清掉）
+  const followup = useFollowup({
+    kind: 'meihua',
+    key: res ? String(cast?.key ?? 0) : null,
+    facts: res ? meihuaFacts(res) : null,
+    tone: reading?.tone ?? '平',
+    question: clipQuestion(question),
+    context: clipContext(context),
+    reading: ai.status === 'ok' ? ai.reading : null,
+  })
   const tpl = ai.status === 'idle' || ai.status === 'fail'
   const instant = prefersReduced()
   const complete = shown >= ROW_KEYS.length
@@ -187,6 +201,9 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
             titleClass="ml-mh-question"
             onCommit={(q) => { updateSession({ question: q }); setQuestion(q) }}
           />
+          {proxyUrl() !== '' && (
+            <ContextField value={context} canEdit={!cast} onChange={(v) => { setContext(v); updateSession({ context: v }) }} />
+          )}
         </div>
         <div className="ml-how" role="group" aria-label="起卦方式">
           <button type="button" className="ml-chip" data-testid="ml-method-time" aria-pressed={way === 'time'} onClick={() => setWay('time')}>時間起卦</button>
@@ -276,6 +293,18 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
           </div>
           {ai.status === 'loading' && <AiLoading />}
           {ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
+          {ai.status === 'ok' && (
+            <FollowupPanel
+              entries={followup.entries}
+              status={followup.status}
+              refusal={followup.refusal}
+              canAsk
+              hideReadings
+              placeholder="接著問，例如：時機那段再講細一點？那我該怎麼做？"
+              onSend={followup.send}
+              onClear={followup.clear}
+            />
+          )}
           {ai.status === 'refused' && <AiRefusalView refusal={ai.refusal} />}
           {ai.status === 'fail' && ai.limited && <AiLimitLine />}
           {ai.status === 'fail' && <AiHelpLine />}

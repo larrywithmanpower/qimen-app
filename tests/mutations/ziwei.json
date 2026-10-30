@@ -168,8 +168,8 @@
   "id": "Z-Q3",
   "desc": "紫微問題欄：問題改了不清掉已顯示的解讀（key 不含問題，Playwright）",
   "file": "src/mingli/ziwei/ui/ZiweiPage.tsx",
-  "find": "JSON.stringify([ask.trim(), aiFacts])",
-  "replace": "JSON.stringify([aiFacts])",
+  "find": "JSON.stringify([ask.trim(), clipContext(context) ?? '', aiFacts])",
+  "replace": "JSON.stringify([clipContext(context) ?? '', aiFacts])",
   "test": "e2e/mingli/ziwei.spec.ts",
   "runner": "playwright"
  }
