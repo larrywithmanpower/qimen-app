@@ -85,7 +85,7 @@ for (const kind of ['tarot', 'meihua'] as const) {
     await ask(page, '那我該怎麼做')
     const item = page.getByTestId('ml-followup-item')
     await expect(item).toHaveCount(1)
-    await expect(item).toContainText('問：那我該怎麼做')
+    await expect(item).toContainText('那我該怎麼做')
     await expect(item).toContainText('先把手上的事做完')
     await expect(page.getByTestId('ml-followup-basis')).toContainText('追問依據')
     await expect(page.getByTestId('ml-followup-input')).toHaveValue('')
@@ -201,4 +201,48 @@ test('紫微：近況送進解讀與追問；改近況回到按鈕狀態', async
   // 改近況：按鈕再出現
   await page.getByTestId('ml-context-input').fill('在考慮換工作')
   await expect(page.getByTestId('ml-ai-ziwei-btn')).toBeVisible()
+})
+
+test('對話樣式：建議問題點了直接送、問過就收起；解讀各段收合可再展開；輸入列黏在分頁列上方', async ({ page }) => {
+  const { fups } = await setup(page, 'tarot', [json(answer('回答一'))])
+  await open(page, 'tarot')
+  const sugs = page.getByTestId('ml-followup-sug')
+  await expect(sugs).toHaveText(['現在那張再講細一點', '那我該怎麼做？', '要注意什麼？'])
+  // 各段一開始是展開的；捲到第一段中間時輸入列仍在畫面內、在分頁列上方
+  const paras = page.locator('.ml-ai-para')
+  await expect(paras).toHaveCount(1)
+  await expect(paras.first()).toHaveAttribute('open', '')
+  await paras.first().locator('.ml-ai-text').scrollIntoViewIfNeeded()
+  // 測試解讀很短，畫面放得下；另外確認是黏底定位，長解讀時才會跟著畫面
+  expect(await page.locator('.ml-followup-dock').evaluate((el) => getComputedStyle(el).position)).toBe('sticky')
+  const dock = await page.locator('.ml-followup-dock').boundingBox()
+  const bar = await page.locator('.ml-tabbar').boundingBox()
+  expect(dock && bar && dock.y + dock.height <= bar.y && dock.y > 0).toBe(true)
+  // 點建議問題：直接送出、泡泡出現，建議消失
+  await sugs.nth(1).click()
+  await expect(page.getByTestId('ml-followup-item')).toHaveCount(1)
+  expect(fups[0].question).toBe('那我該怎麼做？')
+  await expect(page.locator('.ml-chat-q').first()).toHaveText('那我該怎麼做？')
+  await expect(sugs).toHaveCount(0)
+  // 問過之後解讀各段收起（一句話留著），點標題可展開
+  await expect(paras.first()).not.toHaveAttribute('open', '')
+  await expect(page.getByTestId('ml-ai-verdict')).toBeVisible()
+  await expect(paras.first().locator('.ml-ai-text')).toBeHidden()
+  await paras.first().locator('summary').click()
+  await expect(paras.first().locator('.ml-ai-text')).toBeVisible()
+  // 清除對話：建議問題回來、各段展開
+  await page.getByTestId('ml-followup-clear').click()
+  await expect(sugs).toHaveCount(3)
+  await expect(paras.first()).toHaveAttribute('open', '')
+  expect(await checkLayout(page)).toEqual([])
+})
+
+test('建議問題送不出去（回答沒過檢查）就放回輸入框', async ({ page }) => {
+  // 回答提到不是動爻的爻 → 前端判失敗
+  const other = ['初', '二', '三', '四', '五', '上'].find((_, i) => i + 1 !== mei.moving)
+  await setup(page, 'meihua', [json(answer(`${other}爻是關鍵`))])
+  await open(page, 'meihua')
+  await page.getByTestId('ml-followup-sug').first().click()
+  await expect(page.getByTestId('ml-followup-error')).toBeVisible()
+  await expect(page.getByTestId('ml-followup-input')).toHaveValue('動爻在說什麼？')
 })

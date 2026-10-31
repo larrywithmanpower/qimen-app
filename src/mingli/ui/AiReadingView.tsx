@@ -1,6 +1,6 @@
 import './ai.css'
 import { AI_LIMIT_TEXT, AI_NOTICE_TEXT } from '../ai'
-import type { AiReading, AiRefusal } from '../ai'
+import type { AiCardRef, AiReading, AiRefusal } from '../ai'
 
 // 讀取中
 export function AiLoading() {
@@ -12,8 +12,23 @@ export function AiLoading() {
   )
 }
 
-// AI 解讀結果：一句話＋各段，每段下方小字列依據
-export function AiReadingView({ reading }: { reading: AiReading }) {
+// 依據＋知識卡：知識卡只列名稱（編號是內部用的），停留可看出處
+export function AiSources({ basis, cards, basisId, cardsId }: { basis: string[]; cards: AiCardRef[]; basisId: string; cardsId: string }) {
+  return (
+    <div className="ml-ai-src">
+      {basis.length > 0 && <span className="ml-ai-basis" data-testid={basisId}>依據：{basis.join('；')}</span>}
+      {cards.length > 0 && (
+        <span className="ml-ai-cards" data-testid={cardsId}>
+          {cards.map((c) => <span className="ml-ai-chip" key={c.id} title={c.source}>{c.title}</span>)}
+        </span>
+      )}
+    </div>
+  )
+}
+
+// AI 解讀結果：一句話＋各段，每段下方列依據
+// folded：已經接著問了，各段收起來（一句話留著），點標題可再展開
+export function AiReadingView({ reading, folded = false }: { reading: AiReading; folded?: boolean }) {
   return (
     <div className="ml-ai-reading" data-testid="ml-ai-reading">
       {reading.notice && reading.notice.length > 0 && (
@@ -26,12 +41,12 @@ export function AiReadingView({ reading }: { reading: AiReading }) {
         <div className="ml-ai-verdict-v">{reading.verdict}</div>
       </div>
       {reading.paragraphs.map((p, k) => (
-        <div className="ml-ai-para" key={k}>
-          <h2 className="ml-ai-title">{p.title}</h2>
+        // key 帶 folded：收合狀態一變就重設開關
+        <details className="ml-ai-para" key={`${k}-${folded}`} open={!folded}>
+          <summary className="ml-ai-sum"><h2 className="ml-ai-title">{p.title}</h2></summary>
           <p className="ml-ai-text">{p.text}</p>
-          <span className="ml-ai-basis" data-testid="ml-ai-basis">依據：{p.basis.join('；')}</span>
-          <span className="ml-ai-cards" data-testid="ml-ai-cards">知識卡：{p.cards.map((c) => `${c.id} ${c.title}`).join('；')}</span>
-        </div>
+          <AiSources basis={p.basis} cards={p.cards} basisId="ml-ai-basis" cardsId="ml-ai-cards" />
+        </details>
       ))}
     </div>
   )

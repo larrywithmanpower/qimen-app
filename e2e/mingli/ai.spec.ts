@@ -129,8 +129,10 @@ for (const kind of ['tarot', 'meihua', 'ziwei'] as const) {
     await expect(page.getByTestId('ml-ai-basis')).toHaveCount(2)
     await expect(page.getByTestId('ml-ai-basis').first()).toContainText('依據甲')
     await expect(page.getByTestId('ml-ai-cards')).toHaveCount(2)
-    await expect(page.getByTestId('ml-ai-cards').first()).toHaveText('知識卡：test-card-1 測試卡')
-    await expect(page.getByTestId('ml-ai-cards').nth(1)).toHaveText('知識卡：test-card-1 測試卡；test-card-2 另一張')
+    await expect(page.getByTestId('ml-ai-cards').first()).toHaveText('測試卡')
+    // 知識卡只列名稱、不露內部編號，停留可看出處
+    await expect(page.getByTestId('ml-ai-cards').nth(1).locator('.ml-ai-chip')).toHaveText(['測試卡', '另一張'])
+    await expect(page.getByTestId('ml-ai-cards').nth(1)).not.toContainText('test-card')
     // 塔羅、梅花：範本整塊不見；紫微：按鈕消失，宮位說明仍是範本
     if (kind === 'ziwei') await expect(page.getByTestId('ml-ai-ziwei-btn')).toHaveCount(0)
     if (kind !== 'ziwei') {

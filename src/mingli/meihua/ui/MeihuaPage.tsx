@@ -9,7 +9,7 @@ import { clipContext, clipQuestion, meihuaFacts, proxyUrl } from '../../ai'
 import ContextField from '../../ui/ContextField'
 import FollowupPanel from '../../ziwei/ui/FollowupPanel'
 import { useFollowup } from '../../ui/useFollowup'
-import { AiHelpLine, AiLimitLine, AiLoading, AiReadingView, AiRefusalView } from '../../ui/AiReadingView'
+import { AiHelpLine, AiLimitLine, AiLoading, AiRefusalView } from '../../ui/AiReadingView'
 import { useAiReading } from '../../ui/useAiReading'
 import { castByNumbers, castByTime, lunarNumbersOf, templateReading } from '../engine'
 import type { MeihuaResult } from '../engine'
@@ -292,15 +292,14 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
             </div>
           </div>
           {ai.status === 'loading' && <AiLoading />}
-          {ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
           {ai.status === 'ok' && (
             <FollowupPanel
               entries={followup.entries}
               status={followup.status}
               refusal={followup.refusal}
               canAsk
-              hideReadings
-              placeholder="接著問，例如：時機那段再講細一點？那我該怎麼做？"
+              questionInHeader
+              suggestions={['動爻在說什麼？', '那我該怎麼做？', '要注意什麼？']}
               onSend={followup.send}
               onClear={followup.clear}
             />

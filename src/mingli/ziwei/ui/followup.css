@@ -1,19 +1,49 @@
-/* 紫微解讀完繼續追問 */
+/* 解讀完繼續追問（三個術數共用）：對話樣式，問題靠右、AI 靠左 */
 .ml-followup { display: flex; flex-direction: column; gap: var(--ml-space-3); min-width: 0; max-width: 680px; width: 100%; margin: 0 auto; }
 .ml-followup-thread { display: flex; flex-direction: column; gap: var(--ml-space-4); min-width: 0; }
-.ml-followup-item {
-  display: flex; flex-direction: column; align-items: flex-start; gap: var(--ml-space-2);
-  padding: 0 var(--ml-space-1) 14px; border-bottom: 1px solid var(--ml-line); min-width: 0;
+.ml-followup-reading, .ml-followup-item { display: flex; flex-direction: column; gap: var(--ml-space-3); min-width: 0; }
+.ml-chat-q {
+  align-self: flex-end; max-width: 85%; margin: 0; padding: 10px 16px; box-sizing: border-box;
+  border-radius: 20px 20px 4px 20px; border: 1px solid var(--ml-line-strong); background: var(--ml-surface);
+  color: var(--ml-ink); font-size: var(--ml-fs-body); line-height: 1.7; overflow-wrap: anywhere;
 }
-.ml-followup-q { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-body); font-weight: 700; color: var(--ml-ink); overflow-wrap: anywhere; }
+.ml-chat-a {
+  align-self: flex-start; max-width: 92%; min-width: 0; box-sizing: border-box;
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--ml-space-2); padding: 14px 16px;
+  border-radius: 20px 20px 20px 4px; border: 1px solid var(--ml-line); background: var(--ml-night-glass);
+}
+.ml-chat-wait { padding: 0; }
+.ml-followup-clear {
+  align-self: center; min-height: 44px; padding: 0 var(--ml-space-3); border: 0; background: none; cursor: pointer;
+  color: var(--ml-ink-faint); font: inherit; font-size: var(--ml-fs-caption); text-decoration: underline; text-underline-offset: 3px;
+}
+/* 輸入列黏在畫面底部（手機在分頁列上方），讀解讀時也找得到 */
+.ml-followup-dock {
+  position: sticky; bottom: calc(56px + var(--ml-safe-bottom) + var(--ml-space-2)); z-index: 4;
+  padding: 6px; border-radius: var(--ml-radius-pill); border: 1px solid var(--ml-line); background: var(--ml-nav);
+}
+/* 建議問題放在對話尾端靠右（像是你接下來要說的話），不黏底 */
+.ml-followup-sugs { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--ml-space-2); }
+.ml-followup-sug {
+  min-height: 44px; padding: 0 var(--ml-space-3); border-radius: var(--ml-radius-pill);
+  border: 1px solid var(--ml-line-strong); background: var(--ml-veil); cursor: pointer;
+  color: var(--ml-ink-body); font: inherit; font-size: var(--ml-fs-body-sm);
+}
+.ml-followup-sug:hover { border-color: var(--ml-paper); color: var(--ml-ink); }
 .ml-followup-form { display: flex; align-items: center; gap: var(--ml-space-2); min-width: 0; }
 .ml-followup-input {
-  flex: 1 1 auto; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0 var(--ml-space-3);
-  border: 1px solid var(--ml-line-strong); border-radius: var(--ml-radius-control); background: var(--ml-veil);
+  flex: 1 1 auto; min-width: 0; box-sizing: border-box; min-height: 44px; padding: 0 var(--ml-space-4);
+  border: 1px solid var(--ml-line-strong); border-radius: var(--ml-radius-pill); background: var(--ml-veil);
   color: var(--ml-ink); font-family: var(--ml-font-serif); font-size: var(--ml-fs-body);
 }
 .ml-followup-input::placeholder { color: var(--ml-ink-faint); }
 .ml-followup-input:focus-visible { outline: none; border-color: var(--ml-paper); }
-.ml-followup-send { flex: 0 0 auto; min-width: 64px; padding: 0 var(--ml-space-3); }
-.ml-followup-clear { align-self: flex-start; }
-.ml-followup-reading { display: flex; flex-direction: column; gap: var(--ml-space-2); min-width: 0; }
+.ml-followup-send {
+  flex: 0 0 auto; min-width: 64px; min-height: 44px; padding: 0 var(--ml-space-4); border: 0; cursor: pointer;
+  border-radius: var(--ml-radius-pill); background: var(--ml-paper); color: var(--ml-on-paper);
+  font: inherit; font-size: var(--ml-fs-body-sm); font-weight: 700;
+}
+.ml-followup-send:disabled { opacity: .35; cursor: not-allowed; }
+@media (min-width: 720px) {
+  .ml-followup-dock { bottom: calc(var(--ml-safe-bottom) + var(--ml-space-4)); }
+}

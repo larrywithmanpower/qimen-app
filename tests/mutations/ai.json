@@ -573,5 +573,59 @@
   "replace": "JSON.stringify([ask.trim(), aiFacts])",
   "test": "e2e/mingli/followup-more.spec.ts",
   "runner": "playwright"
+ },
+ {
+  "id": "A66",
+  "desc": "畫面：追問後解讀各段不收合（Playwright）",
+  "file": "src/mingli/ziwei/ui/FollowupPanel.tsx",
+  "find": "folded={entries.slice(k + 1).some((x) => x.type === 'followup')}",
+  "replace": "folded={false}",
+  "test": "e2e/mingli/followup-more.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A67",
+  "desc": "畫面：問過之後建議問題還留著（Playwright）",
+  "file": "src/mingli/ziwei/ui/FollowupPanel.tsx",
+  "find": "{hasReading && canAsk && !asked && !loading && suggestions.length > 0 && (",
+  "replace": "{hasReading && canAsk && !loading && suggestions.length > 0 && (",
+  "test": "e2e/mingli/followup-more.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A68",
+  "desc": "畫面：建議問題送失敗沒放回輸入框（Playwright）",
+  "file": "src/mingli/ziwei/ui/FollowupPanel.tsx",
+  "find": "if (!(await onSend(q))) setText(q)",
+  "replace": "await onSend(q)",
+  "test": "e2e/mingli/followup-more.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A69",
+  "desc": "畫面：知識卡露出內部編號（Playwright）",
+  "file": "src/mingli/ui/AiReadingView.tsx",
+  "find": "{c.title}</span>)}",
+  "replace": "{c.id} {c.title}</span>)}",
+  "test": "e2e/mingli/ai.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A70",
+  "desc": "畫面：輸入列沒黏在畫面底部（Playwright）",
+  "file": "src/mingli/ziwei/ui/followup.css",
+  "find": "position: sticky; bottom: calc(56px",
+  "replace": "position: static; bottom: calc(56px",
+  "test": "e2e/mingli/followup-more.spec.ts",
+  "runner": "playwright"
+ },
+ {
+  "id": "A71",
+  "desc": "畫面：平板以上輸入列沒避開安全區域（Playwright）",
+  "file": "src/mingli/ziwei/ui/followup.css",
+  "find": "bottom: calc(var(--ml-safe-bottom) + var(--ml-space-4))",
+  "replace": "bottom: var(--ml-space-4)",
+  "test": "e2e/mingli/followup.spec.ts",
+  "runner": "playwright"
  }
 ]

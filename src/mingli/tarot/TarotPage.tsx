@@ -10,7 +10,7 @@ import { clipContext, clipQuestion, proxyUrl, tarotFacts } from '../ai'
 import ContextField from '../ui/ContextField'
 import FollowupPanel from '../ziwei/ui/FollowupPanel'
 import { useFollowup } from '../ui/useFollowup'
-import { AiHelpLine, AiLimitLine, AiLoading, AiReadingView, AiRefusalView } from '../ui/AiReadingView'
+import { AiHelpLine, AiLimitLine, AiLoading, AiRefusalView } from '../ui/AiReadingView'
 import { useAiReading } from '../ui/useAiReading'
 import { drawThree, nextSeed, SEED_RANGE, seedFrom, shuffle, templateReading } from './engine'
 
@@ -239,7 +239,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
   })
 
   return (
-    <section className="ml-view ml-tarot" data-testid="ml-tarot" data-read={read}>
+    <section className="ml-view ml-tarot" data-testid="ml-tarot" data-read={read} data-ai={ai.status}>
       <div className="ml-tarot-board">
         <div className="ml-tarot-head">
           <span className="ml-tarot-sub">The Three-Card Spread</span>
@@ -330,15 +330,14 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
         </div>
       </div>
       {drawn && ai.status === 'loading' && <AiLoading />}
-      {drawn && ai.status === 'ok' && <AiReadingView reading={ai.reading} />}
       {drawn && ai.status === 'ok' && (
         <FollowupPanel
           entries={followup.entries}
           status={followup.status}
           refusal={followup.refusal}
           canAsk
-          hideReadings
-          placeholder="接著問，例如：現在那張再講細一點？那我該怎麼做？"
+          questionInHeader
+          suggestions={['現在那張再講細一點', '那我該怎麼做？', '要注意什麼？']}
           onSend={followup.send}
           onClear={followup.clear}
         />

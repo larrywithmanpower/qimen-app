@@ -168,4 +168,7 @@
   .ml-tarot[data-read="true"] .ml-tools { justify-content: flex-start; }
   .ml-tarot[data-read="true"] .ml-reading { margin: 0; max-width: 560px; }
   .ml-tarot[data-read="true"] .ml-paras { display: flex; flex-direction: column; gap: var(--ml-space-4); }
+  /* AI 對話會越來越長：牌陣固定在左邊，右邊捲對話 */
+  .ml-tarot[data-read="true"][data-ai="ok"] { align-items: start; }
+  .ml-tarot[data-read="true"][data-ai="ok"] .ml-tarot-board { position: sticky; top: var(--ml-space-6); }
 }

@@ -529,6 +529,7 @@ export default function ZiweiPage({ params, testid = 'ml-ziwei' }: { params: URL
                 status={followup.status}
                 refusal={followup.refusal}
                 canAsk={canAsk}
+                suggestions={['感情方面呢？', '那明年呢？', '我該注意什麼？']}
                 onSend={followup.send}
                 onClear={followup.clear}
               />

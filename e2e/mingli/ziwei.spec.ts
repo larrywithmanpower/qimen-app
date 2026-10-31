@@ -303,11 +303,11 @@ test('紫微問題欄：改了問題，舊解讀留在對話串並標出當時�
   await input.fill('第一個問題')
   await page.getByTestId('ml-ai-ziwei-btn').click()
   await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
-  await expect(page.getByTestId('ml-followup-reading-q')).toHaveText('問：第一個問題')
+  await expect(page.getByTestId('ml-followup-reading-q')).toHaveText('第一個問題')
   await input.fill('第二個問題')
   // 對話串不收起來：舊解讀還在、標著原本的問題；按鈕出現可問新的
   await expect(page.getByTestId('ml-ai-reading')).toHaveCount(1)
-  await expect(page.getByTestId('ml-followup-reading-q')).toHaveText('問：第一個問題')
+  await expect(page.getByTestId('ml-followup-reading-q')).toHaveText('第一個問題')
   await expect(page.getByTestId('ml-ai-ziwei-btn')).toBeVisible()
 
   await page.evaluate(() => { location.hash = '#/meihua' })

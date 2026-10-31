@@ -18,11 +18,28 @@
 }
 .ml-ai-verdict-k { font-size: var(--ml-fs-caption); letter-spacing: .3em; color: var(--ml-accent); }
 .ml-ai-verdict-v { margin-top: 6px; font-family: var(--ml-font-serif); font-size: var(--ml-fs-title); font-weight: 900; letter-spacing: .08em; }
-.ml-ai-para { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ml-space-2); padding: 0 var(--ml-space-1) 14px; border-bottom: 1px solid var(--ml-line); }
+/* 每段可收合：標題列整條可點，右側寫「收起／展開」 */
+.ml-ai-para { padding: 0 var(--ml-space-1) 14px; border-bottom: 1px solid var(--ml-line); min-width: 0; }
+.ml-ai-para > * + * { margin-top: var(--ml-space-2); }
+.ml-ai-sum {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--ml-space-3);
+  min-height: 44px; list-style: none; cursor: pointer;
+}
+.ml-ai-sum::-webkit-details-marker { display: none; }
+.ml-ai-sum::after { content: '收起'; flex: 0 0 auto; font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); letter-spacing: .1em; }
+.ml-ai-para:not([open]) { padding-bottom: 0; }
+.ml-ai-para:not([open]) .ml-ai-sum::after { content: '展開'; }
+.ml-ai-sum:focus-visible { outline: 1px solid var(--ml-paper); outline-offset: 2px; }
 .ml-ai-title { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 700; }
 .ml-ai-text { margin: 0; font-size: var(--ml-fs-body); line-height: 1.85; color: var(--ml-ink-body); }
+/* 依據一行小字＋知識卡名稱膠囊 */
+.ml-ai-src { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
 .ml-ai-basis { font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); line-height: 1.6; }
-.ml-ai-cards { font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); line-height: 1.6; }
+.ml-ai-cards { display: flex; flex-wrap: wrap; gap: 6px; }
+.ml-ai-chip {
+  padding: 2px 10px; border-radius: var(--ml-radius-pill); border: 1px solid var(--ml-line);
+  font-size: var(--ml-fs-caption); line-height: 1.6; color: var(--ml-ink-muted);
+}
 
 .ml-ai-notice {
   padding: 10px 14px; border-radius: var(--ml-radius-card); border: 1px solid var(--ml-line-soft);
