@@ -125,7 +125,10 @@ export async function checkLayout(page: Page): Promise<LayoutIssue[]> {
     document.querySelectorAll('body *').forEach(el => {
       if (decorative(el) || !visible(el) || el.closest('svg')) return;
       const s = getComputedStyle(el);
-      if (s.overflowX !== 'hidden' && s.overflow !== 'hidden') return;
+      // hidden 與 clip 都會把超出的字藏掉，兩種都要檢查；跑馬燈本來就從兩側進出，不算
+      const clips = (v: string) => v === 'hidden' || v === 'clip';
+      if (!clips(s.overflowX) && !clips(s.overflow)) return;
+      if (el.closest('[data-ml-marquee]')) return;
       if (!(el.textContent || '').trim()) return;
       if (el.scrollWidth > el.clientWidth + 1 && s.textOverflow !== 'ellipsis') {
         issues.push({ kind: '文字被裁', detail: `${label(el)} ${el.scrollWidth}>${el.clientWidth}` });

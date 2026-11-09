@@ -275,10 +275,13 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
           )}
         </div>
         <div className="ml-ritual ml-tritual" data-testid="ml-tritual">
-        <Astrolabe />
-        <span className="ml-tw ml-tw1" aria-hidden="true" />
-        <span className="ml-tw ml-tw2" aria-hidden="true" />
-        <span className="ml-tw ml-tw3" aria-hidden="true" />
+        {/* 裝飾圖單獨一層裁切，內容區不裁切，版面檢查才看得到字有沒有被切 */}
+        <div className="ml-decor" aria-hidden="true">
+          <Astrolabe />
+          <span className="ml-tw ml-tw1" />
+          <span className="ml-tw ml-tw2" />
+          <span className="ml-tw ml-tw3" />
+        </div>
         <div className="ml-slots">
           {SLOT_LABELS.map(([zh, en], i) => {
             const phase = phases[i]

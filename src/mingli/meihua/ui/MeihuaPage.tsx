@@ -207,7 +207,8 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
           )}
         </div>
         <div className="ml-ritual ml-mritual" data-testid="ml-mritual">
-        <Bagua />
+        {/* 裝飾圖單獨一層裁切，內容區不裁切，版面檢查才看得到字有沒有被切 */}
+        <div className="ml-decor" aria-hidden="true"><Bagua /></div>
         <div className="ml-how" role="group" aria-label="起卦方式">
           <button type="button" className="ml-chip" data-testid="ml-method-time" aria-pressed={way === 'time'} onClick={() => setWay('time')}>時間起卦</button>
           <button type="button" className="ml-chip" data-testid="ml-method-numbers" aria-pressed={way === 'numbers'} onClick={() => setWay('numbers')}>報數起卦</button>

@@ -28,6 +28,8 @@ body:has(.ml-app) {
 /* 背景層：淺色紙張纖維紋理（2026-11-09 拿掉深色水墨／星空 WebGL 背景） */
 .ml-grain { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--ml-paper-grain); opacity: .55; }
 [data-ml-realm="home"] .ml-grain { opacity: .25; }
+/* 裝飾圖層：只裁切裝飾（羅盤、星盤、八卦），內容區本身不裁切 */
+.ml-decor { position: absolute; inset: 0; overflow: hidden; pointer-events: none; border-radius: inherit; }
 .ml-bagua {
   position: absolute; left: 50%; top: 50%; z-index: 0; pointer-events: none;
   width: min(125%, 540px); aspect-ratio: 1; transform: translate(-50%, -50%);

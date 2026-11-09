@@ -42,7 +42,7 @@
 
 /* 兩塊入口：手機上下錯位疊放，電腦左右錯位 */
 .ml-hm-doors { position: relative; display: flex; flex-direction: column; margin-top: 28px; }
-.ml-hm-east, .ml-hm-west { position: relative; overflow: clip; min-height: 300px; box-sizing: border-box; }
+.ml-hm-east, .ml-hm-west { position: relative; min-height: 300px; box-sizing: border-box; }
 .ml-hm-east { min-height: 330px; }
 .ml-hm-east {
   margin-left: 0; margin-right: calc(-1 * var(--ml-gutter)); border-radius: 28px 0 0 28px;

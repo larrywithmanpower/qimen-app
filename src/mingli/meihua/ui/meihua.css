@@ -7,7 +7,7 @@
 
 /* 起卦儀式區：深色黛藍，八卦羅盤在後面慢轉 */
 .ml-mritual {
-  position: relative; overflow: clip; display: flex; flex-direction: column; gap: 18px;
+  position: relative; display: flex; flex-direction: column; gap: 18px;
   margin-inline: calc(-1 * var(--ml-gutter)); padding: 26px var(--ml-gutter) 28px;
 }
 .ml-mritual > :not([aria-hidden="true"]) { position: relative; z-index: 1; }

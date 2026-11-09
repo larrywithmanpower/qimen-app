@@ -142,7 +142,7 @@ export default function Home() {
 
       <div className="ml-hm-doors">
         <div className="ml-hm-east" data-testid="ml-door-east">
-          <MiniCompass />
+          <div className="ml-decor" aria-hidden="true"><MiniCompass /></div>
           <h2 className="ml-hm-east-title">問天時</h2>
           <span className="ml-hm-east-sub">東方命理</span>
           <div className="ml-hm-list">
@@ -152,9 +152,11 @@ export default function Home() {
           </div>
         </div>
         <div className="ml-hm-west" data-testid="ml-door-west">
-          <span className="ml-hm-dot1" aria-hidden="true" />
-          <span className="ml-hm-dot2" aria-hidden="true" />
-          <StarCard />
+          <div className="ml-decor" aria-hidden="true">
+            <span className="ml-hm-dot1" />
+            <span className="ml-hm-dot2" />
+            <StarCard />
+          </div>
           <p className="ml-hm-west-title">Stars</p>
           <p className="ml-hm-west-sub">WESTERN · 問星辰</p>
           <div className="ml-hm-list">

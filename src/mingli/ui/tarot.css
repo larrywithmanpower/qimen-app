@@ -6,10 +6,10 @@
 .ml-tarot-question { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-title); font-weight: 700; letter-spacing: .04em; line-height: 1.4; }
 /* 抽牌儀式區：深藍綠夜空，金色星盤慢轉 */
 .ml-tritual {
-  position: relative; overflow: clip; display: flex; flex-direction: column; gap: 18px;
+  position: relative; display: flex; flex-direction: column; gap: 18px;
   margin-inline: calc(-1 * var(--ml-gutter)); padding: 28px var(--ml-gutter) 24px;
 }
-.ml-tritual > :not(.ml-astro, .ml-tw) { position: relative; z-index: 1; }
+.ml-tritual > :not([aria-hidden="true"]) { position: relative; z-index: 1; }
 .ml-astro { position: absolute; left: 50%; top: 42%; width: min(130%, 620px); aspect-ratio: 1; transform: translate(-50%, -50%); pointer-events: none; opacity: .32; }
 .ml-astro-spin { transform-box: fill-box; transform-origin: center; animation: ml-astro-rot 140s linear infinite; }
 @keyframes ml-astro-rot { to { transform: rotate(360deg); } }
