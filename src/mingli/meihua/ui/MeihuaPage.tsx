@@ -256,7 +256,10 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
             {rows.map(([k, v], i) => (
               <div className="ml-gua-row" data-testid="ml-gua-row" data-k={k} data-on={shown > i} key={k}>
                 <span className="ml-gua-k">{k}</span>
-                <span className={`ml-gua-v${k === '體用' ? ' ml-gua-v-sm' : ''}${k === '動爻' ? ' ml-gua-v-mid' : ''}`}>{v}</span>
+                <span className={`ml-gua-v${k === '體用' ? ' ml-gua-v-sm' : ''}${k === '動爻' ? ' ml-gua-v-mid' : ''}`}>
+                  {/* 逐字寫出：純文字才拆字（體用那行是排版元件照原樣）；減少動態時全站動畫歸零直接顯示 */}
+                  {typeof v === 'string' ? [...v].map((c, j) => <span className="ml-ch" key={j} style={{ animationDelay: `${j * 0.045}s` }}>{c}</span>) : v}
+                </span>
               </div>
             ))}
             {res && (

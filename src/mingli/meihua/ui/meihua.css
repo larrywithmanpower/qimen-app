@@ -58,6 +58,9 @@
 .ml-gua-k { flex: 0 0 3em; font-size: var(--ml-fs-label); color: var(--ml-ink-muted); letter-spacing: .1em; }
 .ml-gua-v { min-width: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 900; letter-spacing: .08em; line-height: 1.35; }
 .ml-gua-v-mid { font-size: var(--ml-fs-body); }
+.ml-ch { opacity: 0; }
+.ml-gua-row[data-on="true"] .ml-ch { animation: ml-ch .32s ease-out forwards; }
+@keyframes ml-ch { from { opacity: 0; filter: blur(2px); } to { opacity: 1; filter: none; } }
 .ml-gua-v-sm { font-size: var(--ml-fs-body-sm); letter-spacing: .04em; }
 .ml-seal {
   display: inline-grid; place-items: center; width: 54px; height: 54px; border-radius: 6px;
