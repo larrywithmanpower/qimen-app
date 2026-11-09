@@ -112,7 +112,11 @@ export function meihuaFacts(r: MeihuaResult): Record<string, unknown> {
     ti: { trigram: r.ti, element: r.tiElement },
     yong: { trigram: r.yong, element: r.yongElement },
     relation: r.relation,
+    // 2026-11-09 起：五級吉凶、三段走勢（用卦＝開頭、用互＝過程、變卦＝結果）、季節與體卦旺衰
     level: r.level,
+    trend: r.trend,
+    stages: r.stages.map((x) => ({ stage: x.name, trigram: x.trigram, relation: x.relation })),
+    ...(r.season ? { season: r.season, tiQi: r.tiQi } : {}),
   }
 }
 

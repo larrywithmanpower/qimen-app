@@ -5,7 +5,13 @@ export type Trigram = '乾' | '兌' | '離' | '震' | '巽' | '坎' | '艮' | '�
 export type Element = '金' | '木' | '水' | '火' | '土'
 export type Relation = '用生體' | '體剋用' | '比和' | '體生用' | '用剋體'
 export type Tone = '吉' | '平' | '凶'
-export type Level = '大吉' | '吉' | '小凶' | '凶'
+export type Level = '大吉' | '吉' | '平' | '小凶' | '凶'
+// 季節（依節氣月建）：辰戌丑未月是「四季」，土當令
+export type Season = '春' | '夏' | '秋' | '冬' | '四季'
+// 卦氣：只分旺、衰、平（《梅花易數》卷一〈卦氣旺〉〈卦氣衰〉）
+export type Qi = '旺' | '衰' | '平'
+// 三段走勢各段的好壞：生體或比和或體剋它＝吉、體生它＝耗、剋體＝凶
+export type StageMark = '吉' | '耗' | '凶'
 
 // 先天數：1～8 對應乾兌離震巽坎艮坤
 const TRIGRAM_BY_NUM: Trigram[] = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤']
@@ -115,14 +121,62 @@ export interface MeihuaResult {
   relation: Relation
   tone: Tone
   level: Level
+  // 季節與體卦旺衰；報數起卦沒給時間時是 null（不計旺衰）
+  season: Season | null
+  tiQi: Qi | null
+  // 吉凶總分（用卦×2＋用互＋變卦，再加旺衰修正）
+  score: number
+  // 三段走勢：用卦＝開頭、用互＝過程、變卦＝結果
+  stages: Stage[]
+  trend: string
 }
 
-const RELATION_TONE: Record<Relation, { tone: Tone; level: Level }> = {
-  用生體: { tone: '吉', level: '大吉' },
-  體剋用: { tone: '吉', level: '吉' },
-  比和: { tone: '吉', level: '吉' },
-  體生用: { tone: '平', level: '小凶' },
-  用剋體: { tone: '凶', level: '凶' },
+export interface Stage {
+  name: '開頭' | '過程' | '結果'
+  trigram: Trigram
+  relation: Relation
+  mark: StageMark
+}
+
+// 各卦對體卦的生剋換成分數（卷二〈體用總訣〉：生體吉、比和順、體克用吉、體生用耗、克體凶）
+const RELATION_SCORE: Record<Relation, number> = { 用生體: 2, 比和: 1, 體剋用: 1, 體生用: -1, 用剋體: -2 }
+const RELATION_MARK: Record<Relation, StageMark> = { 用生體: '吉', 比和: '吉', 體剋用: '吉', 體生用: '耗', 用剋體: '凶' }
+
+// 季節當令：旺的卦與衰的卦（衰＝當令五行剋它）
+const SEASON_OF_ZHI: Record<string, Season> = {
+  寅: '春', 卯: '春', 巳: '夏', 午: '夏', 申: '秋', 酉: '秋', 亥: '冬', 子: '冬', 辰: '四季', 戌: '四季', 丑: '四季', 未: '四季',
+}
+const SEASON_ELEMENT: Record<Season, Element> = { 春: '木', 夏: '火', 秋: '金', 冬: '水', 四季: '土' }
+export const qiOf = (t: Trigram, season: Season): Qi => {
+  const e = TRIGRAM_ELEMENT[t]
+  const now = SEASON_ELEMENT[season]
+  if (e === now) return '旺'
+  if (KE[now] === e) return '衰'
+  return '平'
+}
+
+// 時間點的季節：用節氣月建（立春入寅月），不是農曆月
+export const seasonOf = (date: Date): Season => {
+  const zhi: string = Solar.fromYmdHms(date.getFullYear(), date.getMonth() + 1, date.getDate(), date.getHours(), date.getMinutes(), 0)
+    .getLunar().getMonthZhiExact()
+  return SEASON_OF_ZHI[zhi]
+}
+
+const levelOf = (score: number): Level =>
+  score >= 5 ? '大吉' : score >= 2 ? '吉' : score >= 0 ? '平' : score === -1 ? '小凶' : '凶'
+const TONE_OF_LEVEL: Record<Level, Tone> = { 大吉: '吉', 吉: '吉', 平: '平', 小凶: '凶', 凶: '凶' }
+
+// 走勢一句話：看開頭與結果
+const trendOf = (stages: Stage[]): string => {
+  const good = (m: StageMark) => m === '吉'
+  const [a, mid, z] = stages
+  const head = good(a.mark) && good(z.mark) ? '前後都順'
+    : good(a.mark) ? '先順後阻'
+      : good(z.mark) ? '先難後成'
+        : '前後都有阻力'
+  // 開頭和結果一樣、中段卻不同才補一句（開頭結果不同時，中段本來就是轉折）
+  if (good(a.mark) !== good(z.mark) || good(mid.mark) === good(a.mark)) return head
+  return `${head}，${good(mid.mark) ? '中段有轉機' : '中段有消耗'}`
 }
 
 const relationOf = (ti: Element, yong: Element): Relation => {
@@ -134,7 +188,7 @@ const relationOf = (ti: Element, yong: Element): Relation => {
 }
 
 // 由上下卦與動爻組出完整結果
-const build = (input: MeihuaInput, upper: Trigram, lower: Trigram, moving: number): MeihuaResult => {
+const build = (input: MeihuaInput, upper: Trigram, lower: Trigram, moving: number, season: Season | null = null): MeihuaResult => {
   const lines = [...TRIGRAM_LINES[lower], ...TRIGRAM_LINES[upper]]
   // 互卦：下互取 2、3、4 爻，上互取 3、4、5 爻
   const mutualLower = trigramFromLines(lines.slice(1, 4))
@@ -150,6 +204,27 @@ const build = (input: MeihuaInput, upper: Trigram, lower: Trigram, moving: numbe
   const tiElement = TRIGRAM_ELEMENT[ti]
   const yongElement = TRIGRAM_ELEMENT[yong]
   const relation = relationOf(tiElement, yongElement)
+  // 用互：互卦中跟用卦同一側的那個（古例判吉凶都取用互）；乾坤無互，改取變卦的互卦（卷一〈互卦起例〉）
+  const noMutual = upper === lower && (upper === '乾' || upper === '坤')
+  const mutualSrc = noMutual ? changedLines : lines
+  const mutualYong = trigramFromLines(yongIsLower ? mutualSrc.slice(1, 4) : mutualSrc.slice(2, 5))
+  const changedYong = yongIsLower ? changedLower : changedUpper
+  const rel = (t: Trigram) => relationOf(tiElement, TRIGRAM_ELEMENT[t])
+  const stages: Stage[] = ([['開頭', yong], ['過程', mutualYong], ['結果', changedYong]] as const).map(([name, t]) => ({
+    name, trigram: t, relation: rel(t), mark: RELATION_MARK[rel(t)],
+  }))
+  let score = 2 * RELATION_SCORE[stages[0].relation] + RELATION_SCORE[stages[1].relation] + RELATION_SCORE[stages[2].relation]
+  // 旺衰修正（卷二〈衰旺論〉：體衰逢克凶甚、克體之卦氣宜衰；卷三：體旺雖有克亦無大害）
+  const tiQi = season ? qiOf(ti, season) : null
+  if (season) {
+    const kers = stages.filter((x) => x.relation === '用剋體').map((x) => x.trigram)
+    const shengs = stages.filter((x) => x.relation === '用生體').map((x) => x.trigram)
+    if (tiQi === '旺') score += 1
+    if (tiQi === '衰') score -= kers.length > 0 ? 2 : 1
+    if (kers.some((t) => qiOf(t, season) === '旺')) score -= 1
+    if (shengs.some((t) => qiOf(t, season) === '旺')) score += 1
+  }
+  const level = levelOf(score)
   return {
     input,
     upper,
@@ -164,7 +239,13 @@ const build = (input: MeihuaInput, upper: Trigram, lower: Trigram, moving: numbe
     tiElement,
     yongElement,
     relation,
-    ...RELATION_TONE[relation],
+    tone: TONE_OF_LEVEL[level],
+    level,
+    season,
+    tiQi,
+    score,
+    stages,
+    trend: trendOf(stages),
   }
 }
 
@@ -176,7 +257,7 @@ export interface LunarNumbers {
 }
 
 // 時間起卦：年支數＋月＋日 取上卦；再加時支數取下卦與動爻
-export const castByLunar = ({ yearZhi, month, day, hourZhi }: LunarNumbers): MeihuaResult => {
+export const castByLunar = ({ yearZhi, month, day, hourZhi }: LunarNumbers, season: Season | null = null): MeihuaResult => {
   const upperTotal = yearZhi + month + day
   const lowerTotal = upperTotal + hourZhi
   return build(
@@ -184,6 +265,7 @@ export const castByLunar = ({ yearZhi, month, day, hourZhi }: LunarNumbers): Mei
     trigramOf(upperTotal),
     trigramOf(lowerTotal),
     remainder(lowerTotal, 6),
+    season,
   )
 }
 
@@ -191,7 +273,8 @@ export const castByLunar = ({ yearZhi, month, day, hourZhi }: LunarNumbers): Mei
 export const castByNumbers = (
   a: number,
   b: number,
-  opts: { addHour?: boolean; hourZhi?: number } = {},
+  // at：起卦當下的時間，用來算季節旺衰；沒給就不計旺衰
+  opts: { addHour?: boolean; hourZhi?: number; at?: Date } = {},
 ): MeihuaResult => {
   const movingTotal = a + b + (opts.addHour ? (opts.hourZhi ?? 0) : 0)
   return build(
@@ -207,6 +290,7 @@ export const castByNumbers = (
     trigramOf(a),
     trigramOf(b),
     remainder(movingTotal, 6),
+    opts.at ? seasonOf(opts.at) : null,
   )
 }
 
@@ -233,7 +317,7 @@ export const lunarNumbersOf = (date: Date): LunarNumbersOfDate => {
 
 export const castByTime = (date: Date): MeihuaResult => {
   const { yearZhi, month, day, hourZhi } = lunarNumbersOf(date)
-  return castByLunar({ yearZhi, month, day, hourZhi })
+  return castByLunar({ yearZhi, month, day, hourZhi }, seasonOf(date))
 }
 
 export interface TemplateParagraph {
@@ -286,11 +370,21 @@ const elementBasis = (r: MeihuaResult): string => {
   return `${t}${y}比和`
 }
 
-// 範本解讀：依生剋與卦名組句，尚未接 AI
+// 一句話依五級吉凶（不只看本卦體用，免得跟三段走勢矛盾）
+const LEVEL_VERDICT: Record<Level, string> = {
+  大吉: '各方面都在幫你，放手去做',
+  吉: '大致順利，用心經營會有成果',
+  平: '不好不壞，成敗看你怎麼做',
+  小凶: '有些消耗與阻礙，放慢腳步較穩',
+  凶: '阻力偏大，現在不宜硬碰',
+}
+
+// 範本解讀：依吉凶、生剋與卦名組句（AI 失敗時的備用）
 export const templateReading = (result: MeihuaResult): TemplateReading => {
   const text = RELATION_TEXT[result.relation]
+  const end = RELATION_TEXT[result.stages[2].relation]
   return {
-    verdict: text.verdict,
+    verdict: `${LEVEL_VERDICT[result.level]}（${result.trend}）`,
     tone: result.tone,
     paragraphs: [
       {
@@ -305,7 +399,7 @@ export const templateReading = (result: MeihuaResult): TemplateReading => {
       },
       {
         title: '最後會怎樣',
-        text: `${text.end}。變卦是「${result.changed.name}」，第 ${result.moving} 爻是變動的關鍵點。`,
+        text: `${end.end}。變卦是「${result.changed.name}」，第 ${result.moving} 爻是變動的關鍵點；整體走勢「${result.trend}」。`,
         basis: `變卦 ${result.changed.name}・${result.moving}爻動`,
       },
     ],

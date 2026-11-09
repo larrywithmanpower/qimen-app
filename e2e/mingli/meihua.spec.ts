@@ -32,7 +32,10 @@ async function expectResult(page: Page, res: MeihuaResult) {
   expect(rows['動爻']).toBe(`${YAO_NAMES[res.moving - 1]}爻`)
   expect(rows['變卦']).toBe(res.changed.name)
   expect(rows['體用']).toContain(`體${res.ti}${res.tiElement}・用${res.yong}${res.yongElement}`)
-  await expect(page.getByTestId('ml-seal')).toHaveText(res.tone)
+  await expect(page.getByTestId('ml-seal')).toHaveText(res.level)
+  // 判那一行：走勢＋時令（季節・體卦旺衰）
+  await expect(page.getByTestId('ml-trend')).toContainText(res.trend)
+  if (res.season) await expect(page.getByTestId('ml-trend')).toContainText(`${res.season}・體${res.ti}${res.tiElement}${res.tiQi}`)
   // 爻線條數：陽 1 筆、陰 2 筆；動爻是朱砂色
   await expect(page.getByTestId('ml-yao')).toHaveCount(res.lines.reduce((n, v) => n + (v ? 1 : 2), 0))
   const moving = await page.locator('[data-testid="ml-yao"].ml-moving').count()
@@ -50,8 +53,9 @@ test('時間起卦：畫面上的卦等於 castByTime 的結果', async ({ page 
 
 test('報數起卦：網址帶 a、b 直接起卦，等於 castByNumbers', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await open(page, `${BASE}#/meihua?a=16&b=5`)
-  await expectResult(page, castByNumbers(16, 5))
+  // 網址帶 t 固定起卦時間（季節旺衰才算得一樣）
+  await open(page, `${BASE}#/meihua?a=16&b=5&t=2024-03-15T10:00`)
+  await expectResult(page, castByNumbers(16, 5, { at: new Date('2024-03-15T10:00') }))
   await expect(page.getByTestId('ml-cast-info')).toHaveText('報數 16、5')
 })
 

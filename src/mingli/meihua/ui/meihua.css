@@ -71,6 +71,13 @@
 .ml-gua-row[data-on="true"] .ml-seal { animation: ml-stamp .55s cubic-bezier(.3, 1.6, .5, 1) forwards; }
 @keyframes ml-stamp { from { opacity: 0; transform: rotate(-5deg) scale(1.9); } to { opacity: 1; transform: rotate(-5deg) scale(1); } }
 .ml-seal-sm { width: 44px; height: 44px; font-size: var(--ml-fs-heading); flex: 0 0 auto; }
+/* 大吉、小凶兩個字：印章裡改直排兩字、字縮小 */
+.ml-seal[data-len="2"] { writing-mode: vertical-rl; font-size: var(--ml-fs-body); letter-spacing: .05em; line-height: 1; }
+.ml-seal-sm[data-len="2"] { font-size: var(--ml-fs-caption); }
+/* 判那一行：印章右邊寫走勢與時令 */
+.ml-gua-trend { display: flex; flex-direction: column; gap: 2px; min-width: 0; white-space: normal; font-size: var(--ml-fs-body-sm); color: var(--ml-ink-body); opacity: 0; }
+.ml-gua-row[data-on="true"] .ml-gua-trend { animation: ml-ch .4s .45s ease-out forwards; }
+.ml-gua-qi { font-size: var(--ml-fs-caption); color: var(--ml-ink-muted); }
 
 .ml-cast-info { margin: 0; text-align: center; font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); letter-spacing: .06em; }
 .ml-mtools { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--ml-space-3); }

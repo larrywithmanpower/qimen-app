@@ -12,7 +12,7 @@ const SEED = 4271
 const PICKS: [number, number, number] = [3, 9, 17]
 const drawn = drawThree(SEED, PICKS)
 const tarotTone = templateReading(drawn).tone
-const mei = castByNumbers(12, 34)
+const mei = castByNumbers(12, 34, { at: new Date('2024-03-15T10:00') })
 const CARD = { id: 'fu-card-1', title: '追問卡', source: '追問來源' }
 
 type Kind = 'tarot' | 'meihua'
@@ -55,7 +55,7 @@ async function setup(page: Page, kind: Kind, followups: ((route: Route) => Promi
 
 // 打開、填問題（可帶近況），走到 AI 解讀成功
 async function open(page: Page, kind: Kind, context = '') {
-  await page.goto(`${BASE}#/${kind === 'tarot' ? `tarot?seed=${SEED}` : 'meihua?a=12&b=34'}`)
+  await page.goto(`${BASE}#/${kind === 'tarot' ? `tarot?seed=${SEED}` : 'meihua?a=12&b=34&t=2024-03-15T10:00'}`)
   if (context) {
     await page.getByTestId('ml-context-open').click()
     await page.getByTestId('ml-context-input').fill(context)

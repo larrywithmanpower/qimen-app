@@ -20,7 +20,7 @@ const SEED = 4271
 const PICKS: [number, number, number] = [3, 9, 17]
 const drawn = drawThree(SEED, PICKS)
 const tarotTone = templateReading(drawn).tone
-const mei = castByNumbers(12, 34)
+const mei = castByNumbers(12, 34, { at: new Date('2024-03-15T10:00') })
 const chart = buildChart({ solarDate: '1990-07-05', timeIndex: 4, gender: '男' })
 const chartStar = chart.palaces.flatMap((p) => p.majorStars)[0].name
 
@@ -53,7 +53,7 @@ const SPECS: Record<Kind, {
     goodText: `本卦是${mei.name}，變卦是${mei.changed.name}`,
     outOfBoundsText: `像${['乾為天', '坤為地', '水火既濟'].find((n) => ![mei.name, mei.mutual.name, mei.changed.name].includes(n))}`,
     open: async (page) => {
-      await page.goto(`${BASE}#/meihua?a=12&b=34`)
+      await page.goto(`${BASE}#/meihua?a=12&b=34&t=2024-03-15T10:00`)
       await askQuestion(page)
       await page.getByTestId('ml-to-reading').click()
     },

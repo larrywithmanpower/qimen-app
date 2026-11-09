@@ -117,17 +117,22 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
     window.scrollTo(0, 0)
   }
 
+  // 起卦時間：網址帶 t 就用它（測試、分享固定結果），否則用現在；報數起卦也拿它算季節旺衰
+  const castDate = () => {
+    const t = params.get('t')
+    const given = t ? new Date(t) : null
+    return given && !Number.isNaN(given.getTime()) ? given : new Date()
+  }
+
   const doCast = (btn?: Element) => {
     if (btn) burstAt(btn)
     if (!question) return
     if (way === 'numbers') {
       if (a === null || b === null) return
-      run(castByNumbers(a, b), `報數 ${a}、${b}`)
+      run(castByNumbers(a, b, { at: castDate() }), `報數 ${a}、${b}`)
       return
     }
-    const t = params.get('t')
-    const given = t ? new Date(t) : null
-    const date = given && !Number.isNaN(given.getTime()) ? given : new Date()
+    const date = castDate()
     run(castByTime(date), lunarLine(date))
   }
 
@@ -145,7 +150,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
   useEffect(() => {
     if (question && pa !== null && pb !== null && !autoRan.current) {
       autoRan.current = true
-      run(castByNumbers(pa, pb), `報數 ${pa}、${pb}`)
+      run(castByNumbers(pa, pb, { at: castDate() }), `報數 ${pa}、${pb}`)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [question])
@@ -266,7 +271,12 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
             {res && (
               <div className="ml-gua-row" data-testid="ml-gua-row" data-k="判" data-on={shown > 5}>
                 <span className="ml-gua-k">判</span>
-                <span className="ml-seal" data-testid="ml-seal" ref={sealRef} aria-label={`判斷：${res.tone}`}>{res.tone}</span>
+                <span className="ml-seal" data-testid="ml-seal" data-len={res.level.length} ref={sealRef} aria-label={`判斷：${res.level}`}>{res.level}</span>
+                <span className="ml-gua-trend" data-testid="ml-trend">
+                  {/* 走勢在逗號後分兩段，窄螢幕可以換行（逗號不能放行首，要留在前一段尾巴） */}
+                  <span>{res.trend.split('，').map((x, i, all) => <span className="ml-nb" key={i}>{i < all.length - 1 ? `${x}，` : x}</span>)}</span>
+                  {res.season && <span className="ml-nb ml-gua-qi">{`${res.season}・體${res.ti}${res.tiElement}${res.tiQi}`}</span>}
+                </span>
               </div>
             )}
           </div>
@@ -323,7 +333,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
                   <div className="ml-mverdict-k">一句話</div>
                   <div className="ml-mverdict-v">{reading.verdict}</div>
                 </div>
-                <span className="ml-seal ml-seal-sm" aria-hidden="true">{res.tone}</span>
+                <span className="ml-seal ml-seal-sm" data-len={res.level.length} aria-hidden="true">{res.level}</span>
               </div>
               <div className="ml-mparas">
                 {reading.paragraphs.map((p, k) => (
