@@ -27,6 +27,8 @@
 .ml-dp-nav { display: inline-flex; align-items: center; justify-content: center; }
 .ml-dp-tbtn { font-weight: 700; color: var(--ml-ink); }
 .ml-dp-nav:disabled, .ml-dp-cell:disabled { opacity: .3; cursor: default; }
+/* 不能選的日子加刪除線：不只靠變淡，色弱也分得出來 */
+.ml-dp-cell:disabled { text-decoration: line-through; }
 
 .ml-dp-grid { display: grid; gap: 2px; }
 .ml-dp-grid4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }

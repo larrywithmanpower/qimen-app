@@ -105,3 +105,12 @@ test('舊網址 #/qimen 與未知網址一律導回首頁', async ({ page }) => 
     await expect(page.getByTestId('ml-home')).toBeVisible()
   }
 })
+
+test('大標題換行平均分配（text-wrap: balance），最後一行不會只剩一兩個字', async ({ page }) => {
+  await prepare(page)
+  await page.goto(`${BASE}#/`)
+  const wrap = (sel: string) => page.locator(sel).first().evaluate((el) => getComputedStyle(el).textWrapStyle || getComputedStyle(el).textWrap)
+  expect(await wrap('.ml-hm-title')).toContain('balance')
+  await page.goto(`${BASE}#/privacy`)
+  expect(await wrap('.ml-page-title')).toContain('balance')
+})

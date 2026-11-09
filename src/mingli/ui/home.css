@@ -2,7 +2,7 @@
 .ml-hm { gap: 0; padding-block: var(--ml-space-4) var(--ml-space-6); }
 .ml-hm-today { margin: 0; font-size: var(--ml-fs-caption); letter-spacing: .12em; color: var(--ml-ink-muted); }
 .ml-hm-hero { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
-.ml-hm-title { margin: 0; font-family: var(--ml-font-serif); font-weight: 900; font-size: clamp(2.5rem, 10.5vw, 4.75rem); line-height: 1.28; letter-spacing: .04em; }
+.ml-hm-title { margin: 0; text-wrap: balance; font-family: var(--ml-font-serif); font-weight: 900; font-size: clamp(2.5rem, 10.5vw, 4.75rem); line-height: 1.28; letter-spacing: .04em; }
 .ml-hm-red { color: var(--ml-east-red); }
 .ml-hm-lead { margin: 0; max-width: 30em; font-size: var(--ml-fs-body); line-height: 1.75; color: var(--ml-ink-soft); }
 

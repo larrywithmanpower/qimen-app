@@ -54,6 +54,10 @@ test('今天之後的日子 disabled，本月時下一頁 disabled', async ({ pa
   await expect(page.getByTestId(`ml-dp-d-${d}`)).toBeEnabled()
   const last = new Date(y, m, 0).getDate()
   if (d < last) await expect(page.getByTestId(`ml-dp-d-${d + 1}`)).toBeDisabled()
+  // 不能選的日子除了變淡還有刪除線（不只靠顏色分辨），能選的沒有
+  const deco = (id: string) => page.getByTestId(id).evaluate((el) => getComputedStyle(el).textDecorationLine)
+  expect(await deco(`ml-dp-d-${d}`)).not.toContain('line-through')
+  if (d < last) expect(await deco(`ml-dp-d-${d + 1}`)).toContain('line-through')
 })
 
 test('Esc 與點面板外都會關閉', async ({ page }) => {
@@ -92,4 +96,17 @@ test('頁面上沒有任何 input[type=date]', async ({ page }) => {
   await expect(page.locator('input[type="date"]')).toHaveCount(0)
   await field(page).click()
   await expect(page.locator('input[type="date"]')).toHaveCount(0)
+})
+
+test('按鈕按住時會變暗（按下去有回饋），放開後恢復', async ({ page }) => {
+  const btn = field(page)
+  const box = (await btn.boundingBox())!
+  const filter = () => btn.evaluate((el) => getComputedStyle(el).filter)
+  expect(await filter()).toBe('none')
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  // 欄位本身有轉場，等轉場跑完再讀
+  await expect.poll(filter).toBe('brightness(0.88)')
+  await page.mouse.up()
+  await expect.poll(filter).toBe('none')
 })

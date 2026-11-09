@@ -1,6 +1,6 @@
 /* 問題標題與「改問題」：塔羅、梅花共用 */
 .ml-qrow { display: flex; flex-direction: column; align-items: inherit; gap: var(--ml-space-2); min-width: 0; }
-.ml-qrow h1 { overflow-wrap: anywhere; }
+.ml-qrow h1 { overflow-wrap: anywhere; text-wrap: balance; }
 .ml-qedit { display: flex; flex-direction: column; align-items: stretch; gap: var(--ml-space-2); width: 100%; min-width: 0; }
 .ml-qedit-input {
   display: block; width: 100%; box-sizing: border-box; min-height: 48px; padding: 0 var(--ml-space-1);

@@ -24,6 +24,8 @@ body:has(.ml-app) {
   outline: 2px solid var(--ml-accent);
   outline-offset: 3px;
 }
+/* 按下去的瞬間變暗一點，手機上才感覺得到有按到 */
+.ml-app button:not(:disabled):active, .ml-app a:active { filter: brightness(.88); }
 
 /* 背景層：淺色紙張纖維紋理（2026-11-09 拿掉深色水墨／星空 WebGL 背景） */
 .ml-grain { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--ml-paper-grain); opacity: .55; }
@@ -106,7 +108,7 @@ body:has(.ml-app) {
 
 /* 紀錄、準度、佔位頁 */
 .ml-page { justify-content: center; align-items: flex-start; gap: var(--ml-space-4); padding-block: var(--ml-space-6); }
-.ml-page-title { margin: 0; font-family: var(--ml-font-serif); font-weight: 900; font-size: var(--ml-fs-title); letter-spacing: .1em; }
+.ml-page-title { margin: 0; text-wrap: balance; font-family: var(--ml-font-serif); font-weight: 900; font-size: var(--ml-fs-title); letter-spacing: .1em; }
 .ml-page-question { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-heading); color: var(--ml-ink-soft); }
 .ml-page-line { margin: 0; max-width: 34em; line-height: 1.8; color: var(--ml-ink-muted); }
 
