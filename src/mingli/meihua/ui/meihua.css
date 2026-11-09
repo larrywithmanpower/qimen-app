@@ -137,6 +137,9 @@
   .ml-meihua[data-read="true"] .ml-cast-info { text-align: left; }
   .ml-meihua[data-read="true"] .ml-mreading { margin: 0; max-width: 560px; }
   .ml-meihua[data-read="true"] .ml-mparas { display: flex; flex-direction: column; gap: var(--ml-space-4); }
+  /* 解讀＋追問會越來越長：兩欄靠上對齊，卦象固定在左邊，右邊自己往下捲（同塔羅） */
+  .ml-meihua[data-read="true"] { align-items: start; }
+  .ml-meihua[data-read="true"] .ml-mboard { position: sticky; top: var(--ml-space-6); }
 }
 
 /* 體用的兩段各自不換行，放不下就整段換到下一行 */

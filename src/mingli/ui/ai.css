@@ -14,7 +14,7 @@
 .ml-ai-reading { display: flex; flex-direction: column; gap: var(--ml-space-4); max-width: 680px; width: 100%; margin: 6px auto 0; min-width: 0; }
 .ml-ai-verdict {
   padding: 20px 22px; border-radius: var(--ml-radius-card); border: 1px solid var(--ml-accent);
-  background: var(--ml-night-glass);
+  background: var(--ml-surface);
 }
 .ml-ai-verdict-k { font-size: var(--ml-fs-caption); letter-spacing: .3em; color: var(--ml-accent); }
 .ml-ai-verdict-v { margin-top: 6px; font-family: var(--ml-font-serif); font-size: var(--ml-fs-title); font-weight: 900; letter-spacing: .08em; }
@@ -48,7 +48,7 @@
 .ml-ai-notice p { margin: 0; }
 .ml-ai-refusal {
   max-width: 680px; width: 100%; margin: 6px auto 0; padding: 20px 22px; box-sizing: border-box;
-  border-radius: var(--ml-radius-card); border: 1px solid var(--ml-accent); background: var(--ml-night-glass);
+  border-radius: var(--ml-radius-card); border: 1px solid var(--ml-accent); background: var(--ml-surface);
   color: var(--ml-ink-body); font-size: var(--ml-fs-body); line-height: 1.85;
 }
 .ml-ai-refusal p { margin: 0; }

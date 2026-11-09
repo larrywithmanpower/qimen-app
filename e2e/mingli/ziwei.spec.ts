@@ -1,6 +1,6 @@
 import { test, expect } from './checks'
 import type { Page } from 'playwright/test'
-import { BASE, DEFAULT_QUESTION, askQuestion, checkLayout, pickDate, prepare } from './checks'
+import { BASE, DEFAULT_QUESTION, askQuestion, checkContrast, checkLayout, pickDate, prepare } from './checks'
 
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -79,6 +79,8 @@ test('點一宮說明卡更新；輸入頁、命盤版面檢查沒有問題', as
   await expect(detail).toHaveAttribute('data-branch', facts.soulBranch)
   await expect(detail).toContainText('命宮')
   await expect(detail).toContainText('範例說明，正式版由 AI 依星曜規則卡撰寫')
+  // 宮位說明卡的字要看得清楚（改淺底後曾是深底深字）
+  expect(await checkContrast(page, '.ml-pdetail')).toEqual([])
 
   const other = facts.palaces.find((p) => p.branch === '午')!
   await page.locator('[data-testid="ml-palace"][data-branch="午"]').click()
@@ -304,6 +306,7 @@ test('紫微問題欄：改了問題，舊解讀留在對話串並標出當時�
   await page.getByTestId('ml-ai-ziwei-btn').click()
   await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
   await expect(page.getByTestId('ml-followup-reading-q')).toHaveText('第一個問題')
+  expect(await checkContrast(page, '.ml-ai-reading')).toEqual([])
   await input.fill('第二個問題')
   // 對話串不收起來：舊解讀還在、標著原本的問題；按鈕出現可問新的
   await expect(page.getByTestId('ml-ai-reading')).toHaveCount(1)

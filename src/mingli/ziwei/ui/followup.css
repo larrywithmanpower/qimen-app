@@ -10,7 +10,7 @@
 .ml-chat-a {
   align-self: flex-start; max-width: 92%; min-width: 0; box-sizing: border-box;
   display: flex; flex-direction: column; align-items: flex-start; gap: var(--ml-space-2); padding: 14px 16px;
-  border-radius: 20px 20px 20px 4px; border: 1px solid var(--ml-line); background: var(--ml-night-glass);
+  border-radius: 20px 20px 20px 4px; border: 1px solid var(--ml-line); background: var(--ml-surface);
 }
 .ml-chat-wait { padding: 0; }
 .ml-followup-clear {
@@ -21,6 +21,11 @@
 .ml-followup-dock {
   position: sticky; bottom: calc(56px + var(--ml-safe-bottom) + var(--ml-space-2)); z-index: 4;
   padding: 6px; border-radius: var(--ml-radius-pill); border: 1px solid var(--ml-line); background: var(--ml-nav);
+}
+/* 對話捲到輸入列底下時用底色淡出蓋住，不會字疊字 */
+.ml-followup-dock::before {
+  content: ""; position: absolute; inset: -20px -10px -14px; z-index: -1; pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--ml-ground) 45%);
 }
 /* 建議問題放在對話尾端靠右（像是你接下來要說的話），不黏底 */
 .ml-followup-sugs { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--ml-space-2); }

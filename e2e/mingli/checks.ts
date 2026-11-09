@@ -199,3 +199,52 @@ export async function pickDate(page: Page, iso: string, fieldTestId = 'ml-birth-
   await page.getByTestId(`ml-dp-d-${d}`).click();
   await panel.waitFor({ state: 'hidden' });
 }
+
+/**
+ * 文字對比：roots 裡每段字的顏色對「實際疊出來的底色」要 ≥ 4.5（大字 ≥ 3）
+ * 底色從字往上找，半透明的一層層疊，直到不透明為止
+ */
+export async function checkContrast(page: Page, roots: string): Promise<string[]> {
+  return page.evaluate((roots) => {
+    const parse = (c: string) => {
+      const m = c.match(/rgba?\(([^)]+)\)/)
+      if (!m) return [0, 0, 0, 0]
+      const p = m[1].split(/[ ,/]+/).filter(Boolean).map(Number)
+      return [p[0], p[1], p[2], p.length > 3 ? p[3] : 1]
+    }
+    const bgOf = (el: Element) => {
+      const layers: number[][] = []
+      for (let n: Element | null = el; n; n = n.parentElement) {
+        const c = parse(getComputedStyle(n).backgroundColor)
+        if (c[3] > 0) layers.push(c)
+        if (c[3] >= 1) break
+      }
+      let out = [255, 255, 255]
+      for (const [r, g, b, a] of layers.reverse()) out = [r * a + out[0] * (1 - a), g * a + out[1] * (1 - a), b * a + out[2] * (1 - a)]
+      return out
+    }
+    const lum = (rgb: number[]) => {
+      const [r, g, b] = rgb.map((v) => v / 255).map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4))
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b
+    }
+    const bad: string[] = []
+    document.querySelectorAll(roots).forEach((root) => {
+      [root, ...root.querySelectorAll('*')].forEach((el) => {
+        if (el.closest('[aria-hidden="true"]')) return
+        const own = [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent || '').trim())
+        if (!own) return
+        const s = getComputedStyle(el)
+        if (s.visibility === 'hidden' || s.display === 'none') return
+        const fg = parse(s.color)
+        const bg = bgOf(el)
+        const mix = [0, 1, 2].map((i) => fg[i] * fg[3] + bg[i] * (1 - fg[3]))
+        const [x, y] = [lum(mix), lum(bg)].sort((a, b) => b - a)
+        const ratio = (x + 0.05) / (y + 0.05)
+        const px = parseFloat(s.fontSize)
+        const big = px >= 24 || (px >= 18.66 && Number(s.fontWeight) >= 700)
+        if (ratio < (big ? 3 : 4.5)) bad.push(`${(el.textContent || '').trim().slice(0, 16)} 對比 ${ratio.toFixed(2)}`)
+      })
+    })
+    return bad
+  }, roots)
+}

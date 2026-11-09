@@ -1,6 +1,6 @@
 import { test, expect } from './checks'
 import type { Page, Route } from 'playwright/test'
-import { BASE, askQuestion, checkLayout, prepare } from './checks'
+import { BASE, askQuestion, checkContrast, checkLayout, prepare } from './checks'
 import { drawThree, templateReading } from '../../src/mingli/tarot/engine'
 import { castByNumbers } from '../../src/mingli/meihua/engine'
 
@@ -89,6 +89,8 @@ for (const kind of ['tarot', 'meihua'] as const) {
     await expect(item).toContainText('先把手上的事做完')
     await expect(page.getByTestId('ml-followup-basis')).toContainText('追問依據')
     await expect(page.getByTestId('ml-followup-input')).toHaveValue('')
+    // 一句話卡、各段解讀、AI 回答泡泡的字都要看得清楚（2026-11-09 改淺底後曾變成深底深字）
+    expect(await checkContrast(page, '.ml-ai-reading, .ml-chat-a, .ml-chat-q')).toEqual([])
     expect(fups[0]).toMatchObject({ kind, mode: 'followup', question: '那我該怎麼做', tone: TONE[kind] })
     expect('focus' in fups[0]).toBe(false)
     expect(fups[0].history).toHaveLength(1)
@@ -246,3 +248,24 @@ test('建議問題送不出去（回答沒過檢查）就放回輸入框', async
   await expect(page.getByTestId('ml-followup-error')).toBeVisible()
   await expect(page.getByTestId('ml-followup-input')).toHaveValue('動爻在說什麼？')
 })
+
+// 2026-11-09 Boss 回報：電腦版追問一多，左邊卦象被推到下面、上方空一大塊，捲動不好操作
+for (const kind of ['tarot', 'meihua'] as const) {
+  test(`${kind} 電腦版：追問變長時左邊牌陣／卦象靠上、往下捲仍固定在畫面上`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await setup(page, kind, [json(answer('這是一段比較長的追問回答，'.repeat(8)))])
+    await open(page, kind)
+    for (const q of ['第一題', '第二題', '第三題', '第四題']) {
+      await ask(page, q)
+      await expect(page.getByTestId('ml-followup-item').filter({ hasText: q })).toHaveCount(1)
+    }
+    const board = page.locator(kind === 'tarot' ? '.ml-tarot-board' : '.ml-mboard')
+    await page.evaluate(() => window.scrollTo(0, 0))
+    const top0 = await board.evaluate((e) => e.getBoundingClientRect().top)
+    expect(top0).toBeLessThan(260)
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+    const r = await board.evaluate((e) => { const b = e.getBoundingClientRect(); return { top: b.top, bottom: b.bottom } })
+    expect(r.top).toBeGreaterThanOrEqual(0)
+    expect(r.top).toBeLessThan(120)
+  })
+}
