@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react'
 import './styles/tokens.css'
 import './ui/ui.css'
 import './ui/legal.css'
-import Background from './ui/Background'
-import { Bagua, BrushFilters } from './ui/Bagua'
+import { BrushFilters } from './ui/Bagua'
 import Home from './ui/Home'
 import { SoonPage } from './ui/Pages'
 import { LegalFooter, MaintenancePage, PrivacyPage, TermsPage } from './ui/Legal'
@@ -87,8 +86,7 @@ export default function MingliApp() {
 
   return (
     <div className="ml-app" data-ml-realm={realm}>
-      <Background />
-      <Bagua />
+      <div className="ml-grain" aria-hidden="true" />
       <BrushFilters />
       <header className="ml-header">
         <div className="ml-header-inner">

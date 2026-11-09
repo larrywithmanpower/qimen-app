@@ -3,13 +3,6 @@ import { useSyncExternalStore } from 'react'
 
 export type Realm = 'home' | 'west' | 'east'
 
-declare global {
-  interface Window {
-    // 每畫一格加 1，測試量 fps 用
-    __mlFrames?: number
-  }
-}
-
 export const prefersReduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export const fx = {
@@ -42,18 +35,6 @@ export function setRealm(next: Realm) {
     fx.taijiT = 0
   }
   notify()
-}
-
-// 首頁太極偏向哪一半：1 星空（塔羅）、-1 水墨（東方）
-export function setTaijiSide(side: 1 | -1) {
-  fx.sideT = side
-}
-
-// 太極擴散轉場：選中的那半邊吞掉整個畫面
-export function expandTaiji(side: 1 | -1) {
-  fx.expT = 1
-  fx.taijiT = 0
-  fx.target = side > 0 ? 1 : 0
 }
 
 const now = () => ((performance.now() - fx.t0) / 1000) * (prefersReduced() ? 0.25 : 1)

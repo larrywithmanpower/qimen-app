@@ -14,6 +14,32 @@ import { AiHelpLine, AiLimitLine, AiLoading, AiRefusalView } from '../ui/AiReadi
 import { useAiReading } from '../ui/useAiReading'
 import { drawThree, nextSeed, SEED_RANGE, seedFrom, shuffle, templateReading } from './engine'
 
+// 抽牌儀式區後面慢轉的星盤（金色細線、羅馬數字 12 宮）
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
+function Astrolabe() {
+  return (
+    <svg className="ml-astro" viewBox="0 0 340 340" aria-hidden="true">
+      <g className="ml-astro-spin">
+        <circle cx="170" cy="170" r="158" className="ml-astro-ring" />
+        <circle cx="170" cy="170" r="128" className="ml-astro-ring" />
+        <circle cx="170" cy="170" r="60" className="ml-astro-ring" />
+        <circle cx="170" cy="170" r="150" className="ml-astro-ticks" />
+        {ROMAN.map((r, i) => {
+          const a = (i * Math.PI) / 6
+          const b = a + Math.PI / 12
+          return (
+            <g key={r}>
+              <line x1={170 + 60 * Math.sin(b)} y1={170 - 60 * Math.cos(b)} x2={170 + 128 * Math.sin(b)} y2={170 - 128 * Math.cos(b)} className="ml-astro-spoke" />
+              <text x={170 + 142 * Math.sin(a)} y={170 - 142 * Math.cos(a)} dy=".35em" textAnchor="middle" className="ml-astro-num">{r}</text>
+            </g>
+          )
+        })}
+        <path d="M170 110l8 52 52 8-52 8-8 52-8-52-52-8 52-8z" className="ml-astro-ring" />
+      </g>
+    </svg>
+  )
+}
+
 const SLOT_LABELS = [['過去', 'Past'], ['現在', 'Present'], ['接下來', 'Future']] as const
 
 // 每個牌位的進度：空 → 飛行中 → 蓋著 → 翻面 → 牌面揭露
@@ -248,6 +274,11 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
             <ContextField value={context} canEdit={picks.length === 0 && !busy} onChange={(v) => { setContext(v); updateSession({ context: v }) }} />
           )}
         </div>
+        <div className="ml-ritual ml-tritual" data-testid="ml-tritual">
+        <Astrolabe />
+        <span className="ml-tw ml-tw1" aria-hidden="true" />
+        <span className="ml-tw ml-tw2" aria-hidden="true" />
+        <span className="ml-tw ml-tw3" aria-hidden="true" />
         <div className="ml-slots">
           {SLOT_LABELS.map(([zh, en], i) => {
             const phase = phases[i]
@@ -327,6 +358,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
               ))}
             </div>
           </div>
+        </div>
         </div>
       </div>
       {drawn && ai.status === 'loading' && <AiLoading />}

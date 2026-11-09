@@ -81,3 +81,12 @@ describe('路由：隱私與免責頁', () => {
     }
   })
 })
+
+// 2026-11-09 定：解讀全是 AI，不能讓人以為有真人命理師（文案、AI 指令、知識卡都不准出現）
+describe('不出現「命理師」', () => {
+  it('src/mingli、index.html、知識卡、AI 指令都沒有「命理師」', () => {
+    const files = [...targets(), join(REPO, 'functions', 'gemini-proxy', 'prompt.js')]
+    const hits = files.filter((f) => readFileSync(f, 'utf8').includes('命理師')).map((f) => relative(REPO, f))
+    expect(hits).toEqual([])
+  })
+})

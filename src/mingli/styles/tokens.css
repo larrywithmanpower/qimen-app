@@ -109,22 +109,101 @@
   /* iPhone 安全區域；測試可用 --ml-safe-bottom 覆寫 */
   --ml-safe-bottom: env(safe-area-inset-bottom, 0px);
 
-  /* 著色器用的主色（0～1 的 RGB，由 Background 讀進 WebGL） */
-  --ml-gl-paper: .91 .88 .81;
-  --ml-gl-ink: .043 .040 .052;
-  --ml-gl-sky: .02 .025 .06;
-  --ml-gl-sky-hi: .10 .08 .24;
-  --ml-gl-star: .75 .82 1;
 }
 
-/* 各頁強調色：首頁與東方頁用宣紙白，塔羅用月光銀 */
-[data-ml-realm="home"], [data-ml-realm="east"] {
-  --ml-accent: var(--ml-paper);
-  --ml-on-accent: var(--ml-on-paper);
-  --ml-accent-soft: var(--ml-paper-soft);
+/* ===== 2026-11-09 改版：淺色底分三區，只有儀式區（起卦、抽牌）轉深色 =====
+   做法：同一組變數名稱在各區重設值，元件不用改寫；
+   「--ml-paper」在淺色區代表主要強調色（墨黑），「--ml-on-paper」是蓋在上面的字色 */
+[data-ml-realm="home"], html:has([data-ml-realm="home"]) {
+  --ml-ground: #F7F3EC; --ml-ground-deep: #F7F3EC;
+  --ml-surface: #FFFDF8; --ml-surface-glass: rgba(255, 253, 248, .88); --ml-surface-sunk: #F0EADF; --ml-surface-chart: #FFFDF8;
+  --ml-nav: #F7F3EC; --ml-nav-glass: rgba(247, 243, 236, .9); --ml-veil: rgba(255, 253, 248, .7);
+  --ml-line: rgba(30, 26, 23, .14); --ml-line-strong: rgba(30, 26, 23, .42); --ml-line-soft: rgba(30, 26, 23, .1); --ml-track: #E6DFD2;
+  --ml-ink: #1E1A17; --ml-ink-body: #2E2823; --ml-ink-soft: #453C35; --ml-ink-muted: #5E5248; --ml-ink-faint: #6E6155;
+  --ml-shadow-text: transparent;
+  --ml-paper: #1E1A17; --ml-on-paper: #F7F3EC; --ml-paper-soft: rgba(30, 26, 23, .06); --ml-paper-glow: rgba(30, 26, 23, .18);
+  --ml-cinnabar-text: #A3301F; --ml-jade: #2F6B4E;
+  --ml-accent: #1E1A17; --ml-on-accent: #F7F3EC; --ml-accent-soft: rgba(30, 26, 23, .06);
+  --ml-chip: #FFFDF8;
+  color-scheme: light;
 }
-[data-ml-realm="west"] {
-  --ml-accent: var(--ml-silver);
-  --ml-on-accent: var(--ml-night-blue);
-  --ml-accent-soft: var(--ml-silver-soft);
+[data-ml-realm="east"], html:has([data-ml-realm="east"]) {
+  --ml-ground: #F4EDE0; --ml-ground-deep: #F4EDE0;
+  --ml-surface: #FBF8F2; --ml-surface-glass: rgba(251, 248, 242, .88); --ml-surface-sunk: #EDE4D3; --ml-surface-chart: #FBF8F2;
+  --ml-nav: #F4EDE0; --ml-nav-glass: rgba(244, 237, 224, .9); --ml-veil: rgba(251, 248, 242, .7);
+  --ml-line: rgba(30, 26, 23, .14); --ml-line-strong: rgba(30, 26, 23, .42); --ml-line-soft: rgba(30, 26, 23, .1); --ml-track: #E3D9C6;
+  --ml-ink: #1E1A17; --ml-ink-body: #2E2823; --ml-ink-soft: #453C35; --ml-ink-muted: #5C4F43; --ml-ink-faint: #6A5C4F;
+  --ml-shadow-text: transparent;
+  --ml-paper: #1E1A17; --ml-on-paper: #F4EDE0; --ml-paper-soft: rgba(30, 26, 23, .06); --ml-paper-glow: rgba(30, 26, 23, .18);
+  --ml-cinnabar-text: #A3301F; --ml-jade: #2F6B4E;
+  --ml-accent: #C23B2E; --ml-on-accent: #F4EDE0; --ml-accent-soft: rgba(194, 59, 46, .08);
+  --ml-gold: #B8935A; --ml-stone-blue: #2D5A7B;
+  --ml-lay-decadal: #3E5BA8; --ml-lay-decadal-soft: rgba(62, 91, 168, .12);
+  --ml-lay-age: #8A6A1E; --ml-lay-age-soft: rgba(138, 106, 30, .12);
+  --ml-lay-yearly: #2F7A55; --ml-lay-yearly-soft: rgba(47, 122, 85, .12);
+  --ml-lay-monthly: #7B4A99; --ml-lay-monthly-soft: rgba(123, 74, 153, .12);
+  --ml-lay-daily: #B4572A; --ml-lay-daily-soft: rgba(180, 87, 42, .12);
+  color-scheme: light;
+}
+[data-ml-realm="west"], html:has([data-ml-realm="west"]) {
+  --ml-ground: #F6F0E6; --ml-ground-deep: #F6F0E6;
+  --ml-surface: #FCF9F3; --ml-surface-glass: rgba(252, 249, 243, .88); --ml-surface-sunk: #ECE6F3; --ml-surface-chart: #FCF9F3;
+  --ml-nav: #F6F0E6; --ml-nav-glass: rgba(246, 240, 230, .9); --ml-veil: rgba(252, 249, 243, .7);
+  --ml-line: rgba(28, 33, 64, .14); --ml-line-strong: rgba(28, 33, 64, .42); --ml-line-soft: rgba(28, 33, 64, .1); --ml-track: #E4DDEC;
+  --ml-ink: #1C2140; --ml-ink-body: #252A4C; --ml-ink-soft: #3A3F62; --ml-ink-muted: #4E5272; --ml-ink-faint: #5B5F7E;
+  --ml-shadow-text: transparent;
+  --ml-paper: #1C2140; --ml-on-paper: #F6F0E6; --ml-paper-soft: rgba(28, 33, 64, .06); --ml-paper-glow: rgba(28, 33, 64, .18);
+  --ml-silver: #1C2140; --ml-silver-soft: rgba(28, 33, 64, .06); --ml-silver-line: rgba(28, 33, 64, .25);
+  --ml-star: #5E4F8C; --ml-star-line: rgba(94, 79, 140, .35);
+  --ml-cinnabar-text: #A3301F; --ml-jade: #2F6B4E;
+  --ml-accent: #1C2140; --ml-on-accent: #F6F0E6; --ml-accent-soft: rgba(28, 33, 64, .06);
+  --ml-gold: #B08A48; --ml-violet: #5E4F8C;
+  color-scheme: light;
+}
+
+/* 儀式區：起卦、抽牌那一段改回深色（變數重設成深色值，裡面的元件照舊能用） */
+.ml-ritual {
+  --ml-ground: #1F2A3A; --ml-surface: rgba(244, 237, 224, .06); --ml-surface-glass: rgba(31, 42, 58, .8); --ml-surface-sunk: #18212E;
+  --ml-veil: rgba(15, 20, 28, .5); --ml-line: rgba(232, 223, 201, .16); --ml-line-strong: rgba(232, 223, 201, .45); --ml-line-soft: rgba(232, 223, 201, .1);
+  --ml-ink: #F4EDE0; --ml-ink-body: #E9DFC9; --ml-ink-soft: #D9CFBA; --ml-ink-muted: #C2B8A4; --ml-ink-faint: #ADA390;
+  --ml-paper: #F4EDE0; --ml-on-paper: #1F2A3A; --ml-paper-soft: rgba(244, 237, 224, .08); --ml-paper-glow: rgba(244, 237, 224, .25);
+  --ml-cinnabar-text: #F0B3A6; --ml-accent: #C23B2E; --ml-on-accent: #F4EDE0;
+  background: var(--ml-ground); color: var(--ml-ink); color-scheme: dark;
+}
+[data-ml-realm="west"] .ml-ritual {
+  --ml-ground: #173649; --ml-surface-glass: rgba(23, 54, 73, .8); --ml-surface-sunk: #122C3C;
+  --ml-ink: #F6F0E6; --ml-ink-body: #E8E1D3; --ml-ink-muted: #B9C3CB; --ml-ink-faint: #A3B0BA;
+  --ml-paper: #F6F0E6; --ml-on-paper: #173649;
+  --ml-silver: #C9D3E6; --ml-star: #FEEBA9; --ml-accent: #B08A48; --ml-on-accent: #173649;
+}
+
+/* 新字體 */
+:root {
+  --ml-font-kai: "LXGW WenKai TC", "Kaiti TC", "Noto Serif TC", serif;
+  --ml-font-west-sc: "Marcellus SC", "Cormorant Garamond", serif;
+  --ml-ritual-east: #1F2A3A;
+  --ml-ritual-west: #173649;
+  --ml-west-gold: #B08A48;
+  --ml-east-gold: #B8935A;
+  --ml-on-gold: #173649;
+  --ml-petal: #E7B7AE;
+  --ml-mist: rgba(244, 237, 224, .16);
+  --ml-mist-soft: rgba(244, 237, 224, .06);
+  --ml-star-dot: #FEEBA9;
+  --ml-west-frame-faint: rgba(176, 138, 72, .55);
+  /* 首頁兩塊入口各自的顏色（首頁是中性區，入口要露出東西方的味道） */
+  --ml-east-paper: #F4EDE0;
+  --ml-east-ink: #1E1A17;
+  --ml-east-muted: #5C4F43;
+  --ml-east-red: #C23B2E;
+  --ml-west-on-night: #F6F0E6;
+  --ml-west-muted-night: #B9C3CB;
+  --ml-west-gold-soft: #C9B37E;
+  --ml-west-parchment: #F6F0E6;
+  --ml-west-ink: #1C2140;
+  --ml-west-violet: #5E4F8C;
+  --ml-card-shadow-soft: rgba(0, 0, 0, .35);
+  --ml-door-shadow: rgba(30, 26, 23, .08);
+  /* 紙張纖維紋理（SVG 雜訊，顏色寫在矩陣裡） */
+  --ml-paper-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45  0 0 0 0 .38  0 0 0 0 .3  0 0 0 .2 0'/></filter><rect width='240' height='240' filter='url(%23g)'/></svg>");
 }

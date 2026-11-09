@@ -1,0 +1,136 @@
+/* 2026-11-09 新首頁：暖白中性底，東西兩塊入口各自一種風格 */
+.ml-hm { gap: 0; padding-block: var(--ml-space-4) var(--ml-space-6); }
+.ml-hm-today { margin: 0; font-size: var(--ml-fs-caption); letter-spacing: .12em; color: var(--ml-ink-muted); }
+.ml-hm-hero { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+.ml-hm-title { margin: 0; font-family: var(--ml-font-serif); font-weight: 900; font-size: clamp(2.5rem, 10.5vw, 4.75rem); line-height: 1.28; letter-spacing: .04em; }
+.ml-hm-red { color: var(--ml-east-red); }
+.ml-hm-lead { margin: 0; max-width: 30em; font-size: var(--ml-fs-body); line-height: 1.75; color: var(--ml-ink-soft); }
+
+/* 直接問一件事 */
+.ml-hm-ask { display: flex; flex-direction: column; gap: 12px; margin-top: 22px; max-width: 640px; }
+.ml-hm-input {
+  display: block; width: 100%; box-sizing: border-box; min-height: 54px; padding: 0 16px;
+  border: 1px solid var(--ml-line-strong); border-radius: var(--ml-radius-control); background: var(--ml-surface);
+  color: var(--ml-ink); font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title);
+}
+.ml-hm-input::placeholder { color: var(--ml-ink-faint); font-size: var(--ml-fs-body-sm); font-family: var(--ml-font-sans); }
+.ml-hm-need { margin: 0; font-size: var(--ml-fs-caption); color: var(--ml-cinnabar-text); }
+.ml-hm-go { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ml-hm-gobtn {
+  position: relative; min-height: 50px; padding: 0 8px; border-radius: var(--ml-radius-control);
+  border: 1px solid var(--ml-line-strong); background: transparent; color: var(--ml-ink);
+  font: inherit; font-size: var(--ml-fs-body-sm); font-weight: 700; cursor: pointer;
+}
+.ml-hm-gobtn[data-rec] { background: var(--ml-ink); color: var(--ml-on-paper); border-color: var(--ml-ink); }
+.ml-hm-rec {
+  position: absolute; top: -9px; right: 8px; padding: 1px 8px; border-radius: var(--ml-radius-pill);
+  background: var(--ml-east-red); color: var(--ml-seal-ink); font-size: var(--ml-fs-micro); font-weight: 700;
+}
+.ml-hm-mqlabel { margin: 22px 0 0; font-size: var(--ml-fs-caption); letter-spacing: .1em; color: var(--ml-ink-muted); }
+
+/* 煩惱字卡跑馬燈：滿版、左右拉到螢幕邊 */
+.ml-hm-marquee { margin: 10px calc(-1 * var(--ml-gutter)) 0; overflow: clip; padding: 2px 0; }
+.ml-hm-track { display: flex; gap: 10px; width: max-content; animation: ml-hm-mq 36s linear infinite; }
+.ml-hm-marquee:hover .ml-hm-track, .ml-hm-marquee:focus-within .ml-hm-track { animation-play-state: paused; }
+@keyframes ml-hm-mq { to { transform: translateX(-50%); } }
+.ml-hm-chip {
+  flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px;
+  border-radius: var(--ml-radius-pill); border: 1px solid var(--ml-line-strong); background: var(--ml-chip);
+  color: var(--ml-ink); font: inherit; font-size: var(--ml-fs-body-sm); cursor: pointer; transition: background .2s, color .2s;
+}
+.ml-hm-chip:hover { background: var(--ml-ink); color: var(--ml-on-paper); }
+
+/* 兩塊入口：手機上下錯位疊放，電腦左右錯位 */
+.ml-hm-doors { position: relative; display: flex; flex-direction: column; margin-top: 28px; }
+.ml-hm-east, .ml-hm-west { position: relative; overflow: clip; min-height: 300px; box-sizing: border-box; }
+.ml-hm-east { min-height: 330px; }
+.ml-hm-east {
+  margin-left: 0; margin-right: calc(-1 * var(--ml-gutter)); border-radius: 28px 0 0 28px;
+  background: var(--ml-paper-grain), var(--ml-east-paper); color: var(--ml-east-ink); box-shadow: 0 1px 0 var(--ml-door-shadow);
+}
+.ml-hm-west {
+  margin-top: -26px; margin-left: calc(-1 * var(--ml-gutter)); border-radius: 0 28px 28px 0;
+  background: var(--ml-ritual-west); color: var(--ml-west-on-night);
+}
+.ml-hm-west::before {
+  content: ""; position: absolute; inset: 14px; pointer-events: none;
+  background:
+    linear-gradient(var(--ml-west-gold), var(--ml-west-gold)) left top / 28px 1px no-repeat,
+    linear-gradient(var(--ml-west-gold), var(--ml-west-gold)) left top / 1px 28px no-repeat,
+    linear-gradient(var(--ml-west-gold), var(--ml-west-gold)) right top / 28px 1px no-repeat,
+    linear-gradient(var(--ml-west-gold), var(--ml-west-gold)) right top / 1px 28px no-repeat,
+    linear-gradient(var(--ml-west-gold), var(--ml-west-gold)) left bottom / 28px 1px no-repeat,
+    linear-gradient(var(--ml-west-gold), var(--ml-west-gold)) left bottom / 1px 28px no-repeat,
+    linear-gradient(var(--ml-west-gold), var(--ml-west-gold)) right bottom / 28px 1px no-repeat,
+    linear-gradient(var(--ml-west-gold), var(--ml-west-gold)) right bottom / 1px 28px no-repeat;
+}
+.ml-hm-compass { position: absolute; right: -30px; top: 40px; width: 190px; height: 190px; }
+.ml-hm-spin { transform-box: fill-box; transform-origin: center; animation: ml-hm-rot 90s linear infinite; }
+@keyframes ml-hm-rot { to { transform: rotate(360deg); } }
+.ml-hm-ring { fill: none; stroke: var(--ml-east-gold); stroke-width: .6; }
+.ml-hm-ticks { fill: none; stroke: var(--ml-east-gold); stroke-width: 3; stroke-dasharray: .7 10.4; }
+.ml-hm-tri { fill: var(--ml-east-ink); opacity: .75; font-family: var(--ml-font-serif); font-weight: 700; font-size: 9px; }
+.ml-hm-dot { fill: var(--ml-east-red); }
+.ml-hm-east-title {
+  position: absolute; left: 26px; top: 28px; margin: 0; writing-mode: vertical-rl;
+  font-family: var(--ml-font-serif); font-weight: 900; font-size: 2.5rem; letter-spacing: .2em;
+}
+.ml-hm-east-sub { position: absolute; left: 84px; top: 34px; writing-mode: vertical-rl; font-family: var(--ml-font-kai); font-size: .9375rem; letter-spacing: .3em; color: var(--ml-east-muted); }
+.ml-hm-list { position: absolute; display: flex; flex-direction: column; gap: 2px; }
+.ml-hm-east .ml-hm-list { left: 120px; right: 16px; bottom: 44px; }
+.ml-hm-west .ml-hm-list { left: 30px; right: 130px; bottom: 26px; }
+.ml-hm-list a {
+  display: flex; flex-direction: column; justify-content: center; min-height: 48px;
+  font-family: var(--ml-font-serif); font-weight: 700; font-size: 1.0625rem;
+}
+.ml-hm-list a small { font-family: var(--ml-font-sans); font-weight: 400; font-size: var(--ml-fs-caption); opacity: .8; }
+.ml-hm-east .ml-hm-list a small { color: var(--ml-east-muted); opacity: 1; }
+.ml-hm-west .ml-hm-list a small { color: var(--ml-west-muted-night); opacity: 1; }
+.ml-hm-list a:hover { text-decoration: underline; text-underline-offset: 4px; }
+.ml-hm-soon { font-size: var(--ml-fs-caption); padding-top: 4px; }
+.ml-hm-east .ml-hm-soon { color: var(--ml-east-muted); }
+.ml-hm-west .ml-hm-soon { color: var(--ml-west-muted-night); }
+.ml-hm-west-title { position: absolute; left: 30px; top: 44px; margin: 0; font-family: var(--ml-font-west); font-style: italic; font-size: 2.875rem; line-height: 1; }
+.ml-hm-west-sub { position: absolute; left: 30px; top: 98px; margin: 0; font-family: var(--ml-font-west-sc); letter-spacing: .3em; font-size: .6875rem; color: var(--ml-west-gold-soft); }
+.ml-hm-card {
+  position: absolute; right: 36px; top: 46px; width: 96px; height: 156px; border-radius: 8px;
+  background: var(--ml-west-parchment); box-shadow: 0 12px 30px var(--ml-card-shadow-soft);
+  animation: ml-hm-float 6s ease-in-out infinite;
+}
+@keyframes ml-hm-float { 0%, 100% { transform: translateY(0) rotate(8deg); } 50% { transform: translateY(-10px) rotate(5deg); } }
+.ml-hm-card-frame { fill: none; stroke: var(--ml-west-gold); stroke-width: .8; }
+.ml-hm-card-num, .ml-hm-card-name { fill: var(--ml-west-ink); font-family: var(--ml-font-west-sc); font-size: 8px; letter-spacing: 1.5px; }
+.ml-hm-card-star { fill: none; stroke: var(--ml-west-gold); stroke-width: .9; }
+.ml-hm-card-line { fill: none; stroke: var(--ml-west-violet); stroke-width: .9; }
+.ml-hm-dot1, .ml-hm-dot2 { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: var(--ml-star-dot); animation: ml-hm-twk 3s ease-in-out infinite; }
+.ml-hm-dot1 { left: 210px; top: 34px; }
+.ml-hm-dot2 { left: 80px; top: 200px; animation-delay: 1.2s; }
+@keyframes ml-hm-twk { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+
+@media (min-width: 720px) {
+  .ml-hm-marquee { margin-inline: calc(-1 * var(--ml-space-6)); }
+  .ml-hm-doors { display: grid; grid-template-columns: 1.1fr 1fr; gap: 24px; align-items: start; }
+  .ml-hm-east, .ml-hm-west { margin: 0; border-radius: 32px; min-height: 380px; }
+  .ml-hm-west { margin-top: 40px; }
+  .ml-hm-compass { width: 280px; height: 280px; right: -40px; }
+  .ml-hm-east-title { left: 40px; top: 40px; font-size: 3.5rem; }
+  .ml-hm-east-sub { left: 116px; top: 48px; }
+  .ml-hm-east .ml-hm-list { left: 170px; bottom: 32px; }
+  .ml-hm-east { min-height: 380px; }
+  .ml-hm-list a { font-size: 1.25rem; }
+  .ml-hm-west-title { left: 44px; top: 52px; font-size: 4.25rem; }
+  .ml-hm-west-sub { left: 44px; top: 128px; }
+  .ml-hm-card { right: 54px; top: 56px; width: 130px; height: 212px; }
+  .ml-hm-west .ml-hm-list { left: 44px; bottom: 36px; }
+}
+@media (min-width: 1100px) {
+  .ml-hm-hero { display: grid; grid-template-columns: 1fr 380px; gap: 60px; align-items: end; margin-top: 28px; }
+  .ml-hm-br { display: none; }
+  .ml-hm-title { font-size: 4.75rem; }
+  .ml-hm-lead { padding-bottom: 14px; font-size: 1.0625rem; }
+}
+/* 減少動態：跑馬燈改成直接換行排好，第二組（重複）拿掉 */
+@media (prefers-reduced-motion: reduce) {
+  .ml-hm-track { animation: none; width: auto; flex-wrap: wrap; padding-inline: var(--ml-gutter); }
+  .ml-hm-chip[aria-hidden="true"] { display: none; }
+}

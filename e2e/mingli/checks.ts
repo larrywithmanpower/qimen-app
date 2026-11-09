@@ -106,7 +106,8 @@ export async function checkLayout(page: Page): Promise<LayoutIssue[]> {
         Math.max(...rects.map(x => x.bottom)) - Math.min(...rects.map(x => x.top)),
       );
       texts.push({ el, r, pin: pinned(el) });
-      if (r.left < -1 || r.right > vw + 1) issues.push({ kind: '文字超出畫面', detail: label(el) });
+      // 跑馬燈字卡本來就會從畫面兩側進出，不算超出
+      if ((r.left < -1 || r.right > vw + 1) && !el.closest('[data-ml-marquee]')) issues.push({ kind: '文字超出畫面', detail: label(el) });
     });
     for (let i = 0; i < texts.length; i++) {
       for (let j = i + 1; j < texts.length; j++) {

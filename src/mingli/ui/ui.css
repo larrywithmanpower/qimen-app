@@ -1,7 +1,6 @@
 /* 命理 App 外殼與首頁：顏色一律走 tokens.css 的 var(--ml-*)，class 全部 ml- 前綴 */
 html:has(.ml-app), body:has(.ml-app) {
   background: var(--ml-ground-deep);
-  color-scheme: dark;
 }
 body:has(.ml-app) {
   margin: 0;
@@ -26,49 +25,20 @@ body:has(.ml-app) {
   outline-offset: 3px;
 }
 
-/* 背景層 */
-.ml-bg { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; display: block; }
-.ml-bg-fallback { background: radial-gradient(ellipse at 30% 20%, var(--ml-surface), var(--ml-ground-deep) 70%); }
+/* 背景層：淺色紙張纖維紋理（2026-11-09 拿掉深色水墨／星空 WebGL 背景） */
+.ml-grain { position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--ml-paper-grain); opacity: .55; }
+[data-ml-realm="home"] .ml-grain { opacity: .25; }
 .ml-bagua {
-  position: fixed; left: 50%; top: 50%; z-index: 0; pointer-events: none;
-  width: min(118vmin, 980px); height: min(118vmin, 980px);
-  margin: calc(min(118vmin, 980px) / -2) 0 0 calc(min(118vmin, 980px) / -2);
-  opacity: 0; transition: opacity 1.6s ease;
+  position: absolute; left: 50%; top: 50%; z-index: 0; pointer-events: none;
+  width: min(125%, 540px); aspect-ratio: 1; transform: translate(-50%, -50%);
 }
-.ml-bagua[data-on="true"] { opacity: 1; }
 .ml-bagua svg { width: 100%; height: 100%; animation: ml-spin 240s linear infinite; }
 @keyframes ml-spin { to { transform: rotate(360deg); } }
-.ml-bagua-tri { stroke: var(--ml-paper); stroke-width: 4.2; stroke-linecap: round; fill: none; opacity: .11; filter: url(#ml-brush-s); transition: opacity 1.2s, stroke 1.2s; }
-.ml-bagua-tri.ml-lit { stroke: var(--ml-cinnabar); opacity: .75; }
-.ml-bagua-ring { fill: none; stroke: var(--ml-paper); stroke-width: .6; opacity: .08; }
-.ml-bagua-name { fill: var(--ml-paper); font-family: var(--ml-font-serif); font-size: 9px; font-weight: 700; text-anchor: middle; opacity: .16; transition: opacity 1.2s, fill 1.2s; }
-.ml-bagua-name.ml-lit { fill: var(--ml-cinnabar); opacity: .9; }
-
-/* 梅花解讀頁：八卦只放在卦象後面，不壓到解讀文字。手機與平板縮到右上角並變淡 */
-.ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua {
-  left: auto; right: -110px; top: -40px; width: 320px; height: 320px; margin: 0;
-}
-.ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua[data-on="true"] { opacity: .5; }
-@media (min-width: 1100px) {
-  .ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua {
-    /* 縮到卦象區內：整圈轉到哪裡都碰不到右邊的卦名欄與解讀文字 */
-    left: calc(50% - 435px); right: auto; top: 525px; width: 400px; height: 400px; margin: -200px 0 0 -200px;
-  }
-  .ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua[data-on="true"] { opacity: .5; }
-  .ml-app:has([data-testid="ml-meihua"][data-read="true"]) .ml-bagua-name { display: none; }
-}
-
-/* 紫微頁：八卦不壓表單、宮格、說明文字。縮到右上角並變淡；電腦版輸入頁移到右邊空白處 */
-.ml-app:has(:is([data-testid="ml-ziwei"], [data-testid="ml-me"])) .ml-bagua {
-  left: auto; right: -110px; top: -40px; width: 320px; height: 320px; margin: 0;
-}
-.ml-app:has(:is([data-testid="ml-ziwei"], [data-testid="ml-me"])) .ml-bagua[data-on="true"] { opacity: .3; }
-@media (min-width: 1100px) {
-  .ml-app:has(:is([data-testid="ml-ziwei"], [data-testid="ml-me"])[data-phase="form"]) .ml-bagua {
-    left: calc(50% + 280px); right: auto; top: 50%; width: 560px; height: 560px; margin: -280px 0 0 -280px;
-  }
-  .ml-app:has(:is([data-testid="ml-ziwei"], [data-testid="ml-me"])[data-phase="form"]) .ml-bagua[data-on="true"] { opacity: .8; }
-}
+.ml-bagua-tri { stroke: var(--ml-east-gold); stroke-width: 4.2; stroke-linecap: round; fill: none; opacity: .16; filter: url(#ml-brush-s); transition: opacity 1.2s, stroke 1.2s; }
+.ml-bagua-tri.ml-lit { stroke: var(--ml-cinnabar); opacity: .5; }
+.ml-bagua-ring { fill: none; stroke: var(--ml-east-gold); stroke-width: .6; opacity: .45; }
+.ml-bagua-name { fill: var(--ml-ink-body); font-family: var(--ml-font-serif); font-size: 9px; font-weight: 700; text-anchor: middle; opacity: .4; transition: opacity 1.2s, fill 1.2s; }
+.ml-bagua-name.ml-lit { fill: var(--ml-cinnabar-text); opacity: 1; }
 
 /* 頂部列 */
 .ml-header {
@@ -132,62 +102,6 @@ body:has(.ml-app) {
   font-size: var(--ml-fs-caption); color: var(--ml-ink-muted);
 }
 
-/* 首頁 */
-.ml-home { justify-content: flex-start; gap: 14px; padding-block: 178px var(--ml-space-4); }
-.ml-home .ml-home-ask { gap: 14px; }
-.ml-home .ml-method { min-height: 80px; padding-block: var(--ml-space-3); gap: 4px; }
-.ml-home-title {
-  margin: 0; font-family: var(--ml-font-serif); font-weight: 900;
-  font-size: clamp(var(--ml-fs-display), 11vw, 6rem); line-height: 1.12; letter-spacing: .08em; text-wrap: balance;
-  text-shadow: 0 2px 24px var(--ml-shadow-text);
-}
-.ml-home-title-seg { display: inline-block; white-space: nowrap; }
-.ml-home-title span span { display: inline-block; opacity: 0; filter: blur(14px); transform: translateY(8px); animation: ml-ink-in 1.6s cubic-bezier(.2,.7,.2,1) forwards; }
-@keyframes ml-ink-in { 60% { opacity: .9; filter: blur(2px); } to { opacity: 1; filter: blur(0); transform: none; } }
-.ml-home-lead { margin: 0; max-width: 34em; font-size: var(--ml-fs-body); line-height: 1.8; color: var(--ml-ink-muted); text-shadow: 0 1px 12px var(--ml-shadow-text); }
-.ml-home-ask { display: flex; flex-direction: column; gap: 18px; max-width: 640px; width: 100%; }
-.ml-home-q { position: relative; }
-.ml-home-q input {
-  display: block; width: 100%; min-height: 56px; padding: 0 var(--ml-space-1);
-  border: 0; border-bottom: 1px solid var(--ml-line-strong); border-radius: 0; background: transparent;
-  color: var(--ml-ink); font-family: var(--ml-font-serif); font-size: var(--ml-fs-heading);
-}
-.ml-home-q input::placeholder { color: var(--ml-ink-faint); }
-.ml-home-q input:focus-visible { outline: none; }
-.ml-home-q::after {
-  content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 100%;
-  background: linear-gradient(90deg, transparent, var(--ml-paper), transparent);
-  transform: scaleX(0); transition: transform .8s cubic-bezier(.2,.7,.2,1); pointer-events: none;
-}
-.ml-home-q:focus-within::after { transform: scaleX(1); }
-.ml-home-methods { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ml-space-3); }
-.ml-method {
-  position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
-  min-height: 96px; padding: var(--ml-space-4) 18px; border-radius: var(--ml-radius-card);
-  border: 1px solid var(--ml-line); background: var(--ml-surface-glass); backdrop-filter: blur(8px);
-  color: var(--ml-ink); font: inherit; text-align: left; cursor: pointer; transition: border-color .3s, transform .3s;
-}
-.ml-method[data-m="tarot"] { grid-column: 1 / -1; }
-.ml-method:hover { transform: translateY(-2px); border-color: var(--ml-line-strong); }
-.ml-method[data-m="tarot"][aria-pressed="true"] { border-color: var(--ml-silver); }
-.ml-method[aria-pressed="true"]:not([data-m="tarot"]) { border-color: var(--ml-paper); }
-.ml-method-name { font-family: var(--ml-font-serif); font-size: var(--ml-fs-heading); font-weight: 700; }
-.ml-method-sub { font-size: var(--ml-fs-label); color: var(--ml-ink-muted); }
-.ml-method-tag { position: absolute; right: 14px; top: 12px; font-size: var(--ml-fs-body-sm); }
-.ml-method[data-m="tarot"] .ml-method-tag { font-family: var(--ml-font-west); font-style: italic; color: var(--ml-star); }
-.ml-method:not([data-m="tarot"]) .ml-method-tag { font-family: var(--ml-font-serif); font-weight: 900; color: var(--ml-cinnabar-text); }
-.ml-home-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ml-space-3); }
-.ml-go {
-  min-height: 54px; padding: 0 40px; border-radius: var(--ml-radius-pill); border: 0;
-  background: var(--ml-paper); color: var(--ml-on-paper);
-  font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 900; letter-spacing: .4em;
-  cursor: pointer; transition: box-shadow .4s;
-}
-.ml-go:hover { box-shadow: 0 0 32px 2px var(--ml-paper-glow); }
-.ml-home-soon { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ml-space-2); }
-.ml-home-soon-label { font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); }
-.ml-home-soon .ml-soon-pill:last-child { display: none; }
-
 /* 紀錄、準度、佔位頁 */
 .ml-page { justify-content: center; align-items: flex-start; gap: var(--ml-space-4); padding-block: var(--ml-space-6); }
 .ml-page-title { margin: 0; font-family: var(--ml-font-serif); font-weight: 900; font-size: var(--ml-fs-title); letter-spacing: .1em; }
@@ -212,13 +126,6 @@ body:has(.ml-app) {
   .ml-tab:hover { color: var(--ml-ink); }
   .ml-tab[aria-current="page"] { color: var(--ml-ink); font-weight: 700; background: var(--ml-surface); border-color: var(--ml-line); }
   .ml-main { padding-inline: var(--ml-space-6); padding-bottom: var(--ml-space-6); }
-  .ml-home .ml-method { min-height: 140px; padding-block: var(--ml-space-4); gap: 6px; }
-  .ml-home .ml-home-ask { gap: 18px; }
-  .ml-method[data-m="tarot"] { grid-column: auto; }
-  .ml-home-methods { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .ml-home-soon { margin-left: auto; }
-  .ml-home-soon .ml-soon-pill:last-child { display: inline-flex; }
-  .ml-home { justify-content: flex-end; gap: var(--ml-space-6); padding-block: 420px var(--ml-space-6); }
 }
 
 /* 電腦（含平板橫放）：左 brand＋文字分頁、右側日期或回首頁 */
@@ -226,7 +133,6 @@ body:has(.ml-app) {
   .ml-header-inner { grid-template-columns: auto 1fr auto; border-bottom: 1px solid var(--ml-line-soft); }
   .ml-topnav { justify-self: start; border: 0; background: transparent; backdrop-filter: none; padding: 0; }
   .ml-tab[aria-current="page"] { background: transparent; border-color: transparent; }
-  .ml-home { justify-content: center; padding-block: var(--ml-space-6); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -236,4 +142,3 @@ body:has(.ml-app) {
   .ml-app *, .ml-app *::before, .ml-app *::after { animation-delay: 0s !important; transition-delay: 0s !important; }
   .ml-bagua svg { animation: none; }
 }
-.ml-home-need { margin: 0; font-size: var(--ml-fs-caption); color: var(--ml-cinnabar-text); }

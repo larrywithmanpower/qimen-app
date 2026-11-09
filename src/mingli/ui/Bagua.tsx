@@ -1,4 +1,4 @@
-import { useLitTrigrams, useRealm } from './fx'
+import { useLitTrigrams } from './fx'
 
 // 先天八卦：乾南（上）坤北，離東（左）坎西；爻由內往外＝由初爻往上
 const TRI: [string, number[]][] = [
@@ -6,12 +6,11 @@ const TRI: [string, number[]][] = [
   ['坤', [0, 0, 0]], ['震', [1, 0, 0]], ['離', [1, 0, 1]], ['兌', [1, 1, 0]],
 ]
 
-// 東方頁的背景八卦盤，亮起的卦用朱砂色
+// 起卦儀式區裡的八卦羅盤（慢轉），亮起的卦用朱砂色
 export function Bagua() {
-  const realm = useRealm()
   const lit = useLitTrigrams()
   return (
-    <div className="ml-bagua" data-on={realm === 'east'} aria-hidden="true">
+    <div className="ml-bagua" aria-hidden="true">
       <svg viewBox="-100 -100 200 200">
         <circle className="ml-bagua-ring" r="44" />
         <circle className="ml-bagua-ring" r="84" />

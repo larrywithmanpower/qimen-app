@@ -7,6 +7,7 @@ import QuestionBar, { NEED_QUESTION } from '../../ui/QuestionBar'
 import { session, updateSession } from '../../ui/session'
 import { clipContext, clipQuestion, meihuaFacts, proxyUrl } from '../../ai'
 import ContextField from '../../ui/ContextField'
+import { Bagua } from '../../ui/Bagua'
 import FollowupPanel from '../../ziwei/ui/FollowupPanel'
 import { useFollowup } from '../../ui/useFollowup'
 import { AiHelpLine, AiLimitLine, AiLoading, AiRefusalView } from '../../ui/AiReadingView'
@@ -205,6 +206,8 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
             <ContextField value={context} canEdit={!cast} onChange={(v) => { setContext(v); updateSession({ context: v }) }} />
           )}
         </div>
+        <div className="ml-ritual ml-mritual" data-testid="ml-mritual">
+        <Bagua />
         <div className="ml-how" role="group" aria-label="起卦方式">
           <button type="button" className="ml-chip" data-testid="ml-method-time" aria-pressed={way === 'time'} onClick={() => setWay('time')}>時間起卦</button>
           <button type="button" className="ml-chip" data-testid="ml-method-numbers" aria-pressed={way === 'numbers'} onClick={() => setWay('numbers')}>報數起卦</button>
@@ -224,6 +227,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
         )}
         <div className="ml-hexwrap">
           <div className="ml-hex" data-testid="ml-hex">
+            {res && !instant && <span className="ml-mink" key={cast!.key} aria-hidden="true" />}
             <svg viewBox="0 0 300 330" role="img" aria-label={res ? `${res.name}卦象` : '尚未起卦'}>
               {!res && [0, 1, 2, 3, 4, 5].map((k) => (
                 <path key={k} className="ml-yao-ghost" d={`M30 ${yaoY(k)} L270 ${yaoY(k)}`} />
@@ -248,7 +252,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
             </svg>
           </div>
           <div className="ml-gua">
-            {!res && <p className="ml-gua-hint">按下起卦，六爻會由下往上一筆一筆寫出來</p>}
+            {!res && <p className="ml-gua-hint">把想問的事在心裡默念一遍，再按起卦；六爻會由下往上一筆一筆寫出來</p>}
             {rows.map(([k, v], i) => (
               <div className="ml-gua-row" data-testid="ml-gua-row" data-k={k} data-on={shown > i} key={k}>
                 <span className="ml-gua-k">{k}</span>
@@ -278,6 +282,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
           {cast && complete && !read && (
             <button type="button" className="ml-cta" data-testid="ml-to-reading" onClick={toRead}>看解讀</button>
           )}
+        </div>
         </div>
       </div>
 
