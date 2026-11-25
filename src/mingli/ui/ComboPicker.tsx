@@ -14,7 +14,7 @@ export default function ComboPicker({ fromId, kind }: { fromId: string | null; k
   // 換了一筆紀錄：舊清單丟掉，換回來也要重新打開、重新讀
   if (opened && opened.id !== fromId) setOpened(null)
   if (!fromId) return null
-  const open = opened !== null
+  const open = opened?.id === fromId
   const state = open && opened.from ? { from: opened.from, list: opened.list } : null
   const other = kind === 'meihua' ? 'tarot' : 'meihua'
 

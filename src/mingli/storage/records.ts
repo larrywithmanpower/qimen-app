@@ -90,7 +90,9 @@ async function readStored(): Promise<ReadingRecord[]> {
 }
 
 // 合併紀錄的 combo 欄位沒有或格式不對（2026-11-25 前的舊版）：來源還在用來源，不在就從「梅花｜塔羅」標題拆
-// 舊版塔羅來源刪掉後找不到塔羅那次的題目，就當跟合併的題目相同
+// 塔羅來源刪掉時，題目從當時送出的近況找回：comboContext 題目不同時一定以「塔羅那次問的是「…」」開頭，
+// 後面接「；」或直接結束（只認開頭，使用者自己寫的近況不會被當成題目；題目裡有「」也不會被切斷）
+const ASKED_RE = /^塔羅那次問的是「([\s\S]*?)」(?:；|$)/
 function withCombo(r: ReadingRecord, all: readonly ReadingRecord[]): ReadingRecord {
   if (r.kind !== 'combo' || isComboInfo(r.combo)) return r
   const m = all.find((x) => x.id === r.sources?.[0] && x.kind === 'meihua')
@@ -102,7 +104,7 @@ function withCombo(r: ReadingRecord, all: readonly ReadingRecord[]): ReadingReco
       meihuaTitle: m?.title ?? mTitle,
       meihuaLevel: m?.level ?? r.level,
       tarotTitle: t?.title ?? tTitle,
-      tarotQuestion: t?.question ?? r.question,
+      tarotQuestion: t?.question ?? ASKED_RE.exec(r.context ?? '')?.[1] ?? r.question,
     },
   }
 }
