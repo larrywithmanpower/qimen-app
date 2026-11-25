@@ -12,6 +12,8 @@ import FollowupPanel from '../../ziwei/ui/FollowupPanel'
 import { useFollowup } from '../../ui/useFollowup'
 import { AiHelpLine, AiLimitLine, AiLoading, AiRefusalView } from '../../ui/AiReadingView'
 import { useAiReading } from '../../ui/useAiReading'
+import { useSaveRecord } from '../../ui/useSaveRecord'
+import ComboPicker from '../../ui/ComboPicker'
 import { castByNumbers, castByTime, lunarNumbersOf, templateReading } from '../engine'
 import type { MeihuaResult } from '../engine'
 
@@ -172,6 +174,21 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
     context: clipContext(context),
     reading: ai.status === 'ok' ? ai.reading : null,
   })
+  // 看了解讀就存進紀錄（AI 回來後存 AI 的，沒 AI 存範本的一句話）；追問有變再更新
+  const recordId = useSaveRecord({
+    kind: 'meihua',
+    key: res && read ? String(cast?.key ?? 0) : null,
+    ready: ai.status !== 'loading',
+    question: clipQuestion(question),
+    context: clipContext(context),
+    title: res ? `${res.name} → ${res.changed.name}` : '',
+    level: res?.level ?? '',
+    tone: reading?.tone ?? '平',
+    facts: res ? meihuaFacts(res) : null,
+    reading: ai.status === 'ok' ? ai.reading : null,
+    verdict: reading?.verdict ?? '',
+    followups: followup.entries.filter((e) => e.type === 'followup'),
+  })
   const tpl = ai.status === 'idle' || ai.status === 'fail'
   const instant = prefersReduced()
   const complete = shown >= ROW_KEYS.length
@@ -197,7 +214,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
   }
 
   return (
-    <section className="ml-view ml-meihua" data-testid="ml-meihua" data-read={read}>
+    <section className="ml-view ml-meihua" data-testid="ml-meihua" data-read={read} data-record={recordId ?? ''}>
       <div className="ml-mboard">
         <div className="ml-mhead">
           <span className="ml-mh-sub">梅花易數・{way === 'time' ? '時間起卦' : '報數起卦'}</span>
@@ -347,6 +364,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
               <p className="ml-mnote">範例解讀，正式版由 AI 依卦義規則卡撰寫</p>
             </>
           )}
+          {proxyUrl() !== '' && <ComboPicker fromId={recordId} />}
         </div>
       )}
     </section>

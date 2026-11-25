@@ -1,7 +1,8 @@
 import { findAbsolute } from './safety.js';
 import { FOLLOWUP_ACTIONS, FOLLOWUP_FOCUSES } from './prompt.js';
 // 請求與回應的格式檢查（純函式）
-export const KINDS = ['tarot', 'meihua', 'ziwei'];
+// combo＝梅花＋塔羅合併解讀（同一題各算一次，facts 裡各放一份）
+export const KINDS = ['tarot', 'meihua', 'ziwei', 'combo'];
 export const TONES = ['吉', '平', '凶'];
 // 紫微想看哪一段時間（本命＝一生）
 export const FOCUSES = ['natal', 'decadal', 'yearly', 'monthly', 'daily'];
@@ -26,9 +27,12 @@ export function validateRequest(body) {
   if (body.focus !== undefined && (body.kind !== 'ziwei' || !FOCUSES.includes(body.focus))) return 'Invalid focus';
   if (!isObj(body.facts)) return 'Invalid facts';
   if (JSON.stringify(body.facts).length > MAX_FACTS) return 'Facts too long';
+  if (body.kind === 'combo' && (!isObj(body.facts.meihua) || !isObj(body.facts.tarot))) return 'Invalid facts';
   if (body.context !== undefined && (typeof body.context !== 'string' || [...body.context].length > MAX_CONTEXT)) return 'Invalid context';
   if (body.mode !== undefined) {
     if (body.mode !== 'followup') return 'Invalid mode';
+    // 合併解讀沒有追問
+    if (body.kind === 'combo') return 'Invalid mode';
     if (!nonEmpty(q)) return 'Missing question';
     const h = body.history;
     if (!Array.isArray(h) || h.length < 1 || h.length > MAX_HISTORY) return 'Invalid history';
@@ -50,7 +54,8 @@ export function isIsoDate(s) {
 
 // 檢查 Claude 的回傳：通過回 { reading }，不過回 { problem }（哪一條沒過，只給日誌用）
 // allowedCards：這次請求選出的知識卡；每段 cards 只能引用其中的 id
-export function checkReading(out, tone, allowedCards = []) {
+// kind 是 combo 時，basis 要分得出哪條來自梅花、哪條來自塔羅，兩邊都要用到
+export function checkReading(out, tone, allowedCards = [], kind) {
   const byId = new Map(allowedCards.map((c) => [c.id, c]));
   const fail = (problem) => ({ reading: null, problem });
   if (!isObj(out)) return fail('not_json');
@@ -67,6 +72,10 @@ export function checkReading(out, tone, allowedCards = []) {
       return { id: c.id, title: c.title, source: c.source };
     });
     paragraphs.push({ title: p.title, text: p.text, basis: p.basis, cards });
+  }
+  if (kind === 'combo') {
+    const basis = paragraphs.flatMap((p) => p.basis);
+    if (!basis.some((b) => b.startsWith('梅花')) || !basis.some((b) => b.startsWith('塔羅'))) return fail('combo_basis');
   }
   const pr = out.prediction;
   if (!isObj(pr) || !nonEmpty(pr.claim)) return fail('prediction');
@@ -86,8 +95,8 @@ export function checkReading(out, tone, allowedCards = []) {
 }
 
 // 通過回傳整理過的物件，不過回 null
-export function validateReading(out, tone, allowedCards = []) {
-  return checkReading(out, tone, allowedCards).reading;
+export function validateReading(out, tone, allowedCards = [], kind) {
+  return checkReading(out, tone, allowedCards, kind).reading;
 }
 
 // 檢查追問的回傳：通過回 { followup }，不過回 { problem }

@@ -7,7 +7,8 @@ import type { MeihuaResult, Trigram } from './meihua/engine'
 import { MAJOR_STAR_NAMES } from './ziwei/engine'
 import type { HoroscopeFacts, HoroscopeLayer, ZiweiFacts } from './ziwei/engine'
 
-export type AiKind = 'tarot' | 'meihua' | 'ziwei'
+// combo＝梅花＋塔羅合併解讀（facts 是 { meihua, tarot }；沒有追問）
+export type AiKind = 'tarot' | 'meihua' | 'ziwei' | 'combo'
 export type AiTone = '吉' | '平' | '凶'
 export type AiFocus = 'natal' | 'decadal' | 'yearly' | 'monthly' | 'daily'
 
@@ -208,8 +209,16 @@ const asObj = (v: unknown): Obj => (typeof v === 'object' && v !== null ? (v as 
 const asArr = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
 const str = (v: unknown): string => (typeof v === 'string' ? v : '')
 
+// 合併解讀送的盤面：梅花與塔羅各一份
+export const comboFacts = (meihua: Record<string, unknown>, tarot: Record<string, unknown>) => ({ meihua, tarot })
+
 // facts 裡實際出現的名稱，以及該術數全部可能的名稱
 function nameSets(kind: AiKind, facts: Obj): { allowed: Set<string>; universe: readonly string[]; common: ReadonlySet<string> } {
+  if (kind === 'combo') {
+    const m = nameSets('meihua', asObj(facts.meihua))
+    const t = nameSets('tarot', asObj(facts.tarot))
+    return { allowed: new Set([...m.allowed, ...t.allowed]), universe: [...m.universe, ...t.universe], common: t.common }
+  }
   if (kind === 'tarot') {
     return {
       allowed: new Set(asArr(facts.cards).map((c) => str(asObj(c).name))),
@@ -324,13 +333,16 @@ function textAllowed(kind: AiKind, facts: Obj, raw: string): boolean {
   if (mentionedNames(text, universe, common).some((n) => !allowed.has(n))) return false
   // 絕對化字眼視同檢查沒過
   if (findAbsolute(text).length > 0) return false
+  // 合併解讀：梅花、塔羅各自的規則都要過
+  const mf = kind === 'meihua' ? facts : kind === 'combo' ? asObj(facts.meihua) : null
+  const tf = kind === 'tarot' ? facts : kind === 'combo' ? asObj(facts.tarot) : null
   // 梅花：只能提動爻那一爻
-  if (kind === 'meihua' && typeof facts.movingLine === 'number') {
-    if (mentionedLines(text).some((n) => n !== facts.movingLine)) return false
+  if (mf && typeof mf.movingLine === 'number') {
+    if (mentionedLines(text).some((n) => n !== mf.movingLine)) return false
   }
   // 塔羅：牌名後面接的正逆位要和抽到的一致
-  if (kind === 'tarot') {
-    const drawn = new Map(asArr(facts.cards).map((c) => [str(asObj(c).name), str(asObj(c).orientation)]))
+  if (tf) {
+    const drawn = new Map(asArr(tf.cards).map((c) => [str(asObj(c).name), str(asObj(c).orientation)]))
     if (mentionedOrientations(text).some((m) => drawn.has(m.name) && drawn.get(m.name) !== m.orientation)) return false
   }
   return true

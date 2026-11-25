@@ -12,6 +12,8 @@ import { useRoute } from './ui/route'
 import TarotPage from './tarot/TarotPage'
 import MeihuaPage from './meihua/ui/MeihuaPage'
 import ZiweiPage from './ziwei/ui/ZiweiPage'
+import RecordsPage from './ui/RecordsPage'
+import ComboPage from './ui/ComboPage'
 
 const TABS = [
   { path: '/', label: '首頁', icon: 'M4 11l8-7 8 7M6 10v9h12v-9M10 19v-5h4v5' },
@@ -20,13 +22,13 @@ const TABS = [
   { path: '/me', label: '我的', icon: 'M12 4a4 4 0 1 0 0 8a4 4 0 0 0 0-8zM5 20c0-4 3-6 7-6s7 2 7 6' },
 ] as const
 
-// 紫微頁跟「我的」是同一頁，亮「我的」；塔羅、梅花亮首頁
-const tabOf = (path: string) => (path === '/ziwei' ? '/me' : ['/records', '/accuracy', '/me'].includes(path) ? path : '/')
+// 紫微頁跟「我的」是同一頁，亮「我的」；合併解讀亮「紀錄」；塔羅、梅花亮首頁
+const tabOf = (path: string) => (path === '/ziwei' ? '/me' : path === '/combo' ? '/records' : ['/records', '/accuracy', '/me'].includes(path) ? path : '/')
 // 塔羅、梅花右上角放回首頁鈕；紫微照設計稿放日期
 const isMethodPage = (path: string) => ['/tarot', '/meihua'].includes(path)
 
 // 其他網址（含舊的 #/qimen）一律導回首頁
-const KNOWN_PATHS = ['/', '/tarot', '/meihua', '/ziwei', '/records', '/accuracy', '/me', '/privacy', '/terms']
+const KNOWN_PATHS = ['/', '/tarot', '/meihua', '/ziwei', '/records', '/combo', '/accuracy', '/me', '/privacy', '/terms']
 
 function today() {
   const d = new Date()
@@ -63,7 +65,10 @@ export default function MingliApp() {
       page = <ZiweiPage params={route.params} />
       break
     case '/records':
-      page = <SoonPage testid="ml-records" title="紀錄" line="問過的事和當時的判斷，會收在這裡。" />
+      page = <RecordsPage />
+      break
+    case '/combo':
+      page = <ComboPage params={route.params} />
       break
     case '/accuracy':
       page = <SoonPage testid="ml-accuracy" title="準度" line="之後能回頭對答案，看每種算法和實際發生的差多少。" />

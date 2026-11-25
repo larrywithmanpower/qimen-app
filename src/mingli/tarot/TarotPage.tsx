@@ -12,6 +12,8 @@ import FollowupPanel from '../ziwei/ui/FollowupPanel'
 import { useFollowup } from '../ui/useFollowup'
 import { AiHelpLine, AiLimitLine, AiLoading, AiRefusalView } from '../ui/AiReadingView'
 import { useAiReading } from '../ui/useAiReading'
+import { useSaveRecord } from '../ui/useSaveRecord'
+import ComboPicker from '../ui/ComboPicker'
 import { drawThree, nextSeed, SEED_RANGE, seedFrom, shuffle, templateReading } from './engine'
 
 // 抽牌儀式區後面慢轉的星盤（金色細線、羅馬數字 12 宮）
@@ -264,8 +266,24 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     reading: ai.status === 'ok' ? ai.reading : null,
   })
 
+  // 翻完牌就存進紀錄（AI 回來後存 AI 的，沒 AI 存範本的一句話）；追問有變再更新
+  const recordId = useSaveRecord({
+    kind: 'tarot',
+    key: drawn ? `${seed}-${picks.join(',')}` : null,
+    ready: ai.status !== 'loading',
+    question: clipQuestion(question),
+    context: clipContext(context),
+    title: drawn ? drawn.map((c) => `${c.card.zh} ${c.reversed ? '逆位' : '正位'}`).join('・') : '',
+    level: reading?.tone ?? '',
+    tone: reading?.tone ?? '平',
+    facts: drawn ? tarotFacts(drawn) : null,
+    reading: ai.status === 'ok' ? ai.reading : null,
+    verdict: reading?.verdict ?? '',
+    followups: followup.entries.filter((e) => e.type === 'followup'),
+  })
+
   return (
-    <section className="ml-view ml-tarot" data-testid="ml-tarot" data-read={read} data-ai={ai.status}>
+    <section className="ml-view ml-tarot" data-testid="ml-tarot" data-read={read} data-ai={ai.status} data-record={recordId ?? ''}>
       <div className="ml-tarot-board">
         <div className="ml-tarot-head">
           <span className="ml-tarot-sub">The Three-Card Spread</span>
@@ -398,6 +416,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
           <p className="ml-note">範例解讀，正式版由 AI 依牌義規則卡撰寫</p>
         </div>
       )}
+      {drawn && proxyUrl() !== '' && <ComboPicker fromId={recordId} />}
     </section>
   )
 }

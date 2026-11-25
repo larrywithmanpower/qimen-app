@@ -61,6 +61,11 @@ function buildMatcher(kind, facts, focus) {
 
 // 純函式：依盤面事實選出這次可以用的卡（不重複，順序＝卡片檔順序）。db 可注入
 export function selectCards(kind, facts, focus, db) {
+  // 合併解讀：梅花的卡＋塔羅的卡
+  if (kind === 'combo') {
+    const f = isObj(facts) ? facts : {};
+    return [...selectCards('meihua', f.meihua, undefined, db), ...selectCards('tarot', f.tarot, undefined, db)];
+  }
   const all = arr(db?.[kind]);
   const match = buildMatcher(kind, facts, focus);
   const seen = new Set();
