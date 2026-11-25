@@ -74,3 +74,10 @@ describe('彙整', () => {
     expect(text).toContain('NT$0.39')
   })
 })
+
+describe('合併解讀列進報表', () => {
+  it('kind 是 combo 的紀錄在「依項目」有自己一列', () => {
+    const text = renderReport({ rows: [rec({ kind: 'combo', input_tokens: 1_000_000 })], from: '2026-11-01', to: '2026-11-30', rate: 32.5 })
+    expect(text).toContain('梅花＋塔羅合併')
+  })
+})

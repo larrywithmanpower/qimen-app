@@ -248,18 +248,20 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     card?.style.setProperty('--ml-ry', '0deg')
   }
 
-  const drawn = read && picks.length === 3 ? drawThree(seed, [picks[0], picks[1], picks[2]]) : null
+  const drawn = useMemo(() => (read && picks.length === 3 ? drawThree(seed, [picks[0], picks[1], picks[2]]) : null), [read, picks, seed])
+  // 送 AI、追問、存紀錄共用同一份盤面
+  const facts = useMemo(() => (drawn ? tarotFacts(drawn) : null), [drawn])
   const reading = drawn ? templateReading(drawn) : null
   // AI 解讀：吉凶沿用範本算出來的 tone；沒設網址時 ai.status 一律是 idle，直接顯示範本
   const ai = useAiReading(
-    drawn && reading ? { kind: 'tarot', question: clipQuestion(question), facts: tarotFacts(drawn), tone: reading.tone, context: clipContext(context) } : null,
+    facts && reading ? { kind: 'tarot', question: clipQuestion(question), facts, tone: reading.tone, context: clipContext(context) } : null,
     `${seed}-${picks.join(',')}`,
   )
   // 解讀成功後可以接著問（換牌就清掉）
   const followup = useFollowup({
     kind: 'tarot',
     key: drawn ? `${seed}-${picks.join(',')}` : null,
-    facts: drawn ? tarotFacts(drawn) : null,
+    facts,
     tone: reading?.tone ?? '平',
     question: clipQuestion(question),
     context: clipContext(context),
@@ -270,13 +272,14 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
   const recordId = useSaveRecord({
     kind: 'tarot',
     key: drawn ? `${seed}-${picks.join(',')}` : null,
-    ready: ai.status !== 'loading',
+    // 婉拒（問壽命、輕生念頭）不存：畫面不退範本，紀錄也不留範本的一句話
+    ready: ai.status !== 'loading' && ai.status !== 'refused',
     question: clipQuestion(question),
     context: clipContext(context),
     title: drawn ? drawn.map((c) => `${c.card.zh} ${c.reversed ? '逆位' : '正位'}`).join('・') : '',
     level: reading?.tone ?? '',
     tone: reading?.tone ?? '平',
-    facts: drawn ? tarotFacts(drawn) : null,
+    facts,
     reading: ai.status === 'ok' ? ai.reading : null,
     verdict: reading?.verdict ?? '',
     followups: followup.entries.filter((e) => e.type === 'followup'),
@@ -416,7 +419,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
           <p className="ml-note">範例解讀，正式版由 AI 依牌義規則卡撰寫</p>
         </div>
       )}
-      {drawn && proxyUrl() !== '' && <ComboPicker fromId={recordId} />}
+      {drawn && proxyUrl() !== '' && <ComboPicker fromId={recordId} kind="tarot" />}
     </section>
   )
 }

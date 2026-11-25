@@ -232,3 +232,59 @@ for (const size of SIZES) {
     expect(await checkLayout(page)).toEqual([])
   })
 }
+
+test('後端婉拒（例如問壽命）不存紀錄，紀錄頁不會出現那題的範本解讀', async ({ page }) => {
+  await withAi(page, async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ refusal: { kind: 'death', message: '這類問題我們不解讀' } }) })
+  })
+  await openMeihua(page, '我還能活多久')
+  await expect(page.getByTestId('ml-ai-refusal')).toBeVisible()
+  await expect(page.getByTestId('ml-combo-open')).toHaveCount(0)
+  await page.waitForTimeout(300)
+  await page.goto(`${BASE}#/records`)
+  await expect(page.getByTestId('ml-rec-empty')).toBeVisible()
+})
+
+test('合併過之後把來源塔羅刪掉，合併解讀照樣打得開', async ({ page }) => {
+  await withAi(page)
+  await openMeihua(page)
+  await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await openTarot(page)
+  await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await page.getByTestId('ml-combo-open').click()
+  await page.getByTestId('ml-combo-item').first().click()
+  await expect(page.getByTestId('ml-combo-page')).not.toHaveAttribute('data-record', '')
+  await page.goto(`${BASE}#/records`)
+  await expect(page.getByTestId('ml-rec')).toHaveCount(3)
+  const tarot = page.locator('[data-testid="ml-rec"][data-kind="tarot"]')
+  await tarot.locator('.ml-rec-sum').click()
+  await tarot.getByTestId('ml-rec-del').click()
+  await tarot.getByTestId('ml-rec-del-yes').click()
+  await expect(page.getByTestId('ml-rec')).toHaveCount(2)
+  // 刪掉一筆後，其他紀錄不會被意外展開
+  await expect(page.locator('.ml-rec-box[open]')).toHaveCount(0)
+  const combo = page.locator('[data-testid="ml-rec"][data-kind="combo"]')
+  await combo.locator('.ml-rec-sum').click()
+  await combo.getByTestId('ml-rec-open-combo').click()
+  await expect(page.getByTestId('ml-combo-page')).toBeVisible()
+  await expect(page.getByTestId('ml-ai-reading')).toContainText('combo 的一句話')
+  await expect(page.getByTestId('ml-combo-src-t')).toContainText(drawn[0].card.zh)
+  await expect(page.getByTestId('ml-combo-missing')).toHaveCount(0)
+})
+
+test('結果頁的紀錄被清掉後按合併：說明找不到紀錄，不是按了沒反應', async ({ page }) => {
+  await withAi(page)
+  await openMeihua(page)
+  await expect(page.getByTestId('ml-combo-open')).toBeVisible()
+  // 模擬另一個分頁把紀錄清掉
+  await page.evaluate(() => new Promise<void>((done) => {
+    const req = indexedDB.open('keyval-store')
+    req.onsuccess = () => {
+      const tx = req.result.transaction('keyval', 'readwrite')
+      tx.objectStore('keyval').delete('ml-records')
+      tx.oncomplete = () => done()
+    }
+  }))
+  await page.getByTestId('ml-combo-open').click()
+  await expect(page.getByTestId('ml-combo-lost')).toContainText('找不到這筆紀錄')
+})

@@ -29,6 +29,11 @@ export function useSaveRecord(o: Options): string | null {
   const followupCount = o.followups.length
   const readingVerdict = o.reading?.verdict ?? ''
 
+  // 結果清掉（重新抽、重新起卦）就忘掉舊 id：同一副牌序再抽到同樣位置也是新的一筆，不蓋掉上一筆
+  useEffect(() => {
+    if (!o.key) ids.current.clear()
+  }, [o.key])
+
   useEffect(() => {
     if (!o.key || !o.ready || !o.facts) return
     let slot = ids.current.get(o.key)

@@ -7,12 +7,12 @@ import { goTo } from './route'
 import { updateSession } from './session'
 import { comboPath, KIND_NAME, shortTime } from './recordText'
 
-export default function ComboPicker({ fromId }: { fromId: string | null }) {
+// kind：這筆紀錄是梅花還是塔羅（由呼叫端給，不從 id 猜）
+export default function ComboPicker({ fromId, kind }: { fromId: string | null; kind: 'meihua' | 'tarot' }) {
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<{ from: ReadingRecord; list: { rec: ReadingRecord; same: boolean }[] } | null>(null)
   if (!fromId) return null
-  const kindOf = fromId.startsWith('meihua') ? 'meihua' : 'tarot'
-  const other = kindOf === 'meihua' ? 'tarot' : 'meihua'
+  const other = kind === 'meihua' ? 'tarot' : 'meihua'
 
   const toggle = async () => {
     if (open) {
@@ -35,6 +35,9 @@ export default function ComboPicker({ fromId }: { fromId: string | null }) {
       <button type="button" className="ml-ghost ml-combo-btn" data-testid="ml-combo-open" aria-expanded={open} onClick={toggle}>
         和{KIND_NAME[other]}合併解讀
       </button>
+      {open && !state && (
+        <p className="ml-combo-empty ml-combo-panel" data-testid="ml-combo-lost" role="status">找不到這筆紀錄，可能已經刪掉，或是這個瀏覽器不讓網站存資料（例如無痕視窗），所以沒辦法合併。</p>
+      )}
       {open && state && (
         <div className="ml-combo-panel" data-testid="ml-combo-panel">
           {state.list.length === 0 ? (
@@ -48,7 +51,7 @@ export default function ComboPicker({ fromId }: { fromId: string | null }) {
               <ul className="ml-combo-list">
                 {state.list.map(({ rec, same }) => (
                   <li key={rec.id}>
-                    <button type="button" className="ml-combo-item" data-testid="ml-combo-item" data-same={same} onClick={() => goTo(comboPath(state.from, rec))}>
+                    <button type="button" className="ml-combo-item" data-testid="ml-combo-item" data-same={same} onClick={() => goTo(comboPath(state.from, rec) ?? '/records')}>
                       <span className="ml-combo-q">{rec.question}</span>
                       <span className="ml-combo-meta">
                         {same && <span className="ml-rec-tag" data-testid="ml-combo-same">同一題</span>}

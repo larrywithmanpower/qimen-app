@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Solar } from 'lunar-javascript'
 import './meihua.css'
@@ -159,16 +159,18 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
 
   const res = cast?.res ?? null
   const reading = res ? templateReading(res) : null
+  // 送 AI、追問、存紀錄共用同一份盤面
+  const facts = useMemo(() => (res ? meihuaFacts(res) : null), [res])
   // AI 解讀：按「看解讀」才送；吉凶沿用範本算出來的 tone
   const ai = useAiReading(
-    res && reading && read ? { kind: 'meihua', question: clipQuestion(question), facts: meihuaFacts(res), tone: reading.tone, context: clipContext(context) } : null,
+    facts && reading && read ? { kind: 'meihua', question: clipQuestion(question), facts, tone: reading.tone, context: clipContext(context) } : null,
     String(cast?.key ?? 0),
   )
   // 解讀成功後可以接著問（重新起卦就清掉）
   const followup = useFollowup({
     kind: 'meihua',
     key: res ? String(cast?.key ?? 0) : null,
-    facts: res ? meihuaFacts(res) : null,
+    facts,
     tone: reading?.tone ?? '平',
     question: clipQuestion(question),
     context: clipContext(context),
@@ -178,13 +180,14 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
   const recordId = useSaveRecord({
     kind: 'meihua',
     key: res && read ? String(cast?.key ?? 0) : null,
-    ready: ai.status !== 'loading',
+    // 婉拒（問壽命、輕生念頭）不存：畫面不退範本，紀錄也不留範本的一句話
+    ready: ai.status !== 'loading' && ai.status !== 'refused',
     question: clipQuestion(question),
     context: clipContext(context),
     title: res ? `${res.name} → ${res.changed.name}` : '',
     level: res?.level ?? '',
     tone: reading?.tone ?? '平',
-    facts: res ? meihuaFacts(res) : null,
+    facts,
     reading: ai.status === 'ok' ? ai.reading : null,
     verdict: reading?.verdict ?? '',
     followups: followup.entries.filter((e) => e.type === 'followup'),
@@ -364,7 +367,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
               <p className="ml-mnote">範例解讀，正式版由 AI 依卦義規則卡撰寫</p>
             </>
           )}
-          {proxyUrl() !== '' && <ComboPicker fromId={recordId} />}
+          {proxyUrl() !== '' && <ComboPicker fromId={recordId} kind="meihua" />}
         </div>
       )}
     </section>

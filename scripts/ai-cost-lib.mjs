@@ -29,10 +29,11 @@ export function costUsd(rec) {
   );
 }
 
-// 報表的「項目」：塔羅、梅花、紫微各層
+// 報表的「項目」：塔羅、梅花、梅花＋塔羅合併、紫微各層
 export const ITEMS = [
   ['tarot', '塔羅'],
   ['meihua', '梅花'],
+  ['combo', '梅花＋塔羅合併'],
   ['ziwei:natal', '紫微・一生'],
   ['ziwei:decadal', '紫微・這十年'],
   ['ziwei:yearly', '紫微・今年'],

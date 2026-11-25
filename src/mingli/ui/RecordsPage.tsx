@@ -6,13 +6,11 @@ import { clearRecords, deleteRecord, loadRecords, RECORDS_MAX } from '../storage
 import type { ReadingRecord } from '../storage/records'
 import { AiReadingView } from './AiReadingView'
 import ComboPicker from './ComboPicker'
-import { comboPath, KIND_NAME, shortTime } from './recordText'
+import { comboPathOf, KIND_NAME, shortTime } from './recordText'
 import { setRealm } from './fx'
 
-function RecordItem({ rec, all, onDelete }: { rec: ReadingRecord; all: ReadingRecord[]; onDelete: (id: string) => void }) {
+function RecordItem({ rec, onDelete }: { rec: ReadingRecord; onDelete: (id: string) => void }) {
   const [confirm, setConfirm] = useState(false)
-  const m = rec.sources ? all.find((r) => r.id === rec.sources?.[0]) : undefined
-  const t = rec.sources ? all.find((r) => r.id === rec.sources?.[1]) : undefined
   const followups = rec.followups.filter((e) => e.type === 'followup')
   return (
     <li className="ml-rec" data-testid="ml-rec" data-kind={rec.kind}>
@@ -40,8 +38,8 @@ function RecordItem({ rec, all, onDelete }: { rec: ReadingRecord; all: ReadingRe
             </div>
           )}
           <div className="ml-rec-tools">
-            {rec.kind !== 'combo' && proxyUrl() !== '' && <ComboPicker fromId={rec.id} />}
-            {rec.kind === 'combo' && m && t && <a className="ml-ghost" href={`#${comboPath(m, t)}`}>打開合併解讀</a>}
+            {rec.kind !== 'combo' && proxyUrl() !== '' && <ComboPicker fromId={rec.id} kind={rec.kind} />}
+            {rec.kind === 'combo' && rec.sources && <a className="ml-ghost" data-testid="ml-rec-open-combo" href={`#${comboPathOf(rec.sources[0], rec.sources[1])}`}>打開合併解讀</a>}
             {confirm ? (
               <span className="ml-rec-confirm">
                 <button type="button" className="ml-ghost ml-rec-danger" data-testid="ml-rec-del-yes" onClick={() => onDelete(rec.id)}>確定刪除</button>
@@ -94,7 +92,7 @@ export default function RecordsPage() {
       {list && list.length > 0 && (
         <>
           <ul className="ml-rec-list" data-testid="ml-rec-list">
-            {list.map((r) => <RecordItem key={r.id} rec={r} all={list} onDelete={remove} />)}
+            {list.map((r) => <RecordItem key={r.id} rec={r} onDelete={remove} />)}
           </ul>
           <div className="ml-rec-all">
             <span className="ml-rec-count" data-testid="ml-rec-count">共 {list.length} 筆</span>

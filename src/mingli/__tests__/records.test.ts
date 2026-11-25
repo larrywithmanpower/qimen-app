@@ -97,12 +97,19 @@ describe('合併配對', () => {
     expect(comboPair(t, m)?.map((r) => r.id)).toEqual(['m', 't'])
     expect(comboPair(m, m)).toBeNull()
     expect(comboPath(t, m)).toBe('/combo?m=m&t=t')
+    expect(comboPath(m, m)).toBeNull()
   })
   it('題目不同時把塔羅的題目放進近況；相同就不放', () => {
     const m = rec({ kind: 'meihua', question: '要不要換工作', context: '主管很煩' })
     expect(comboContext(m, rec({ kind: 'tarot', question: '要不要換工作？' }))).toBe('主管很煩')
-    expect(comboContext(m, rec({ kind: 'tarot', question: '換工作好嗎' }))).toBe('主管很煩；塔羅那次問的是「換工作好嗎」')
+    expect(comboContext(m, rec({ kind: 'tarot', question: '換工作好嗎' }))).toBe('塔羅那次問的是「換工作好嗎」；主管很煩')
     expect(comboContext(rec({ question: 'a' }), rec({ kind: 'tarot', question: 'a' }))).toBeUndefined()
+  })
+  it('近況很長時，塔羅的題目還是完整送出（被截的是近況尾巴）', () => {
+    const long = '很'.repeat(290)
+    const got = comboContext(rec({ question: 'a', context: long }), rec({ kind: 'tarot', question: '新工作會比較好嗎' })) ?? ''
+    expect(got.startsWith('塔羅那次問的是「新工作會比較好嗎」')).toBe(true)
+    expect([...got].length).toBe(300)
   })
 })
 
