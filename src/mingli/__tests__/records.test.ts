@@ -59,7 +59,7 @@ describe('紀錄存取', () => {
   it('舊版合併紀錄（沒有 combo）：來源在用來源、不在從標題拆；補的值只給畫面用，存檔不寫回', async () => {
     const m = rec({ id: 'm', kind: 'meihua', title: '雷地豫 → 天地否', level: '吉' })
     const t = rec({ id: 't', kind: 'tarot', title: '教皇 正位', question: '換工作好嗎' })
-    const c = rec({ id: 'c', kind: 'combo', title: '舊梅花｜舊塔羅', level: '平', sources: ['m', 't'], context: '塔羅那次問的是「換工作好嗎」；主管很煩' })
+    const c = rec({ id: 'c', kind: 'combo', title: '舊梅花｜舊塔羅', level: '平', sources: ['m', 't'], context: '主管很煩；塔羅那次問的是「換工作好嗎」' })
     store.set(RECORDS_KEY, [m, t, c])
     const got = (await loadRecords()).find((r) => r.id === 'c')
     expect(got?.combo).toEqual({ meihuaTitle: '雷地豫 → 天地否', meihuaLevel: '吉', tarotTitle: '教皇 正位', tarotQuestion: '換工作好嗎' })
@@ -68,14 +68,16 @@ describe('紀錄存取', () => {
     expect(after?.combo).toEqual({ meihuaTitle: '雷地豫 → 天地否', meihuaLevel: '吉', tarotTitle: '舊塔羅', tarotQuestion: '換工作好嗎' })
     expect((store.get(RECORDS_KEY) as Rec[]).find((r) => r.id === 'c')?.combo).toBeUndefined()
   })
-  it('舊版合併紀錄塔羅來源刪掉：題目只從近況開頭找、題目裡有「」不切斷、沒有就當同一題', async () => {
+  it('舊版合併紀錄塔羅來源刪掉：照 9ebefcf 的格式從近況最後面找回題目，題目裡有「」或；不切斷，對不上就當同一題', async () => {
     const q = async (context?: string) => {
       store.set(RECORDS_KEY, [rec({ id: 'c', kind: 'combo', title: '甲｜乙', sources: ['m', 't'], context })])
       return (await loadRecords())[0].combo?.tarotQuestion
     }
-    expect(await q('塔羅那次問的是「他說「分手」是真的嗎」；主管很煩')).toBe('他說「分手」是真的嗎')
-    expect(await q('塔羅那次問的是「他說「分手」是真的嗎」')).toBe('他說「分手」是真的嗎')
+    // 9ebefcf 的 comboContext：[梅花近況, 塔羅那次問的是「…」] 用；接起來
+    expect(await q('主管很煩；塔羅那次問的是「他說「分手」是真的嗎」')).toBe('他說「分手」是真的嗎')
+    expect(await q('塔羅那次問的是「他說「好」；真的會復合嗎」')).toBe('他說「好」；真的會復合嗎')
     expect(await q('主管說塔羅那次問的是「X」')).toBe('要不要換工作？')
+    expect(await q('塔羅那次問的是「被截掉的長題目')).toBe('要不要換工作？')
     expect(await q(undefined)).toBe('要不要換工作？')
   })
   it('combo 欄位壞掉（空物件）照樣補好，不會把原資料洗掉', async () => {
