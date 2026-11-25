@@ -87,7 +87,11 @@ export function comboPair(a: ReadingRecord, b: ReadingRecord): [ReadingRecord, R
 export async function loadRecords(): Promise<ReadingRecord[]> {
   try {
     const v = await get(RECORDS_KEY)
-    return Array.isArray(v) ? v.filter(isRecord).sort((a, b) => b.at - a.at).slice(0, RECORDS_MAX) : []
+    if (!Array.isArray(v)) return []
+    // combo 欄位格式不對（舊版沒有、或壞掉）就拿掉，所有讀紀錄的畫面都不用再各自檢查
+    return v.filter(isRecord)
+      .map((r) => (r.combo === undefined || isComboInfo(r.combo) ? r : { ...r, combo: undefined }))
+      .sort((a, b) => b.at - a.at).slice(0, RECORDS_MAX)
   } catch {
     return []
   }

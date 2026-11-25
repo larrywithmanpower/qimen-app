@@ -69,6 +69,8 @@ const readStoredRecords = (page: Page) => page.evaluate(async () => {
     const req = indexedDB.open('keyval-store')
     req.onerror = () => fail(req.error)
     req.onsuccess = () => {
+      // 有資料庫但沒有存放區（別處先開過）也是零筆
+      if (!req.result.objectStoreNames.contains('keyval')) return done([])
       const get = req.result.transaction('keyval').objectStore('keyval').get('ml-records')
       get.onerror = () => fail(get.error)
       get.onsuccess = () => done(Array.isArray(get.result) ? get.result : [])
@@ -79,6 +81,8 @@ const writeStoredRecords = (page: Page, list: unknown[]) => page.evaluate((v) =>
   const req = indexedDB.open('keyval-store')
   req.onerror = () => fail(req.error)
   req.onsuccess = () => {
+    // 只在網站已經存過紀錄之後用；沒有存放區就明確報錯，不要卡住
+    if (!req.result.objectStoreNames.contains('keyval')) return fail(new Error('還沒有 keyval 存放區'))
     const tx = req.result.transaction('keyval', 'readwrite')
     tx.objectStore('keyval').put(v, 'ml-records')
     tx.oncomplete = () => done()
@@ -101,6 +105,8 @@ test('沒接 AI：看完梅花與塔羅自動存進紀錄，重新整理、關�
   await expect(page.getByTestId('ml-reading')).toBeVisible()
   // 沒接 AI 就不顯示合併按鈕
   await expect(page.getByTestId('ml-combo-open')).toHaveCount(0)
+  // 等塔羅這筆寫好再換頁
+  await expect(page.getByTestId('ml-tarot')).not.toHaveAttribute('data-record', '')
 
   await page.goto(`${BASE}#/records`)
   const recs = page.getByTestId('ml-rec')
@@ -124,6 +130,7 @@ test('單筆刪除要按兩次確定；全部刪除後顯示空白提示，重�
   await expect(page.getByTestId('ml-reading')).toBeVisible()
   await openTarot(page)
   await expect(page.getByTestId('ml-reading')).toBeVisible()
+  await expect(page.getByTestId('ml-tarot')).not.toHaveAttribute('data-record', '')
   await page.goto(`${BASE}#/records`)
   const first = page.getByTestId('ml-rec').first()
   await first.locator('.ml-rec-sum').click()
@@ -380,5 +387,23 @@ test('舊版合併紀錄（沒有存兩邊標題）：來源還在用來源的�
   await writeStoredRecords(page, (await readStoredRecords(page)).map((r) => ({ ...r, combo: {} })))
   await page.reload()
   await expect(page.getByTestId('ml-ai-reading')).toContainText('combo 的一句話')
+  await expect(page.getByTestId('ml-combo-src-t')).toContainText(drawn[0].card.zh)
+})
+
+test('舊版合併紀錄只剩塔羅來源、兩邊題目不同：塔羅用真的紀錄，「塔羅那次問的是」照樣顯示', async ({ page }) => {
+  await withAi(page)
+  await openMeihua(page)
+  await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await openTarot(page, '新工作會比較好嗎')
+  await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await page.getByTestId('ml-combo-open').click()
+  await page.getByTestId('ml-combo-item').first().click()
+  await expect(page.getByTestId('ml-combo-page')).not.toHaveAttribute('data-record', '')
+  // 改成舊版（沒有 combo 欄位），再刪掉梅花來源
+  const all = await readStoredRecords(page)
+  await writeStoredRecords(page, all.filter((r) => r.kind !== 'meihua').map((r) => (r.kind === 'combo' ? { ...r, combo: undefined } : r)))
+  await page.reload()
+  await expect(page.getByTestId('ml-combo-diff')).toContainText('新工作會比較好嗎')
+  await expect(page.getByTestId('ml-combo-src-m')).toContainText(mei.name)
   await expect(page.getByTestId('ml-combo-src-t')).toContainText(drawn[0].card.zh)
 })

@@ -11,6 +11,8 @@ import { comboPath, KIND_NAME, shortTime } from './recordText'
 // 打開時讀到的清單記著是哪一筆紀錄的（id）；換了一筆紀錄，舊清單就不算數、選單視為收起
 export default function ComboPicker({ fromId, kind }: { fromId: string | null; kind: 'meihua' | 'tarot' }) {
   const [opened, setOpened] = useState<{ id: string; from: ReadingRecord | null; list: { rec: ReadingRecord; same: boolean }[] } | null>(null)
+  // 換了一筆紀錄：舊清單丟掉，換回來也要重新打開、重新讀
+  if (opened && opened.id !== fromId) setOpened(null)
   if (!fromId) return null
   const open = opened?.id === fromId
   const state = open && opened.from ? { from: opened.from, list: opened.list } : null

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import './records.css'
 import { clipQuestion, comboFacts, proxyUrl } from '../ai'
-import { isComboInfo, loadRecords, normQuestion } from '../storage/records'
+import { loadRecords, normQuestion } from '../storage/records'
 import type { ComboInfo, ReadingRecord } from '../storage/records'
 import { AiHelpLine, AiLimitLine, AiLoading, AiReadingView, AiRefusalView } from './AiReadingView'
 import { setRealm } from './fx'
@@ -15,6 +15,23 @@ type Loaded =
   | { status: 'missing' }
   // done＝合併過的那筆；有它就算來源紀錄刪掉了也照樣顯示。沒有 done 時 m、t 一定都在
   | { status: 'ok'; m?: ReadingRecord; t?: ReadingRecord; done: ReadingRecord | null }
+
+const pairInfo = (m: ReadingRecord, t: ReadingRecord): ComboInfo => ({ meihuaTitle: m.title, meihuaLevel: m.level, tarotTitle: t.title, tarotQuestion: t.question })
+
+// 標題列：合併紀錄有存就用存的（來源刪掉也一樣）。舊版合併紀錄（2026-11-25 前沒有 combo 欄位）每一邊分開找：
+// 來源還在用來源，不在就從「梅花｜塔羅」標題拆；塔羅題目從當時送出的近況「塔羅那次問的是「…」」找回，找不到就當同一題
+function headerInfo(done: ReadingRecord | null, m?: ReadingRecord, t?: ReadingRecord): ComboInfo | null {
+  if (done?.combo) return done.combo
+  if (!done) return m && t ? pairInfo(m, t) : null
+  const [mTitle = '', tTitle = ''] = done.title.split('｜')
+  const asked = /塔羅那次問的是「(.+?)」/.exec(done.context ?? '')?.[1]
+  return {
+    meihuaTitle: m?.title ?? mTitle,
+    meihuaLevel: m?.level ?? done.level,
+    tarotTitle: t?.title ?? tTitle,
+    tarotQuestion: t?.question ?? asked ?? done.question,
+  }
+}
 
 export default function ComboPage({ params }: { params: URLSearchParams }) {
   const mId = params.get('m') ?? ''
@@ -39,7 +56,6 @@ export default function ComboPage({ params }: { params: URLSearchParams }) {
   const pair = ok && !ok.done && ok.m && ok.t ? { m: ok.m, t: ok.t } : null
   const facts = pair ? comboFacts(pair.m.facts, pair.t.facts) : null
   const context = pair ? comboContext(pair.m, pair.t) : undefined
-  const pairInfo = (m: ReadingRecord, t: ReadingRecord): ComboInfo => ({ meihuaTitle: m.title, meihuaLevel: m.level, tarotTitle: t.title, tarotQuestion: t.question })
   // 已經合併過的就不送；吉凶以梅花為主
   const ai = useAiReading(
     pair && facts ? { kind: 'combo', question: clipQuestion(pair.m.question), facts, tone: pair.m.tone, context } : null,
@@ -63,13 +79,8 @@ export default function ComboPage({ params }: { params: URLSearchParams }) {
   })
 
   const reading = ok?.done?.reading ?? (ai.status === 'ok' ? ai.reading : null)
-  // 標題列：合併紀錄有存就用存的（來源刪掉也一樣）→ 兩筆來源都在就用來源 → 舊版合併紀錄（2026-11-25 前沒有 combo 欄位）從「梅花｜塔羅」標題拆
-  const legacy = (d: ReadingRecord): ComboInfo => {
-    const [meihuaTitle = '', tarotTitle = ''] = d.title.split('｜')
-    return { meihuaTitle, meihuaLevel: d.level, tarotTitle, tarotQuestion: d.question }
-  }
   const done = ok?.done
-  const info = done && isComboInfo(done.combo) ? done.combo : ok?.m && ok.t ? pairInfo(ok.m, ok.t) : done ? legacy(done) : null
+  const info = ok ? headerInfo(done ?? null, ok.m, ok.t) : null
   const question = done?.question ?? pair?.m.question ?? ''
 
   return (
