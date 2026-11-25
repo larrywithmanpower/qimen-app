@@ -20,19 +20,15 @@ interface Options {
   verdict: string
   followups: ThreadEntry[]
   sources?: [string, string]
+  combo?: ReadingRecord['combo']
 }
 
-// 回傳這次結果的紀錄 id（存好之後才有）
+// 回傳這次結果的紀錄 id（存好之後才有）。同一個 key 永遠是同一筆：每次新結果要給新的 key
 export function useSaveRecord(o: Options): string | null {
   const ids = useRef(new Map<string, { id: string; at: number }>())
   const [savedKey, setSavedKey] = useState<string | null>(null)
   const followupCount = o.followups.length
   const readingVerdict = o.reading?.verdict ?? ''
-
-  // 結果清掉（重新抽、重新起卦）就忘掉舊 id：同一副牌序再抽到同樣位置也是新的一筆，不蓋掉上一筆
-  useEffect(() => {
-    if (!o.key) ids.current.clear()
-  }, [o.key])
 
   useEffect(() => {
     if (!o.key || !o.ready || !o.facts) return
@@ -55,6 +51,7 @@ export function useSaveRecord(o: Options): string | null {
       verdict: o.reading?.verdict ?? o.verdict,
       followups: o.followups,
       ...(o.sources ? { sources: o.sources } : {}),
+      ...(o.combo ? { combo: o.combo } : {}),
     }
     let alive = true
     const key = o.key

@@ -62,6 +62,17 @@ async function withAi(page: Page, handle?: (route: Route, body: Record<string, u
   return bodies
 }
 
+// 直接讀 IndexedDB 裡的紀錄（idb-keyval 預設的 keyval-store）
+const readStoredRecords = (page: Page) => page.evaluate(() => new Promise<unknown[]>((done) => {
+  const req = indexedDB.open('keyval-store')
+  req.onsuccess = () => {
+    // 從沒存過任何東西時連存放區都還沒建，就是零筆
+    if (!req.result.objectStoreNames.contains('keyval')) return done([])
+    const get = req.result.transaction('keyval').objectStore('keyval').get('ml-records')
+    get.onsuccess = () => done(Array.isArray(get.result) ? get.result : [])
+  }
+}))
+
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await prepare(page)
@@ -240,9 +251,9 @@ test('後端婉拒（例如問壽命）不存紀錄，紀錄頁不會出現那�
   await openMeihua(page, '我還能活多久')
   await expect(page.getByTestId('ml-ai-refusal')).toBeVisible()
   await expect(page.getByTestId('ml-combo-open')).toHaveCount(0)
-  await page.waitForTimeout(300)
-  await page.goto(`${BASE}#/records`)
-  await expect(page.getByTestId('ml-rec-empty')).toBeVisible()
+  // 直接讀這台裝置存的紀錄（不換頁，避免換頁打斷寫入而看不出來），等 1 秒都沒有才算過
+  await page.waitForTimeout(1000)
+  expect(await readStoredRecords(page)).toEqual([])
 })
 
 test('合併過之後把來源塔羅刪掉，合併解讀照樣打得開', async ({ page }) => {
@@ -287,4 +298,46 @@ test('結果頁的紀錄被清掉後按合併：說明找不到紀錄，不是�
   }))
   await page.getByTestId('ml-combo-open').click()
   await expect(page.getByTestId('ml-combo-lost')).toContainText('找不到這筆紀錄')
+})
+
+test('梅花按「返回卦象」再看解讀，同一卦還是一筆紀錄；塔羅重新抽是新的一筆', async ({ page }) => {
+  await withAi(page)
+  await openMeihua(page)
+  await expect(page.getByTestId('ml-combo-open')).toBeVisible()
+  await page.getByTestId('ml-back-hex').click()
+  await page.getByTestId('ml-to-reading').click()
+  await expect(page.getByTestId('ml-combo-open')).toBeVisible()
+  await page.waitForTimeout(500)
+  expect(await readStoredRecords(page)).toHaveLength(1)
+
+  await openTarot(page)
+  await expect(page.getByTestId('ml-combo-open')).toBeVisible()
+  await page.getByTestId('ml-again').click()
+  const tap = (pos: number) => page.getByTestId('ml-fan-card').nth(pos).dispatchEvent('click')
+  for (const p of PICKS) { await tap(p); await tap(p) }
+  await expect(page.getByTestId('ml-combo-open')).toBeVisible()
+  await page.waitForTimeout(500)
+  expect(await readStoredRecords(page)).toHaveLength(3)
+})
+
+test('題目不同的合併，刪掉塔羅後重開：兩邊標題與「塔羅那次問的是」都還在', async ({ page }) => {
+  await withAi(page)
+  await openMeihua(page)
+  await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await openTarot(page, '新工作會比較好嗎')
+  await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await page.getByTestId('ml-combo-open').click()
+  await page.getByTestId('ml-combo-item').first().click()
+  await expect(page.getByTestId('ml-combo-page')).not.toHaveAttribute('data-record', '')
+  const url = page.url()
+  await page.goto(`${BASE}#/records`)
+  const tarot = page.locator('[data-testid="ml-rec"][data-kind="tarot"]')
+  await tarot.locator('.ml-rec-sum').click()
+  await tarot.getByTestId('ml-rec-del').click()
+  await tarot.getByTestId('ml-rec-del-yes').click()
+  await expect(page.getByTestId('ml-rec')).toHaveCount(2)
+  await page.goto(url)
+  await expect(page.getByTestId('ml-combo-diff')).toContainText('新工作會比較好嗎')
+  await expect(page.getByTestId('ml-combo-src-m')).toContainText(mei.name)
+  await expect(page.getByTestId('ml-combo-src-t')).toContainText(drawn[0].card.zh)
 })

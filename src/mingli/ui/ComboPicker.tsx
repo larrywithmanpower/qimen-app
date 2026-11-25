@@ -8,6 +8,7 @@ import { updateSession } from './session'
 import { comboPath, KIND_NAME, shortTime } from './recordText'
 
 // kind：這筆紀錄是梅花還是塔羅（由呼叫端給，不從 id 猜）
+// 呼叫端用 key={fromId}：換了一筆紀錄就整個重建，選單收起、不沿用舊清單
 export default function ComboPicker({ fromId, kind }: { fromId: string | null; kind: 'meihua' | 'tarot' }) {
   const [open, setOpen] = useState(false)
   const [state, setState] = useState<{ from: ReadingRecord; list: { rec: ReadingRecord; same: boolean }[] } | null>(null)

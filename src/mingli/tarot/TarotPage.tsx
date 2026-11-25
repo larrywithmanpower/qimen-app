@@ -67,6 +67,8 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
   const [question, setQuestion] = useState(session.question)
   const [context, setContext] = useState(session.context)
   const [seed, setSeed] = useState(() => initialSeed(seedParam, question))
+  // 第幾回抽（重新抽就加一），讓每次結果的 key 都不同
+  const [round, setRound] = useState(0)
   // 網址指定了牌序時，第一次填問題不換牌序（測試與分享連結要固定）
   const pinnedSeed = useRef(validSeed(seedParam) !== null)
   const [picks, setPicks] = useState<number[]>([])
@@ -134,6 +136,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
 
   const reset = (nextSeedValue: number) => {
     clearAll()
+    setRound((r) => r + 1)
     picksRef.current = []
     setPicks([])
     setPhases(['empty', 'empty', 'empty'])
@@ -248,19 +251,21 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     card?.style.setProperty('--ml-ry', '0deg')
   }
 
-  const drawn = useMemo(() => (read && picks.length === 3 ? drawThree(seed, [picks[0], picks[1], picks[2]]) : null), [read, picks, seed])
+  const drawn = read && picks.length === 3 ? drawThree(seed, [picks[0], picks[1], picks[2]]) : null
   // 送 AI、追問、存紀錄共用同一份盤面
-  const facts = useMemo(() => (drawn ? tarotFacts(drawn) : null), [drawn])
+  const facts = drawn ? tarotFacts(drawn) : null
+  // 這次結果的 key：加上第幾回抽，同一副牌序重抽到同樣位置也算新的一筆
+  const resultKey = drawn ? `${round}-${seed}-${picks.join(',')}` : null
   const reading = drawn ? templateReading(drawn) : null
   // AI 解讀：吉凶沿用範本算出來的 tone；沒設網址時 ai.status 一律是 idle，直接顯示範本
   const ai = useAiReading(
     facts && reading ? { kind: 'tarot', question: clipQuestion(question), facts, tone: reading.tone, context: clipContext(context) } : null,
-    `${seed}-${picks.join(',')}`,
+    resultKey ?? '',
   )
   // 解讀成功後可以接著問（換牌就清掉）
   const followup = useFollowup({
     kind: 'tarot',
-    key: drawn ? `${seed}-${picks.join(',')}` : null,
+    key: resultKey,
     facts,
     tone: reading?.tone ?? '平',
     question: clipQuestion(question),
@@ -271,7 +276,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
   // 翻完牌就存進紀錄（AI 回來後存 AI 的，沒 AI 存範本的一句話）；追問有變再更新
   const recordId = useSaveRecord({
     kind: 'tarot',
-    key: drawn ? `${seed}-${picks.join(',')}` : null,
+    key: resultKey,
     // 婉拒（問壽命、輕生念頭）不存：畫面不退範本，紀錄也不留範本的一句話
     ready: ai.status !== 'loading' && ai.status !== 'refused',
     question: clipQuestion(question),
@@ -419,7 +424,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
           <p className="ml-note">範例解讀，正式版由 AI 依牌義規則卡撰寫</p>
         </div>
       )}
-      {drawn && proxyUrl() !== '' && <ComboPicker fromId={recordId} kind="tarot" />}
+      {drawn && proxyUrl() !== '' && <ComboPicker key={recordId ?? ''} fromId={recordId} kind="tarot" />}
     </section>
   )
 }

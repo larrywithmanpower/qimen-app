@@ -58,14 +58,13 @@ export default function ComboPage({ params }: { params: URLSearchParams }) {
     verdict: '',
     followups: [],
     sources: pair ? [pair.m.id, pair.t.id] : undefined,
+    combo: pair ? { meihuaTitle: pair.m.title, meihuaLevel: pair.m.level, tarotTitle: pair.t.title, tarotQuestion: pair.t.question } : undefined,
   })
 
   const reading = ok?.done?.reading ?? (ai.status === 'ok' ? ai.reading : null)
-  // 標題列：來源紀錄還在就用來源的，刪掉了就用合併紀錄存的（title 是「梅花｜塔羅」）
-  const [doneM = '', doneT = ''] = ok?.done?.title.split('｜') ?? []
-  const question = ok?.done?.question ?? ok?.m?.question ?? ''
-  const mChip = ok?.m ? `${ok.m.title}・${ok.m.level}` : `${doneM}・${ok?.done?.level ?? ''}`
-  const tChip = ok?.t ? ok.t.title : doneT
+  // 標題列：合併過就一律用合併紀錄存的（來源刪掉也一樣），還沒合併用兩筆來源
+  const info = ok?.done?.combo ?? (pair ? { meihuaTitle: pair.m.title, meihuaLevel: pair.m.level, tarotTitle: pair.t.title, tarotQuestion: pair.t.question } : null)
+  const question = ok?.done?.question ?? pair?.m.question ?? ''
 
   return (
     <section className="ml-view ml-combo-page" data-testid="ml-combo-page" data-record={ok?.done?.id ?? savedId ?? ''}>
@@ -81,14 +80,14 @@ export default function ComboPage({ params }: { params: URLSearchParams }) {
           <h1 className="ml-combo-title" data-testid="ml-combo-question">{question}</h1>
           <div className="ml-combo-sources">
             <a className="ml-combo-src" href="#/records" data-testid="ml-combo-src-m">
-              <span className="ml-rec-tag">梅花</span>{mChip}
+              <span className="ml-rec-tag">梅花</span>{info?.meihuaTitle}・{info?.meihuaLevel}
             </a>
             <a className="ml-combo-src" href="#/records" data-testid="ml-combo-src-t">
-              <span className="ml-rec-tag">塔羅</span>{tChip}
+              <span className="ml-rec-tag">塔羅</span>{info?.tarotTitle}
             </a>
           </div>
-          {ok.m && ok.t && normQuestion(ok.m.question) !== normQuestion(ok.t.question) && (
-            <p className="ml-combo-diff" data-testid="ml-combo-diff">塔羅那次問的是「{ok.t.question}」</p>
+          {info && normQuestion(question) !== normQuestion(info.tarotQuestion) && (
+            <p className="ml-combo-diff" data-testid="ml-combo-diff">塔羅那次問的是「{info.tarotQuestion}」</p>
           )}
           {reading && <AiReadingView reading={reading} />}
           {!reading && proxyUrl() === '' && <p className="ml-ai-help" data-testid="ml-combo-noai">合併解讀要用 AI，這個環境沒有接 AI。</p>}

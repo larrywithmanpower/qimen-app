@@ -30,6 +30,8 @@ export interface ReadingRecord {
   followups: ThreadEntry[]
   // 合併解讀：[梅花紀錄 id, 塔羅紀錄 id]
   sources?: [string, string]
+  // 合併解讀：當時兩邊的標題與塔羅題目（來源刪掉後畫面照樣顯示）
+  combo?: { meihuaTitle: string; meihuaLevel: string; tarotTitle: string; tarotQuestion: string }
 }
 
 export const newRecordId = (kind: RecordKind, now = Date.now()) => `${kind}-${now}-${Math.random().toString(36).slice(2, 8)}`
