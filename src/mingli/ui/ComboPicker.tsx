@@ -8,22 +8,23 @@ import { updateSession } from './session'
 import { comboPath, KIND_NAME, shortTime } from './recordText'
 
 // kind：這筆紀錄是梅花還是塔羅（由呼叫端給，不從 id 猜）
-// 呼叫端用 key={fromId}：換了一筆紀錄就整個重建，選單收起、不沿用舊清單
+// 打開時讀到的清單記著是哪一筆紀錄的（id）；換了一筆紀錄，舊清單就不算數、選單視為收起
 export default function ComboPicker({ fromId, kind }: { fromId: string | null; kind: 'meihua' | 'tarot' }) {
-  const [open, setOpen] = useState(false)
-  const [state, setState] = useState<{ from: ReadingRecord; list: { rec: ReadingRecord; same: boolean }[] } | null>(null)
+  const [opened, setOpened] = useState<{ id: string; from: ReadingRecord | null; list: { rec: ReadingRecord; same: boolean }[] } | null>(null)
   if (!fromId) return null
+  const open = opened?.id === fromId
+  const state = open && opened.from ? { from: opened.from, list: opened.list } : null
   const other = kind === 'meihua' ? 'tarot' : 'meihua'
 
   const toggle = async () => {
     if (open) {
-      setOpen(false)
+      setOpened(null)
       return
     }
+    const id = fromId
     const all = await loadRecords()
-    const from = all.find((r) => r.id === fromId)
-    setState(from ? { from, list: comboCandidates(all, from) } : null)
-    setOpen(true)
+    const from = all.find((r) => r.id === id) ?? null
+    setOpened({ id, from, list: from ? comboCandidates(all, from) : [] })
   }
   // 沒有另一邊的紀錄：帶著同一個問題去算
   const goCast = () => {

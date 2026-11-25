@@ -25,18 +25,16 @@ interface Options {
 
 // 回傳這次結果的紀錄 id（存好之後才有）。同一個 key 永遠是同一筆：每次新結果要給新的 key
 export function useSaveRecord(o: Options): string | null {
-  const ids = useRef(new Map<string, { id: string; at: number }>())
+  // 只記最後一次結果的 key 與編號（返回卦象再看解讀是同一個 key，沿用同一筆）
+  const last = useRef<{ key: string; id: string; at: number } | null>(null)
   const [savedKey, setSavedKey] = useState<string | null>(null)
   const followupCount = o.followups.length
   const readingVerdict = o.reading?.verdict ?? ''
 
   useEffect(() => {
     if (!o.key || !o.ready || !o.facts) return
-    let slot = ids.current.get(o.key)
-    if (!slot) {
-      slot = { id: newRecordId(o.kind), at: Date.now() }
-      ids.current.set(o.key, slot)
-    }
+    if (last.current?.key !== o.key) last.current = { key: o.key, id: newRecordId(o.kind), at: Date.now() }
+    const slot = last.current
     const rec: ReadingRecord = {
       id: slot.id,
       kind: o.kind,
@@ -61,5 +59,5 @@ export function useSaveRecord(o: Options): string | null {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [o.key, o.ready, readingVerdict, followupCount])
 
-  return o.key && savedKey === o.key ? ids.current.get(o.key)?.id ?? null : null
+  return o.key && savedKey === o.key && last.current?.key === o.key ? last.current.id : null
 }

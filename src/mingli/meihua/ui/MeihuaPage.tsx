@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Solar } from 'lunar-javascript'
 import './meihua.css'
@@ -160,7 +160,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
   const res = cast?.res ?? null
   const reading = res ? templateReading(res) : null
   // 送 AI、追問、存紀錄共用同一份盤面
-  const facts = res ? meihuaFacts(res) : null
+  const facts = useMemo(() => (res ? meihuaFacts(res) : null), [res])
   // AI 解讀：按「看解讀」才送；吉凶沿用範本算出來的 tone
   const ai = useAiReading(
     facts && reading && read ? { kind: 'meihua', question: clipQuestion(question), facts, tone: reading.tone, context: clipContext(context) } : null,
@@ -367,7 +367,7 @@ export default function MeihuaPage({ params }: { params: URLSearchParams }) {
               <p className="ml-mnote">範例解讀，正式版由 AI 依卦義規則卡撰寫</p>
             </>
           )}
-          {proxyUrl() !== '' && <ComboPicker key={recordId ?? ''} fromId={recordId} kind="meihua" />}
+          {proxyUrl() !== '' && <ComboPicker fromId={recordId} kind="meihua" />}
         </div>
       )}
     </section>

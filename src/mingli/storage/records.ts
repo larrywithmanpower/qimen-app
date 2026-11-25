@@ -34,6 +34,13 @@ export interface ReadingRecord {
   combo?: { meihuaTitle: string; meihuaLevel: string; tarotTitle: string; tarotQuestion: string }
 }
 
+export type ComboInfo = NonNullable<ReadingRecord['combo']>
+// 讀回來的 combo 欄位四個都是字串才用（舊版或壞掉的資料就當沒有）
+export const isComboInfo = (v: unknown): v is ComboInfo => {
+  const c = v as ComboInfo | undefined
+  return !!c && [c.meihuaTitle, c.meihuaLevel, c.tarotTitle, c.tarotQuestion].every((x) => typeof x === 'string')
+}
+
 export const newRecordId = (kind: RecordKind, now = Date.now()) => `${kind}-${now}-${Math.random().toString(36).slice(2, 8)}`
 
 const isRecord = (v: unknown): v is ReadingRecord => {

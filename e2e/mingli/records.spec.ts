@@ -62,16 +62,29 @@ async function withAi(page: Page, handle?: (route: Route, body: Record<string, u
   return bodies
 }
 
-// 直接讀 IndexedDB 裡的紀錄（idb-keyval 預設的 keyval-store）
-const readStoredRecords = (page: Page) => page.evaluate(() => new Promise<unknown[]>((done) => {
+// 直接讀寫 IndexedDB 裡的紀錄（idb-keyval 預設的 keyval-store）。資料庫還不存在就當零筆，不自己去開（開了會建出沒有存放區的空資料庫，害網站之後存不進去）
+const readStoredRecords = (page: Page) => page.evaluate(async () => {
+  if (!(await indexedDB.databases()).some((d) => d.name === 'keyval-store')) return []
+  return new Promise<Record<string, unknown>[]>((done, fail) => {
+    const req = indexedDB.open('keyval-store')
+    req.onerror = () => fail(req.error)
+    req.onsuccess = () => {
+      const get = req.result.transaction('keyval').objectStore('keyval').get('ml-records')
+      get.onerror = () => fail(get.error)
+      get.onsuccess = () => done(Array.isArray(get.result) ? get.result : [])
+    }
+  })
+})
+const writeStoredRecords = (page: Page, list: unknown[]) => page.evaluate((v) => new Promise<void>((done, fail) => {
   const req = indexedDB.open('keyval-store')
+  req.onerror = () => fail(req.error)
   req.onsuccess = () => {
-    // 從沒存過任何東西時連存放區都還沒建，就是零筆
-    if (!req.result.objectStoreNames.contains('keyval')) return done([])
-    const get = req.result.transaction('keyval').objectStore('keyval').get('ml-records')
-    get.onsuccess = () => done(Array.isArray(get.result) ? get.result : [])
+    const tx = req.result.transaction('keyval', 'readwrite')
+    tx.objectStore('keyval').put(v, 'ml-records')
+    tx.oncomplete = () => done()
+    tx.onerror = () => fail(tx.error)
   }
-}))
+}), list)
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -339,5 +352,33 @@ test('題目不同的合併，刪掉塔羅後重開：兩邊標題與「塔羅�
   await page.goto(url)
   await expect(page.getByTestId('ml-combo-diff')).toContainText('新工作會比較好嗎')
   await expect(page.getByTestId('ml-combo-src-m')).toContainText(mei.name)
+  await expect(page.getByTestId('ml-combo-src-t')).toContainText(drawn[0].card.zh)
+})
+
+test('舊版合併紀錄（沒有存兩邊標題）：來源還在用來源的，來源刪光從舊標題拆；格式壞掉也不當掉', async ({ page }) => {
+  await withAi(page)
+  await openMeihua(page)
+  await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await openTarot(page)
+  await expect(page.getByTestId('ml-ai-reading')).toBeVisible()
+  await page.getByTestId('ml-combo-open').click()
+  await page.getByTestId('ml-combo-item').first().click()
+  await expect(page.getByTestId('ml-combo-page')).not.toHaveAttribute('data-record', '')
+  // 改成 2026-11-25 前的樣子：拿掉 combo 欄位
+  const all = await readStoredRecords(page)
+  await writeStoredRecords(page, all.map((r) => (r.kind === 'combo' ? { ...r, combo: undefined } : r)))
+  await page.reload()
+  await expect(page.getByTestId('ml-combo-src-m')).toContainText(mei.name)
+  await expect(page.getByTestId('ml-combo-src-t')).toContainText(drawn[0].card.zh)
+  // 來源都刪掉：從「梅花｜塔羅」標題拆
+  await writeStoredRecords(page, (await readStoredRecords(page)).filter((r) => r.kind === 'combo'))
+  await page.reload()
+  await expect(page.getByTestId('ml-combo-src-m')).toContainText(`${mei.name} → ${mei.changed.name}`)
+  await expect(page.getByTestId('ml-combo-src-t')).toContainText(drawn[0].card.zh)
+  await expect(page.getByTestId('ml-combo-src-t')).not.toContainText('｜')
+  // combo 欄位壞掉（空物件）：照樣顯示，不當掉（console 守門會抓 pageerror）
+  await writeStoredRecords(page, (await readStoredRecords(page)).map((r) => ({ ...r, combo: {} })))
+  await page.reload()
+  await expect(page.getByTestId('ml-ai-reading')).toContainText('combo 的一句話')
   await expect(page.getByTestId('ml-combo-src-t')).toContainText(drawn[0].card.zh)
 })

@@ -251,21 +251,23 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     card?.style.setProperty('--ml-ry', '0deg')
   }
 
-  const drawn = read && picks.length === 3 ? drawThree(seed, [picks[0], picks[1], picks[2]]) : null
-  // 送 AI、追問、存紀錄共用同一份盤面
-  const facts = drawn ? tarotFacts(drawn) : null
-  // 這次結果的 key：加上第幾回抽，同一副牌序重抽到同樣位置也算新的一筆
-  const resultKey = drawn ? `${round}-${seed}-${picks.join(',')}` : null
+  // 盤面只在牌變了才重算，送 AI、追問、存紀錄共用同一份
+  const drawn = useMemo(() => (read && picks.length === 3 ? drawThree(seed, [picks[0], picks[1], picks[2]]) : null), [read, seed, picks])
+  const facts = useMemo(() => (drawn ? tarotFacts(drawn) : null), [drawn])
+  // AI 解讀與追問的 key：同一副牌序抽到同樣位置就沿用（不重扣額度）
+  const aiKey = drawn ? `${seed}-${picks.join(',')}` : null
+  // 紀錄的 key：再加第幾回抽，重新抽到同樣的牌也是新的一筆
+  const recordKey = aiKey ? `${round}-${aiKey}` : null
   const reading = drawn ? templateReading(drawn) : null
   // AI 解讀：吉凶沿用範本算出來的 tone；沒設網址時 ai.status 一律是 idle，直接顯示範本
   const ai = useAiReading(
     facts && reading ? { kind: 'tarot', question: clipQuestion(question), facts, tone: reading.tone, context: clipContext(context) } : null,
-    resultKey ?? '',
+    aiKey ?? '',
   )
   // 解讀成功後可以接著問（換牌就清掉）
   const followup = useFollowup({
     kind: 'tarot',
-    key: resultKey,
+    key: aiKey,
     facts,
     tone: reading?.tone ?? '平',
     question: clipQuestion(question),
@@ -276,7 +278,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
   // 翻完牌就存進紀錄（AI 回來後存 AI 的，沒 AI 存範本的一句話）；追問有變再更新
   const recordId = useSaveRecord({
     kind: 'tarot',
-    key: resultKey,
+    key: recordKey,
     // 婉拒（問壽命、輕生念頭）不存：畫面不退範本，紀錄也不留範本的一句話
     ready: ai.status !== 'loading' && ai.status !== 'refused',
     question: clipQuestion(question),
@@ -424,7 +426,7 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
           <p className="ml-note">範例解讀，正式版由 AI 依牌義規則卡撰寫</p>
         </div>
       )}
-      {drawn && proxyUrl() !== '' && <ComboPicker key={recordId ?? ''} fromId={recordId} kind="tarot" />}
+      {drawn && proxyUrl() !== '' && <ComboPicker fromId={recordId} kind="tarot" />}
     </section>
   )
 }
