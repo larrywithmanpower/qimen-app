@@ -69,26 +69,31 @@ const readStoredRecords = (page: Page) => page.evaluate(async () => {
     const req = indexedDB.open('keyval-store')
     req.onerror = () => fail(req.error)
     req.onsuccess = () => {
+      const db = req.result
       // 有資料庫但沒有存放區（別處先開過）也是零筆
-      if (!req.result.objectStoreNames.contains('keyval')) return done([])
-      const get = req.result.transaction('keyval').objectStore('keyval').get('ml-records')
-      get.onerror = () => fail(get.error)
-      get.onsuccess = () => done(Array.isArray(get.result) ? get.result : [])
+      if (!db.objectStoreNames.contains('keyval')) { db.close(); return done([]) }
+      const get = db.transaction('keyval').objectStore('keyval').get('ml-records')
+      get.onerror = () => { db.close(); fail(get.error) }
+      get.onsuccess = () => { db.close(); done(Array.isArray(get.result) ? get.result : []) }
     }
   })
 })
-const writeStoredRecords = (page: Page, list: unknown[]) => page.evaluate((v) => new Promise<void>((done, fail) => {
-  const req = indexedDB.open('keyval-store')
-  req.onerror = () => fail(req.error)
-  req.onsuccess = () => {
-    // 只在網站已經存過紀錄之後用；沒有存放區就明確報錯，不要卡住
-    if (!req.result.objectStoreNames.contains('keyval')) return fail(new Error('還沒有 keyval 存放區'))
-    const tx = req.result.transaction('keyval', 'readwrite')
-    tx.objectStore('keyval').put(v, 'ml-records')
-    tx.oncomplete = () => done()
-    tx.onerror = () => fail(tx.error)
-  }
-}), list)
+// 只在網站已經存過紀錄之後用；資料庫或存放區不存在就明確報錯，不自己建
+const writeStoredRecords = (page: Page, list: unknown[]) => page.evaluate(async (v) => {
+  if (!(await indexedDB.databases()).some((d) => d.name === 'keyval-store')) throw new Error('還沒有 keyval-store 資料庫')
+  return new Promise<void>((done, fail) => {
+    const req = indexedDB.open('keyval-store')
+    req.onerror = () => fail(req.error)
+    req.onsuccess = () => {
+      const db = req.result
+      if (!db.objectStoreNames.contains('keyval')) { db.close(); return fail(new Error('還沒有 keyval 存放區')) }
+      const tx = db.transaction('keyval', 'readwrite')
+      tx.objectStore('keyval').put(v, 'ml-records')
+      tx.oncomplete = () => { db.close(); done() }
+      tx.onerror = () => { db.close(); fail(tx.error) }
+    }
+  })
+}, list)
 
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })

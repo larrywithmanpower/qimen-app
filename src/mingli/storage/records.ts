@@ -83,15 +83,35 @@ export function comboPair(a: ReadingRecord, b: ReadingRecord): [ReadingRecord, R
   return null
 }
 
+// 裝置裡存的原樣（只濾掉壞掉的筆）；存檔、刪除用這份寫回，不會把畫面用的補值寫進去
+async function readStored(): Promise<ReadingRecord[]> {
+  const v = await get(RECORDS_KEY)
+  return Array.isArray(v) ? v.filter(isRecord).sort((a, b) => b.at - a.at).slice(0, RECORDS_MAX) : []
+}
+
+// 合併紀錄的 combo 欄位沒有或格式不對（2026-11-25 前的舊版）：來源還在用來源，不在就從「梅花｜塔羅」標題拆
+// 舊版塔羅來源刪掉後找不到塔羅那次的題目，就當跟合併的題目相同
+function withCombo(r: ReadingRecord, all: readonly ReadingRecord[]): ReadingRecord {
+  if (r.kind !== 'combo' || isComboInfo(r.combo)) return r
+  const m = all.find((x) => x.id === r.sources?.[0] && x.kind === 'meihua')
+  const t = all.find((x) => x.id === r.sources?.[1] && x.kind === 'tarot')
+  const [mTitle = '', tTitle = ''] = r.title.split('｜')
+  return {
+    ...r,
+    combo: {
+      meihuaTitle: m?.title ?? mTitle,
+      meihuaLevel: m?.level ?? r.level,
+      tarotTitle: t?.title ?? tTitle,
+      tarotQuestion: t?.question ?? r.question,
+    },
+  }
+}
+
 // 無痕模式等情況 IndexedDB 可能拒絕存取，讀不到就當作沒有紀錄
 export async function loadRecords(): Promise<ReadingRecord[]> {
   try {
-    const v = await get(RECORDS_KEY)
-    if (!Array.isArray(v)) return []
-    // combo 欄位格式不對（舊版沒有、或壞掉）就拿掉，所有讀紀錄的畫面都不用再各自檢查
-    return v.filter(isRecord)
-      .map((r) => (r.combo === undefined || isComboInfo(r.combo) ? r : { ...r, combo: undefined }))
-      .sort((a, b) => b.at - a.at).slice(0, RECORDS_MAX)
+    const all = await readStored()
+    return all.map((r) => withCombo(r, all))
   } catch {
     return []
   }
@@ -108,7 +128,7 @@ const serial = <T>(fn: () => Promise<T>): Promise<T> => {
 export function saveRecord(rec: ReadingRecord): Promise<void> {
   return serial(async () => {
     try {
-      await set(RECORDS_KEY, upsert(await loadRecords(), rec))
+      await set(RECORDS_KEY, upsert(await readStored(), rec))
     } catch {
       // 存不進去就只在這次畫面使用
     }
@@ -118,7 +138,7 @@ export function saveRecord(rec: ReadingRecord): Promise<void> {
 export function deleteRecord(id: string): Promise<void> {
   return serial(async () => {
     try {
-      await set(RECORDS_KEY, (await loadRecords()).filter((r) => r.id !== id))
+      await set(RECORDS_KEY, (await readStored()).filter((r) => r.id !== id))
     } catch {
       // 沒有可刪的東西
     }

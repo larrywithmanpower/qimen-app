@@ -18,21 +18,6 @@ type Loaded =
 
 const pairInfo = (m: ReadingRecord, t: ReadingRecord): ComboInfo => ({ meihuaTitle: m.title, meihuaLevel: m.level, tarotTitle: t.title, tarotQuestion: t.question })
 
-// 標題列：合併紀錄有存就用存的（來源刪掉也一樣）。舊版合併紀錄（2026-11-25 前沒有 combo 欄位）每一邊分開找：
-// 來源還在用來源，不在就從「梅花｜塔羅」標題拆；塔羅題目從當時送出的近況「塔羅那次問的是「…」」找回，找不到就當同一題
-function headerInfo(done: ReadingRecord | null, m?: ReadingRecord, t?: ReadingRecord): ComboInfo | null {
-  if (done?.combo) return done.combo
-  if (!done) return m && t ? pairInfo(m, t) : null
-  const [mTitle = '', tTitle = ''] = done.title.split('｜')
-  const asked = /塔羅那次問的是「(.+?)」/.exec(done.context ?? '')?.[1]
-  return {
-    meihuaTitle: m?.title ?? mTitle,
-    meihuaLevel: m?.level ?? done.level,
-    tarotTitle: t?.title ?? tTitle,
-    tarotQuestion: t?.question ?? asked ?? done.question,
-  }
-}
-
 export default function ComboPage({ params }: { params: URLSearchParams }) {
   const mId = params.get('m') ?? ''
   const tId = params.get('t') ?? ''
@@ -80,7 +65,8 @@ export default function ComboPage({ params }: { params: URLSearchParams }) {
 
   const reading = ok?.done?.reading ?? (ai.status === 'ok' ? ai.reading : null)
   const done = ok?.done
-  const info = ok ? headerInfo(done ?? null, ok.m, ok.t) : null
+  // 標題列：合併過就用合併紀錄存的（舊版的在讀紀錄時已補好），還沒合併用兩筆來源
+  const info = done?.combo ?? (pair ? pairInfo(pair.m, pair.t) : null)
   const question = done?.question ?? pair?.m.question ?? ''
 
   return (

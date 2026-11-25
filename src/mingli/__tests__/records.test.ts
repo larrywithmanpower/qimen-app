@@ -56,6 +56,25 @@ describe('紀錄存取', () => {
     await clearRecords()
     expect(await loadRecords()).toEqual([])
   })
+  it('舊版合併紀錄（沒有 combo）：來源在用來源、不在從標題拆；補的值只給畫面用，存檔不寫回', async () => {
+    const m = rec({ id: 'm', kind: 'meihua', title: '雷地豫 → 天地否', level: '吉' })
+    const t = rec({ id: 't', kind: 'tarot', title: '教皇 正位', question: '換工作好嗎' })
+    const c = rec({ id: 'c', kind: 'combo', title: '舊梅花｜舊塔羅', level: '平', sources: ['m', 't'] })
+    store.set(RECORDS_KEY, [m, t, c])
+    const got = (await loadRecords()).find((r) => r.id === 'c')
+    expect(got?.combo).toEqual({ meihuaTitle: '雷地豫 → 天地否', meihuaLevel: '吉', tarotTitle: '教皇 正位', tarotQuestion: '換工作好嗎' })
+    await deleteRecord('t')
+    const after = (await loadRecords()).find((r) => r.id === 'c')
+    expect(after?.combo).toEqual({ meihuaTitle: '雷地豫 → 天地否', meihuaLevel: '吉', tarotTitle: '舊塔羅', tarotQuestion: '要不要換工作？' })
+    expect((store.get(RECORDS_KEY) as Rec[]).find((r) => r.id === 'c')?.combo).toBeUndefined()
+  })
+  it('combo 欄位壞掉（空物件）照樣補好，不會把原資料洗掉', async () => {
+    const bad = { ...rec({ id: 'c', kind: 'combo', title: '甲｜乙' }), combo: { future: 1 } }
+    store.set(RECORDS_KEY, [bad])
+    expect((await loadRecords())[0].combo?.tarotTitle).toBe('乙')
+    await saveRecord(rec({ id: 'x', at: NOW + 1 }))
+    expect((store.get(RECORDS_KEY) as Rec[]).find((r) => r.id === 'c')?.combo).toEqual({ future: 1 })
+  })
   it('壞掉的資料不讀進來', async () => {
     store.set(RECORDS_KEY, [rec({ id: 'ok' }), { id: 'bad' }, null, 'x'])
     expect((await loadRecords()).map((r) => r.id)).toEqual(['ok'])
