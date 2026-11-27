@@ -4,7 +4,7 @@ import { createHandler, taiwanDate } from './handler.js';
 const ORIGIN = 'https://mingli-yuxuan.web.app';
 const SECRET_Q = '我老闆的秘密問題XYZ';
 
-// 測試自己造的小卡片集（注入，不依賴 cards/*.json）
+// 測試自己造的小卡片集（注入，不依賴 cards/*.txt）
 const CARD_DB = {
   tarot: [
     { id: 'tarot-fool-up', title: '愚者正位', source: '測試來源甲', when: { card: '愚者', orientation: '正位' }, text: '新的開始' },

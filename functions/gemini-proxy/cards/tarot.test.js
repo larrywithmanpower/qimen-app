@@ -1,13 +1,15 @@
 // 塔羅知識卡結構測試：156 張（78 牌 × 正逆位）、id／欄位／字數／禁用詞
 import { readFileSync } from 'node:fs'
+import { parseCardsText } from '../cards-text.js'
 import { describe, expect, it } from 'vitest'
 import { CARDS } from '../../../src/mingli/tarot/cards.ts'
 
-const data = JSON.parse(readFileSync(new URL('./tarot.json', import.meta.url), 'utf8'))
+// 卡片檔是文字檔 tarot.txt，用跟後端一樣的讀法讀進來再檢查
+const data = parseCardsText(readFileSync(new URL('./tarot.txt', import.meta.url), 'utf8'), 'tarot')
 const cards = data.cards
 const ORIENTATIONS = ['正位', '逆位']
 
-describe('tarot.json 知識卡', () => {
+describe('tarot.txt 知識卡', () => {
   it('檔頭正確', () => {
     expect(data.version).toBe(1)
     expect(data.kind).toBe('tarot')

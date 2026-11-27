@@ -1,14 +1,15 @@
-// 知識卡：AI 解讀只能依卡片內容寫。卡片檔在 cards/*.json，啟動時讀一次
+// 知識卡：AI 解讀只能依卡片內容寫。卡片檔是 cards/*.txt（Boss 可直接改的文字檔），啟動時讀一次
 import { readFileSync } from 'node:fs';
+import { parseCardsText } from './cards-text.js';
 
-const FILES = { tarot: 'tarot.json', meihua: 'meihua.json', ziwei: 'ziwei.json' };
+const FILES = { tarot: 'tarot.txt', meihua: 'meihua.txt', ziwei: 'ziwei.txt' };
 
 // 回傳 { tarot: 卡[], meihua: 卡[], ziwei: 卡[] }
 export function loadCards() {
   const db = {};
   for (const [kind, file] of Object.entries(FILES)) {
     const raw = readFileSync(new URL(`./cards/${file}`, import.meta.url), 'utf8');
-    db[kind] = JSON.parse(raw).cards;
+    db[kind] = parseCardsText(raw, kind).cards;
   }
   return db;
 }

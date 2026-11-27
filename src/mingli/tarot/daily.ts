@@ -44,5 +44,5 @@ export function dailyFacts(c: DrawnCard): Record<string, unknown> {
 // AI 詳細解讀固定問這一題（今日一牌沒有使用者輸入的問題）
 export const DAILY_QUESTION = '今天要注意什麼？'
 
-// 知識卡編號：T＋兩位數牌序＋正／逆（跟後端 cards/tarot.json 一致）
+// 知識卡編號：T＋兩位數牌序＋正／逆（跟後端 cards/tarot.txt 一致）
 export const dailyCardId = (c: DrawnCard) => `T${String(c.index).padStart(2, '0')}${c.reversed ? '逆' : '正'}`

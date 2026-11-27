@@ -32,8 +32,11 @@ function saveCachedReading(date: string, reading: AiReading) {
 
 // 知識卡牌義跟後端同一份檔案，用到才載入，不拖慢首頁
 async function loadMeaning(id: string): Promise<string> {
-  const { default: raw } = await import('../../../functions/gemini-proxy/cards/tarot.json?raw')
-  const cards = (JSON.parse(raw) as { cards: { id: string; text: string }[] }).cards
+  const [{ default: raw }, { parseCardsText }] = await Promise.all([
+    import('../../../functions/gemini-proxy/cards/tarot.txt?raw'),
+    import('../../../functions/gemini-proxy/cards-text.js'),
+  ])
+  const { cards } = parseCardsText(raw, 'tarot')
   return cards.find((c) => c.id === id)?.text ?? ''
 }
 

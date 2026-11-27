@@ -1,9 +1,11 @@
 // 梅花易數知識卡結構測試
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { parseCardsText } from '../cards-text.js'
 import { hexagramName } from '../../../src/mingli/meihua/engine.ts'
 
-const data = JSON.parse(readFileSync(new URL('./meihua.json', import.meta.url), 'utf8'))
+// 卡片檔是文字檔 meihua.txt，用跟後端一樣的讀法讀進來再檢查
+const data = parseCardsText(readFileSync(new URL('./meihua.txt', import.meta.url), 'utf8'), 'meihua')
 const cards = data.cards
 
 const TRIGRAMS = ['乾', '兌', '離', '震', '巽', '坎', '艮', '坤']
@@ -29,7 +31,7 @@ const KING_WEN = [
 const byId = (id) => cards.find((c) => c.id === id)
 const pad = (n) => String(n).padStart(2, '0')
 
-describe('meihua.json 結構', () => {
+describe('meihua.txt 結構', () => {
   it('頂層欄位與張數', () => {
     expect(data.version).toBe(1)
     expect(data.kind).toBe('meihua')

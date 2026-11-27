@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import cardsRaw from '../../../../functions/gemini-proxy/cards/tarot.json?raw'
+import cardsRaw from '../../../../functions/gemini-proxy/cards/tarot.txt?raw'
+import { parseCardsText } from '../../../../functions/gemini-proxy/cards-text.js'
 import { CARDS } from '../cards'
 import { dailyCard, dailyCardId, dailyFacts, dailyTone, taiwanDate } from '../daily'
 
@@ -49,7 +50,7 @@ describe('今日一牌', () => {
     expect(rev).toBeLessThan(0.45)
   })
   it('知識卡編號對得到同一張牌與正逆位', () => {
-    const db = new Map((JSON.parse(cardsRaw) as { cards: { id: string; when: { card: string; orientation: string } }[] }).cards.map((c) => [c.id, c.when]))
+    const db = new Map(parseCardsText(cardsRaw, 'tarot').cards.map((c) => [c.id, c.when]))
     for (let index = 0; index < CARDS.length; index++) {
       for (const reversed of [false, true]) {
         const d = { index, reversed, card: CARDS[index] }

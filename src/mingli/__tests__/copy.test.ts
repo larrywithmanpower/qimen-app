@@ -35,7 +35,7 @@ function targets(): string[] {
     ...walk(join(REPO, 'src', 'mingli')),
     join(REPO, 'index.html'),
     join(REPO, 'vite.config.ts'),
-    ...readdirSync(cards).filter((f) => f.endsWith('.json')).map((f) => join(cards, f)),
+    ...readdirSync(cards).filter((f) => f.endsWith('.txt')).map((f) => join(cards, f)),
   ]
 }
 
@@ -51,7 +51,7 @@ describe('對外文案禁用字', () => {
     const list = targets()
     expect(list.length).toBeGreaterThan(20)
     expect(list.some((f) => f.endsWith('index.html'))).toBe(true)
-    expect(list.some((f) => f.endsWith('tarot.json'))).toBe(true)
+    expect(list.some((f) => f.endsWith('tarot.txt'))).toBe(true)
   })
 
   it('src/mingli、index.html、vite.config.ts、知識卡都沒有禁用字', () => {

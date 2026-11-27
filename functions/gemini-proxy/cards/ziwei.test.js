@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { parseCardsText } from '../cards-text.js'
 import { MAJOR_STAR_NAMES } from '../../../src/mingli/ziwei/engine.ts'
 
-const data = JSON.parse(
-  readFileSync(new URL('./ziwei.json', import.meta.url), 'utf8'),
-)
+// 卡片檔是文字檔 ziwei.txt，用跟後端一樣的讀法讀進來再檢查
+const data = parseCardsText(readFileSync(new URL('./ziwei.txt', import.meta.url), 'utf8'), 'ziwei')
 const cards = data.cards
 
 const MINOR = ['左輔', '右弼', '文昌', '文曲', '天魁', '天鉞', '祿存', '天馬', '擎羊', '陀羅', '火星', '鈴星', '地空', '地劫']
