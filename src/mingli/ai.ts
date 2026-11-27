@@ -6,6 +6,7 @@ import { hexagramName } from './meihua/engine'
 import type { MeihuaResult, Trigram } from './meihua/engine'
 import { MAJOR_STAR_NAMES } from './ziwei/engine'
 import type { HoroscopeFacts, HoroscopeLayer, ZiweiFacts } from './ziwei/engine'
+import { chartProblems } from '../../functions/gemini-proxy/consistency.js'
 
 // combo＝梅花＋塔羅合併解讀（facts 是 { meihua, tarot }；沒有追問）
 export type AiKind = 'tarot' | 'meihua' | 'ziwei' | 'combo'
@@ -336,6 +337,8 @@ function textAllowed(kind: AiKind, facts: Obj, raw: string): boolean {
   // 合併解讀：梅花、塔羅各自的規則都要過
   const mf = kind === 'meihua' ? facts : kind === 'combo' ? asObj(facts.meihua) : null
   const tf = kind === 'tarot' ? facts : kind === 'combo' ? asObj(facts.tarot) : null
+  // 盤面核對：講到的位置（牌陣位置、本互變卦、星曜落宮、四化…）要跟盤一致，規則跟後端共用同一份
+  if (chartProblems(kind, facts, raw).length > 0) return false
   // 梅花：只能提動爻那一爻
   if (mf && typeof mf.movingLine === 'number') {
     if (mentionedLines(text).some((n) => n !== mf.movingLine)) return false

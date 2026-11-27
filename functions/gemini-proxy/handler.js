@@ -107,7 +107,7 @@ export function createHandler({ claude, usage, cost, cards, env = process.env, n
           result = { refusal: { kind: risk, message: REFUSAL_MESSAGES[risk] } };
           break;
         }
-        const checked = isFollowup ? checkFollowup(out?.reading, selected, kind) : checkReading(out?.reading, tone, selected, kind);
+        const checked = isFollowup ? checkFollowup(out?.reading, selected, kind, facts) : checkReading(out?.reading, tone, selected, kind, facts);
         const reading = isFollowup ? checked.followup : checked.reading;
         const { problem } = checked;
         if (reading) {

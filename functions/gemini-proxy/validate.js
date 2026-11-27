@@ -1,4 +1,5 @@
 import { findAbsolute } from './safety.js';
+import { chartProblems } from './consistency.js';
 import { FOLLOWUP_ACTIONS, FOLLOWUP_FOCUSES } from './prompt.js';
 // 請求與回應的格式檢查（純函式）
 // combo＝梅花＋塔羅合併解讀（同一題各算一次，facts 裡各放一份）
@@ -55,7 +56,8 @@ export function isIsoDate(s) {
 // 檢查 Claude 的回傳：通過回 { reading }，不過回 { problem }（哪一條沒過，只給日誌用）
 // allowedCards：這次請求選出的知識卡；每段 cards 只能引用其中的 id
 // kind 是 combo 時，basis 要分得出哪條來自梅花、哪條來自塔羅，兩邊都要用到
-export function checkReading(out, tone, allowedCards = [], kind) {
+// facts：這次的盤面；有帶就做盤面核對（解讀寫的位置要跟盤一致）
+export function checkReading(out, tone, allowedCards = [], kind, facts) {
   const byId = new Map(allowedCards.map((c) => [c.id, c]));
   const fail = (problem) => ({ reading: null, problem });
   if (!isObj(out)) return fail('not_json');
@@ -83,6 +85,7 @@ export function checkReading(out, tone, allowedCards = [], kind) {
   // 絕對化字眼（一定、保證…）視同格式不過
   const allText = [out.verdict, pr.claim, ...paragraphs.flatMap((p) => [p.title, p.text, ...p.basis])].join('\n');
   if (findAbsolute(allText).length > 0) return fail('absolute');
+  if (facts !== undefined && chartProblems(kind, facts, allText).length > 0) return fail('chart');
   return {
     reading: {
       verdict: out.verdict,
@@ -101,7 +104,7 @@ export function validateReading(out, tone, allowedCards = [], kind) {
 
 // 檢查追問的回傳：通過回 { followup }，不過回 { problem }
 // allowedCards：這次請求選出的知識卡；cards 只能引用其中的 id。換時間重排（recompute）只有紫微有
-export function checkFollowup(out, allowedCards = [], kind = 'ziwei') {
+export function checkFollowup(out, allowedCards = [], kind = 'ziwei', facts) {
   const byId = new Map(allowedCards.map((c) => [c.id, c]));
   const fail = (problem) => ({ followup: null, problem });
   if (!isObj(out)) return fail('not_json');
@@ -127,6 +130,8 @@ export function checkFollowup(out, allowedCards = [], kind = 'ziwei') {
     followup = { action: 'refuse', text: out.text };
   }
   // 絕對化字眼視同格式不過
-  if (findAbsolute([out.text, ...basis.filter((b) => typeof b === 'string')].join('\n')).length > 0) return fail('absolute');
+  const followText = [out.text, ...basis.filter((b) => typeof b === 'string')].join('\n');
+  if (findAbsolute(followText).length > 0) return fail('absolute');
+  if (facts !== undefined && chartProblems(kind, facts, followText).length > 0) return fail('chart');
   return { followup, problem: null };
 }
