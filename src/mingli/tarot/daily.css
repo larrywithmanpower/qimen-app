@@ -1,0 +1,29 @@
+/* 今日一牌：深色儀式區只放一張牌，下面接牌義與按鈕（字級、按鈕沿用塔羅頁） */
+.ml-daily { gap: 22px; padding-top: var(--ml-space-2); }
+.ml-daily-ritual { align-items: center; }
+.ml-daily-well { width: 168px; max-width: 168px; }
+.ml-daily-name { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 700; letter-spacing: .2em; }
+.ml-daily-meaning { margin: 0; font-size: var(--ml-fs-body); line-height: 1.8; color: var(--ml-ink-body); }
+.ml-daily-actions { display: flex; flex-wrap: wrap; gap: var(--ml-space-3); max-width: 680px; width: 100%; margin: 0 auto; }
+.ml-daily-aibtn {
+  flex: 1 1 200px; min-height: 50px; padding: 0 24px; border: 0; border-radius: var(--ml-radius-pill);
+  background: var(--ml-accent); color: var(--ml-on-accent); font: inherit; font-size: var(--ml-fs-body); font-weight: 700; letter-spacing: .2em; cursor: pointer;
+}
+.ml-daily-ask { flex: 1 1 160px; text-decoration: none; }
+.ml-daily-note { max-width: 680px; width: 100%; margin: 0 auto; text-align: center; }
+
+@media (min-width: 720px) {
+  .ml-daily-head { align-items: center; text-align: center; }
+  .ml-daily-well { width: 200px; max-width: 200px; }
+}
+
+/* 系統開「減少動態」：直接翻開，不播翻牌 */
+@media (prefers-reduced-motion: reduce) {
+  .ml-daily-inner { transition: none; }
+}
+
+/* 牌比塔羅頁大，逆位倒過來時中文字框會碰到英文名，兩行拉開一點 */
+.ml-daily-fctext { gap: 4cqw; }
+
+/* 依據標籤照塔羅頁的小膠囊，不撐滿一整行 */
+.ml-daily-basis { align-self: flex-start; }

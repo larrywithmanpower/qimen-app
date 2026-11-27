@@ -187,3 +187,10 @@
   .ml-tarot[data-read="true"][data-ai="ok"] { align-items: start; }
   .ml-tarot[data-read="true"][data-ai="ok"] .ml-tarot-board { position: sticky; top: var(--ml-space-6); }
 }
+
+/* 頁首副標旁的今日一牌入口 */
+.ml-tarot-subrow { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ml-space-2); }
+.ml-tarot-daily { display: inline-flex; align-items: center; min-height: 44px; font-size: var(--ml-fs-body-sm); color: var(--ml-star); text-decoration: underline; text-underline-offset: 4px; }
+@media (min-width: 720px) {
+  .ml-tarot-subrow { justify-content: center; gap: var(--ml-space-4); }
+}

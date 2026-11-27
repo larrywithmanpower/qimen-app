@@ -18,7 +18,7 @@ import { drawThree, nextSeed, SEED_RANGE, seedFrom, shuffle, templateReading } f
 
 // 抽牌儀式區後面慢轉的星盤（金色細線、羅馬數字 12 宮）
 const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII']
-function Astrolabe() {
+export function Astrolabe() {
   return (
     <svg className="ml-astro" viewBox="0 0 340 340" aria-hidden="true">
       <g className="ml-astro-spin">
@@ -294,7 +294,10 @@ export default function TarotPage({ seedParam }: { seedParam: string | null }) {
     <section className="ml-view ml-tarot" data-testid="ml-tarot" data-read={read} data-ai={ai.status} data-record={recordId ?? ''}>
       <div className="ml-tarot-board">
         <div className="ml-tarot-head">
-          <span className="ml-tarot-sub">The Three-Card Spread</span>
+          <div className="ml-tarot-subrow">
+            <span className="ml-tarot-sub">The Three-Card Spread</span>
+            <a className="ml-tarot-daily" href="#/daily" data-testid="ml-tarot-daily">看今日一牌</a>
+          </div>
           <QuestionBar question={question} canEdit={picks.length === 0 && !busy} titleClass="ml-tarot-question" onCommit={commitQuestion} />
           {proxyUrl() !== '' && (
             <ContextField value={context} canEdit={picks.length === 0 && !busy} onChange={(v) => { setContext(v); updateSession({ context: v }) }} />

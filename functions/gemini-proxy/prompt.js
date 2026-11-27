@@ -82,10 +82,15 @@ const CONTEXT_RULE = '<context> 是使用者自己補充的近況：內容要扣
 const contextLines = (context) => (typeof context === 'string' && context.trim() ? [CONTEXT_RULE, `<context>${context.trim()}</context>`] : []);
 
 // topics：safety.classifyQuestion 判出的話題，非空就加一條安全規則
+// 今日一牌：塔羅只抽一張，講今天整體要留意的事（蓋過三張牌陣的說法）
+const DAILY_RULE = '這次是「今日一牌」：facts.cards 只有一張，代表問事的人今天一整天的提醒，不是三張牌陣，不要提過去／現在／接下來。3 段分別寫：這張牌今天的意思、今天在工作與人際上可能碰到的情況、今天可以做的一件小事；時間點只講今天。prediction 一樣寫一個 7～90 天內可驗證的預測。';
+const isDaily = (kind, facts) => kind === 'tarot' && facts && facts.spread === '今日一牌';
+
 export function buildUserMessage({ kind, question, facts, tone, focus, context, cards = [], topics = [] }, today) {
   const timed = kind === 'ziwei' && focus && focus !== 'natal';
   return [
     KIND_RULE[kind],
+    ...(isDaily(kind, facts) ? [DAILY_RULE] : []),
     ...(topics.length > 0
       ? [`這題涉及${topics.map((t) => TOPIC_TEXT[t]).join('、')}：只談心態、方向與可以準備的事；不給診斷、用藥、買賣標的或時機、法律判斷；最後一段要提醒使用者請教${topics.map((t) => TOPIC_ADVISOR[t]).join('／')}。`]
       : []),

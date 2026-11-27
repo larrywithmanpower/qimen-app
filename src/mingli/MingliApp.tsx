@@ -10,6 +10,7 @@ import { fetchSiteStatus } from './ai'
 import { useRealm } from './ui/fx'
 import { useRoute } from './ui/route'
 import TarotPage from './tarot/TarotPage'
+import DailyPage from './tarot/DailyPage'
 import MeihuaPage from './meihua/ui/MeihuaPage'
 import ZiweiPage from './ziwei/ui/ZiweiPage'
 import RecordsPage from './ui/RecordsPage'
@@ -24,11 +25,11 @@ const TABS = [
 
 // 紫微頁跟「我的」是同一頁，亮「我的」；合併解讀亮「紀錄」；塔羅、梅花亮首頁
 const tabOf = (path: string) => (path === '/ziwei' ? '/me' : path === '/combo' ? '/records' : ['/records', '/accuracy', '/me'].includes(path) ? path : '/')
-// 塔羅、梅花右上角放回首頁鈕；紫微照設計稿放日期
-const isMethodPage = (path: string) => ['/tarot', '/meihua'].includes(path)
+// 塔羅、今日一牌、梅花右上角放回首頁鈕；紫微照設計稿放日期
+const isMethodPage = (path: string) => ['/tarot', '/daily', '/meihua'].includes(path)
 
 // 其他網址（含舊的 #/qimen）一律導回首頁
-const KNOWN_PATHS = ['/', '/tarot', '/meihua', '/ziwei', '/records', '/combo', '/accuracy', '/me', '/privacy', '/terms']
+const KNOWN_PATHS = ['/', '/tarot', '/daily', '/meihua', '/ziwei', '/records', '/combo', '/accuracy', '/me', '/privacy', '/terms']
 
 function today() {
   const d = new Date()
@@ -57,6 +58,9 @@ export default function MingliApp() {
   switch (route.path) {
     case '/tarot':
       page = <TarotPage seedParam={route.params.get('seed')} />
+      break
+    case '/daily':
+      page = <DailyPage />
       break
     case '/meihua':
       page = <MeihuaPage params={route.params} />

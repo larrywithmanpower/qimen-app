@@ -161,6 +161,7 @@ export default function Home() {
           <p className="ml-hm-west-sub">WESTERN · 問星辰</p>
           <div className="ml-hm-list">
             <a href="#/tarot" data-testid="ml-door-tarot">塔羅<small>看清自己現在的心</small></a>
+            <a href="#/daily" data-testid="ml-door-daily">今日一牌<small>每天一張，免費看</small></a>
             <span className="ml-hm-soon">{'星座運勢　籌備中'}</span>
           </div>
         </div>
