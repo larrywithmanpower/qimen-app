@@ -3,13 +3,10 @@ import { CARDS } from './cards'
 import type { DrawnCard, Tone } from './engine'
 import { hashStr, mulberry32, REVERSED_RATE } from './engine'
 
-const TAIWAN_OFFSET_MS = 8 * 3600 * 1000
 const DEVICE_KEY = 'ml-device'
 
-// 台灣日期 YYYY-MM-DD（台灣沒有夏令時間，固定 UTC+8；跟裝置設哪個時區無關）
-export function taiwanDate(now = Date.now()): string {
-  return new Date(now + TAIWAN_OFFSET_MS).toISOString().slice(0, 10)
-}
+// 台灣日期（準度追蹤也用同一份）
+export { taiwanDate } from '../ui/dateMath'
 
 // 這台裝置的隨機代號（只存本機、不送出去）；存不了就用這次開頁的代號
 let memoryId = ''

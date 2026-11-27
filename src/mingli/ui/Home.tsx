@@ -5,6 +5,9 @@ import { goTo } from './route'
 import { SAMPLE_QUESTION, session, updateSession, type Method } from './session'
 import { NEED_QUESTION } from './QuestionBar'
 import { todayInfo } from './today'
+import { loadRecords } from '../storage/records'
+import { dueList } from '../storage/accuracy'
+import { taiwanDate } from './dateMath'
 
 // 煩惱字卡：點了帶入問題，直接進推薦的算法（2026-11-09 定案的分類）
 const WORRIES: { label: string; method: Method; question: string }[] = [
@@ -68,6 +71,13 @@ export default function Home() {
   const [needQ, setNeedQ] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   useEffect(() => { setRealm('home') }, [])
+  // 有幾個 AI 預測到期、還沒回來對答案（紀錄只在本機，讀不到就當 0）
+  const [due, setDue] = useState(0)
+  useEffect(() => {
+    let alive = true
+    loadRecords().then((list) => { if (alive) setDue(dueList(list, taiwanDate()).length) })
+    return () => { alive = false }
+  }, [])
 
   // 字卡只幫忙填問題、標推薦，不直接跳頁
   const fill = (w: (typeof WORRIES)[number]) => {
@@ -108,6 +118,9 @@ export default function Home() {
       <p className="ml-hm-today" data-testid="ml-today">
         {[`${today.year}年`, `${today.month}月`, `${today.day}日`, '·', today.term, '·', today.moon].join(SP)}
       </p>
+      {due > 0 && (
+        <a className="ml-hm-due" href="#/accuracy" data-testid="ml-home-due">有 {due} 個預測到期了，回來對答案</a>
+      )}
       <div className="ml-hm-hero">
         <h1 className="ml-hm-title">有事<br className="ml-hm-br" />放不下，<br /><span className="ml-hm-red">就來問一問。</span></h1>
         <p className="ml-hm-lead">東方看天時，西方看星辰。點一個你在煩的事，我們幫你挑合適的方法；每段 AI 解讀都附上依據的卦辭、牌義與星曜。</p>

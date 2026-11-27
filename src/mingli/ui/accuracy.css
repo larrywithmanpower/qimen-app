@@ -1,0 +1,34 @@
+/* 準度頁：到期待回填、命中率、還沒到期、對過的（卡片樣式跟紀錄頁一致） */
+.ml-acc { gap: var(--ml-space-4); padding-block: var(--ml-space-6); max-width: 760px; width: 100%; margin-inline: auto; }
+.ml-acc-lead { margin: 0; font-size: var(--ml-fs-body-sm); line-height: 1.8; color: var(--ml-ink-muted); }
+.ml-acc-empty { display: flex; flex-direction: column; gap: var(--ml-space-3); color: var(--ml-ink-muted); line-height: 1.8; }
+.ml-acc-empty p { margin: 0; }
+.ml-acc-go, .ml-acc-btns { display: flex; flex-wrap: wrap; gap: var(--ml-space-2); }
+.ml-acc-golink { text-decoration: none; }
+.ml-acc-block { display: flex; flex-direction: column; gap: var(--ml-space-3); }
+.ml-acc-h { margin: 0; font-family: var(--ml-font-serif); font-size: var(--ml-fs-card-title); font-weight: 700; }
+.ml-acc-list, .ml-acc-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ml-space-3); }
+.ml-acc-item {
+  display: flex; flex-direction: column; gap: var(--ml-space-2); padding: var(--ml-space-3) var(--ml-space-4);
+  border: 1px solid var(--ml-line); border-radius: var(--ml-radius-card); background: var(--ml-surface);
+}
+.ml-acc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ml-space-2); font-size: var(--ml-fs-caption); color: var(--ml-ink-muted); }
+.ml-acc-q { font-family: var(--ml-font-serif); font-weight: 700; font-size: var(--ml-fs-body); color: var(--ml-ink); overflow-wrap: anywhere; }
+.ml-acc-claim { font-size: var(--ml-fs-body-sm); line-height: 1.7; color: var(--ml-ink-body); overflow-wrap: anywhere; }
+.ml-acc-btn { flex: 1 1 0; min-width: 72px; }
+.ml-acc-total { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ml-space-3); font-size: var(--ml-fs-body); }
+.ml-acc-pct { font-family: var(--ml-font-serif); font-weight: 900; font-size: var(--ml-fs-title); color: var(--ml-ink); }
+.ml-acc-wait { font-size: var(--ml-fs-body-sm); color: var(--ml-ink-muted); }
+.ml-acc-nums { font-size: var(--ml-fs-caption); color: var(--ml-ink-muted); }
+.ml-acc-rule { margin: 0; font-size: var(--ml-fs-caption); color: var(--ml-ink-faint); }
+.ml-acc-table { display: flex; flex-direction: column; gap: var(--ml-space-2); }
+.ml-acc-sub { margin: 0; font-size: var(--ml-fs-body-sm); font-weight: 700; color: var(--ml-ink-soft); }
+.ml-acc-rows { gap: 0; }
+.ml-acc-row {
+  display: grid; grid-template-columns: 4em minmax(0, 1fr) auto; align-items: baseline; gap: var(--ml-space-3);
+  padding: var(--ml-space-2) 0; border-top: 1px solid var(--ml-line-soft);
+}
+.ml-acc-name { font-weight: 700; font-size: var(--ml-fs-body-sm); color: var(--ml-ink); }
+.ml-acc-row .ml-acc-pct { font-size: var(--ml-fs-body); }
+.ml-acc-donesum { display: flex; align-items: center; min-height: 44px; cursor: pointer; }
+.ml-acc-done[open] > .ml-acc-donesum { margin-bottom: var(--ml-space-1); }

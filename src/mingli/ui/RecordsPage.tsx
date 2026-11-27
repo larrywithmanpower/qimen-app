@@ -8,10 +8,14 @@ import { AiReadingView } from './AiReadingView'
 import ComboPicker from './ComboPicker'
 import { comboPathOf, KIND_NAME, shortTime } from './recordText'
 import { setRealm } from './fx'
+import { predictionOf } from '../storage/accuracy'
+
+const OUTCOME_NAME = { hit: '中', miss: '沒中', unsure: '說不準' } as const
 
 function RecordItem({ rec, onDelete }: { rec: ReadingRecord; onDelete: (id: string) => void }) {
   const [confirm, setConfirm] = useState(false)
   const followups = rec.followups.filter((e) => e.type === 'followup')
+  const prediction = predictionOf(rec)
   return (
     <li className="ml-rec" data-testid="ml-rec" data-kind={rec.kind}>
       <details className="ml-rec-box">
@@ -27,6 +31,11 @@ function RecordItem({ rec, onDelete }: { rec: ReadingRecord; onDelete: (id: stri
         </summary>
         <div className="ml-rec-body">
           {rec.reading ? <AiReadingView reading={rec.reading} /> : <p className="ml-rec-note">這筆沒有 AI 解讀，只留下範例解讀的一句話。</p>}
+          {prediction && (
+            <p className="ml-rec-note" data-testid="ml-rec-prediction">
+              可以對答案的預測：{prediction.claim}（{prediction.dueDate} 到期{rec.outcome ? `・已對：${OUTCOME_NAME[rec.outcome.result]}` : ''}）
+            </p>
+          )}
           {followups.length > 0 && (
             <div className="ml-rec-follow" data-testid="ml-rec-follow">
               {followups.map((e, k) => (

@@ -32,6 +32,14 @@ export interface ReadingRecord {
   sources?: [string, string]
   // 合併解讀：當時兩邊的標題與塔羅題目（來源刪掉後畫面照樣顯示）
   combo?: { meihuaTitle: string; meihuaLevel: string; tarotTitle: string; tarotQuestion: string }
+  // 準度追蹤：AI 預測到期後使用者回填的結果（hit 中、miss 沒中、unsure 說不準）
+  outcome?: { result: OutcomeResult; at: number }
+}
+
+export type OutcomeResult = 'hit' | 'miss' | 'unsure'
+export const isOutcome = (v: unknown): v is NonNullable<ReadingRecord['outcome']> => {
+  const o = v as ReadingRecord['outcome']
+  return !!o && (o.result === 'hit' || o.result === 'miss' || o.result === 'unsure') && typeof o.at === 'number'
 }
 
 export type ComboInfo = NonNullable<ReadingRecord['combo']>
@@ -128,7 +136,23 @@ const serial = <T>(fn: () => Promise<T>): Promise<T> => {
 export function saveRecord(rec: ReadingRecord): Promise<void> {
   return serial(async () => {
     try {
-      await set(RECORDS_KEY, upsert(await readStored(), rec))
+      const stored = await readStored()
+      // 頁面存檔時不帶回填結果：沿用裝置裡已經填好的，不洗掉
+      const prev = stored.find((r) => r.id === rec.id)?.outcome
+      await set(RECORDS_KEY, upsert(stored, prev && !rec.outcome ? { ...rec, outcome: prev } : rec))
+    } catch {
+      // 存不進去就只在這次畫面使用
+    }
+  })
+}
+
+// 回填預測結果（找不到這筆就不動）
+export function setOutcome(id: string, result: OutcomeResult, now = Date.now()): Promise<void> {
+  return serial(async () => {
+    try {
+      const stored = await readStored()
+      if (!stored.some((r) => r.id === id)) return
+      await set(RECORDS_KEY, stored.map((r) => (r.id === id ? { ...r, outcome: { result, at: now } } : r)))
     } catch {
       // 存不進去就只在這次畫面使用
     }

@@ -134,3 +134,10 @@
   .ml-hm-track { animation: none; width: auto; flex-wrap: wrap; padding-inline: var(--ml-gutter); }
   .ml-hm-chip[aria-hidden="true"] { display: none; }
 }
+
+/* 預測到期提醒：日期下方一行，點了去準度頁 */
+.ml-hm-due {
+  align-self: flex-start; margin-top: var(--ml-space-3); display: inline-flex; align-items: center; min-height: 44px; padding: 0 var(--ml-space-4);
+  border-radius: var(--ml-radius-pill); border: 1px solid var(--ml-cinnabar-line); color: var(--ml-cinnabar-text);
+  font-size: var(--ml-fs-body-sm); text-decoration: none;
+}

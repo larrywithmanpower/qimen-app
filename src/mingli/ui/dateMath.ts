@@ -45,3 +45,6 @@ export function shiftMonth(y: number, m: number, delta: number) {
 
 /** 年份頁（12 年一頁）起點，頁面以 minYear 對齊 */
 export const yearPageStart = (y: number, minYear: number) => minYear + Math.floor((y - minYear) / 12) * 12
+
+// 台灣日期 YYYY-MM-DD（台灣沒有夏令時間，固定 UTC+8；跟裝置設哪個時區無關）
+export const taiwanDate = (now = Date.now()) => new Date(now + 8 * 3600 * 1000).toISOString().slice(0, 10)

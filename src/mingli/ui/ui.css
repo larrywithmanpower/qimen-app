@@ -100,11 +100,6 @@ body:has(.ml-app) {
   color: var(--ml-ink); font: inherit; font-size: var(--ml-fs-body-sm); cursor: pointer;
 }
 .ml-ghost:disabled { opacity: .4; cursor: not-allowed; }
-.ml-soon-pill {
-  display: inline-flex; align-items: center; padding: var(--ml-space-1) var(--ml-space-3);
-  border-radius: var(--ml-radius-pill); border: 1px dashed var(--ml-line-strong);
-  font-size: var(--ml-fs-caption); color: var(--ml-ink-muted);
-}
 
 /* 紀錄、準度、佔位頁 */
 .ml-page { justify-content: center; align-items: flex-start; gap: var(--ml-space-4); padding-block: var(--ml-space-6); }

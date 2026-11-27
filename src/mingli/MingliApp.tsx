@@ -4,7 +4,6 @@ import './ui/ui.css'
 import './ui/legal.css'
 import { BrushFilters } from './ui/Bagua'
 import Home from './ui/Home'
-import { SoonPage } from './ui/Pages'
 import { LegalFooter, MaintenancePage, PrivacyPage, TermsPage } from './ui/Legal'
 import { fetchSiteStatus } from './ai'
 import { useRealm } from './ui/fx'
@@ -15,6 +14,7 @@ import MeihuaPage from './meihua/ui/MeihuaPage'
 import ZiweiPage from './ziwei/ui/ZiweiPage'
 import RecordsPage from './ui/RecordsPage'
 import ComboPage from './ui/ComboPage'
+import AccuracyPage from './ui/AccuracyPage'
 
 const TABS = [
   { path: '/', label: '首頁', icon: 'M4 11l8-7 8 7M6 10v9h12v-9M10 19v-5h4v5' },
@@ -75,7 +75,7 @@ export default function MingliApp() {
       page = <ComboPage params={route.params} />
       break
     case '/accuracy':
-      page = <SoonPage testid="ml-accuracy" title="準度" line="之後能回頭對答案，看每種算法和實際發生的差多少。" />
+      page = <AccuracyPage />
       break
     case '/me':
       page = <ZiweiPage params={route.params} testid="ml-me" />
