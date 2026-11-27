@@ -69,6 +69,10 @@ test.describe('頁尾連結', () => {
     await page.goto(BASE + '#/privacy')
     await expect(page.getByTestId('ml-privacy')).toContainText('Anthropic')
     await expect(page.getByTestId('ml-privacy')).toContainText('不含你的生日原文')
+    // 今日一牌的裝置編號與當天 AI 解讀快取、準度回填都要寫在隱私頁
+    await expect(page.getByTestId('ml-privacy')).toContainText('裝置編號')
+    await expect(page.getByTestId('ml-privacy')).toContainText('不含裝置編號')
+    await expect(page.getByTestId('ml-privacy')).toContainText('中、沒中、說不準')
   })
 })
 
