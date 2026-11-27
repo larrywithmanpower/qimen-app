@@ -23,6 +23,11 @@ const ORIGIN = 'https://mingli-yuxuan.web.app'
 const TODAY = '2026-10-27' // 紫微運限的基準日，固定才有可比性
 const SEED = 20261027
 const COUNT = 20
+// repeat 組每種術數幾題（預設 20；抽查時可設小一點省錢，例：AI_EVAL_REPEAT_COUNT=5）
+const REPEAT_COUNT = Number(process.env.AI_EVAL_REPEAT_COUNT) > 0 ? Number(process.env.AI_EVAL_REPEAT_COUNT) : COUNT
+// 口頭禪：11-09 實測 30 份有 28 份寫「兩週」；repeat 組順便統計每個詞出現在幾份解讀
+const STOCK = ['兩週', '較穩', '辭呈', '先別急']
+const stockTexts: string[] = []
 const REPEAT_TIMES = 3
 const PASS_BASIC = COUNT
 const PASS_OVERLAP = 0.8
@@ -155,7 +160,8 @@ async function callOnce(c: Case): Promise<Outcome> {
     reason: '',
     cardIds: new Set(reading.paragraphs.flatMap((p) => p.cards.map((x) => x.id))),
     basis: basisSet(reading.paragraphs.flatMap((p) => p.basis)),
-    text: [reading.verdict, ...reading.paragraphs.map((p) => p.text)].join('\n'),
+    // 一句話、預測、各段標題與內文（口頭禪常出現在標題和預測，例：「兩週內先盤點成績」）
+    text: [reading.verdict, reading.prediction.claim, ...reading.paragraphs.flatMap((p) => [p.title, p.text])].join('\n'),
   }
 }
 
@@ -214,6 +220,12 @@ function report(): string {
       for (const r of rows) lines.push(`| ${r.label} | ${r.rate < PASS_OVERLAP ? `**${pct(r.rate)}**` : pct(r.rate)} | ${pct(r.basisRate)} | ${pct(r.wordRate)} | ${r.note} |`)
       lines.push('')
     }
+    lines.push(`## 口頭禪：出現在幾份解讀（共 ${stockTexts.length} 份成功的解讀；11-09 基準：30 份裡「兩週」28、「較穩」17、「辭呈」10、「先別急」9）`, '', '| 詞 | 份數 | 比例 |', '|---|---|---|')
+    for (const w of STOCK) {
+      const n = stockTexts.filter((t) => t.includes(w)).length
+      lines.push(`| ${w} | ${n}/${stockTexts.length} | ${stockTexts.length ? pct(n / stockTexts.length) : '-'} |`)
+    }
+    lines.push('')
   }
   if (safetyResult.length) {
     lines.push('## safety：內容安全', '', '| 組別 | 通過 | 門檻 |', '|---|---|---|')
@@ -262,9 +274,9 @@ describe.skipIf(!PROXY_URL)('AI 實測', () => {
     for (const [, name] of KINDS) expect(basicResult[name].pass).toBeGreaterThanOrEqual(PASS_BASIC)
   })
 
-  it.runIf(wantRepeat)('repeat：塔羅、梅花、紫微各 20 題 × 3 次', async () => {
+  it.runIf(wantRepeat)(`repeat：塔羅、梅花、紫微各 ${REPEAT_COUNT} 題 × 3 次`, async () => {
     for (const [kind, name] of KINDS) {
-      for (const c of makeCases(kind, COUNT, 7000 + OFFSET[kind])) {
+      for (const c of makeCases(kind, REPEAT_COUNT, 7000 + OFFSET[kind])) {
         const runs: (Set<string> | null)[] = []
         const basisRuns: (Set<string> | null)[] = []
         const wordRuns: (Set<string> | null)[] = []
@@ -274,6 +286,7 @@ describe.skipIf(!PROXY_URL)('AI 實測', () => {
           runs.push(out.cardIds)
           basisRuns.push(out.basis ?? null)
           wordRuns.push(out.text ? bigrams(out.text) : null)
+          if (out.text) stockTexts.push(out.text)
           if (!out.ok) failed++
           await sleep(1000)
         }
