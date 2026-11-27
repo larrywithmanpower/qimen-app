@@ -27,3 +27,15 @@ export function overlapRate(runs) {
 
 // 台灣日期 YYYY-MM-DD（UTC+8）
 export const taiwanDate = (nowMs = Date.now()) => new Date(nowMs + 8 * 3600 * 1000).toISOString().slice(0, 10)
+
+// 依據的比對單位：去掉空白、標點、「」後的整條依據，不同寫法的同一條依據才算同一條
+export const normBasis = (b) => String(b).replace(/[\s\p{P}\p{S}]/gu, '')
+export const basisSet = (basis) => new Set(basis.map(normBasis).filter(Boolean))
+
+// 用詞相似度的比對單位：去掉空白標點後，相鄰兩個字一組（例：「先別急」→ 先別、別急）
+export function bigrams(text) {
+  const s = [...String(text).replace(/[\s\p{P}\p{S}]/gu, '')]
+  const out = new Set()
+  for (let i = 0; i + 1 < s.length; i++) out.add(s[i] + s[i + 1])
+  return out
+}

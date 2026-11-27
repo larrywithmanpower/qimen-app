@@ -15,7 +15,7 @@ import type { AiFocus, AiKind, AiTone } from '../src/mingli/ai'
 import { castByNumbers, templateReading as meihuaTemplate } from '../src/mingli/meihua/engine'
 import { drawThree, mulberry32, templateReading as tarotTemplate } from '../src/mingli/tarot/engine'
 import { buildChart, horoscope } from '../src/mingli/ziwei/engine'
-import { mean, overlapRate, taiwanDate } from './ai-eval-lib.mjs'
+import { basisSet, bigrams, mean, overlapRate, taiwanDate } from './ai-eval-lib.mjs'
 
 const PROXY_URL = process.env.AI_EVAL_URL ?? ''
 const SUITE = process.env.AI_EVAL_SUITE ?? ''
@@ -103,6 +103,9 @@ interface Outcome {
   ok: boolean
   reason: string
   cardIds: Set<string> | null
+  // 6-4 一致性加測：每次的依據集合與全文（用詞比對用）
+  basis?: Set<string> | null
+  text?: string | null
 }
 
 // 看哪一條檢查沒過（validateAiReading 只回 null，這裡逐條探測給報告用）
@@ -147,13 +150,19 @@ async function callOnce(c: Case): Promise<Outcome> {
   }
   const reading = validateAiReading(c.kind, c.facts, c.tone, json)
   if (!reading) return { ok: false, reason: diagnose(c, json), cardIds: null }
-  return { ok: true, reason: '', cardIds: new Set(reading.paragraphs.flatMap((p) => p.cards.map((x) => x.id))) }
+  return {
+    ok: true,
+    reason: '',
+    cardIds: new Set(reading.paragraphs.flatMap((p) => p.cards.map((x) => x.id))),
+    basis: basisSet(reading.paragraphs.flatMap((p) => p.basis)),
+    text: [reading.verdict, ...reading.paragraphs.map((p) => p.text)].join('\n'),
+  }
 }
 
 // ───────── 結果收集與報告 ─────────
 
 const basicResult: Record<string, { pass: number; total: number; fails: string[] }> = {}
-const repeatResult: { kind: string; label: string; rate: number; note: string }[] = []
+const repeatResult: { kind: string; label: string; rate: number; basisRate: number; wordRate: number; note: string }[] = []
 
 const safetyResult: { group: string; question: string; ok: boolean; got: string }[] = []
 const followupResult: { action: string; question: string; ok: boolean; got: string }[] = []
@@ -176,7 +185,7 @@ function report(): string {
     '## 驗收門檻',
     '',
     `- basic：塔羅、梅花、紫微每種 ${PASS_BASIC}/${COUNT} 通過`,
-    `- repeat：總平均重疊率 ≥ ${pct(PASS_OVERLAP)}`,
+    `- repeat：引用卡號總平均重疊率 ≥ ${pct(PASS_OVERLAP)}（依據重疊率、用詞相似度只列出，不設門檻）`,
     '',
     `代理：${PROXY_URL ? '（已設定 AI_EVAL_URL）' : '（未設定）'} ｜ 種子：${SEED} ｜ 基準日：${TODAY}`,
     '',
@@ -195,8 +204,14 @@ function report(): string {
     lines.push(`## repeat：同題 ${REPEAT_TIMES} 次的引用卡號重疊率`, '', `總平均：**${pct(total)}**（${total >= PASS_OVERLAP ? '通過' : '未達標'}）`, '')
     for (const kind of [...new Set(repeatResult.map((r) => r.kind))]) {
       const rows = repeatResult.filter((r) => r.kind === kind)
-      lines.push(`### ${kind}（平均 ${pct(mean(rows.map((r) => r.rate)))}）`, '', '| 題目 | 重疊率 | 備註 |', '|---|---|---|')
-      for (const r of rows) lines.push(`| ${r.label} | ${pct(r.rate)} | ${r.note} |`)
+      const avg = (f: (r: (typeof rows)[number]) => number) => pct(mean(rows.map(f)))
+      lines.push(
+        `### ${kind}（卡號 ${avg((r) => r.rate)}、依據 ${avg((r) => r.basisRate)}、用詞 ${avg((r) => r.wordRate)}；卡號未滿 ${pct(PASS_OVERLAP)} 的 ${rows.filter((r) => r.rate < PASS_OVERLAP).length} 題）`,
+        '',
+        '| 題目 | 卡號重疊率 | 依據重疊率 | 用詞相似度 | 備註 |',
+        '|---|---|---|---|---|',
+      )
+      for (const r of rows) lines.push(`| ${r.label} | ${r.rate < PASS_OVERLAP ? `**${pct(r.rate)}**` : pct(r.rate)} | ${pct(r.basisRate)} | ${pct(r.wordRate)} | ${r.note} |`)
       lines.push('')
     }
   }
@@ -247,18 +262,29 @@ describe.skipIf(!PROXY_URL)('AI 實測', () => {
     for (const [, name] of KINDS) expect(basicResult[name].pass).toBeGreaterThanOrEqual(PASS_BASIC)
   })
 
-  it.runIf(wantRepeat)('repeat：塔羅、梅花各 20 題 × 3 次', async () => {
-    for (const [kind, name] of KINDS.filter(([k]) => k !== 'ziwei')) {
+  it.runIf(wantRepeat)('repeat：塔羅、梅花、紫微各 20 題 × 3 次', async () => {
+    for (const [kind, name] of KINDS) {
       for (const c of makeCases(kind, COUNT, 7000 + OFFSET[kind])) {
         const runs: (Set<string> | null)[] = []
+        const basisRuns: (Set<string> | null)[] = []
+        const wordRuns: (Set<string> | null)[] = []
         let failed = 0
         for (let t = 0; t < REPEAT_TIMES; t++) {
           const out = await callOnce(c)
           runs.push(out.cardIds)
+          basisRuns.push(out.basis ?? null)
+          wordRuns.push(out.text ? bigrams(out.text) : null)
           if (!out.ok) failed++
           await sleep(1000)
         }
-        repeatResult.push({ kind: name, label: `${c.label} ${c.question}`, rate: overlapRate(runs), note: failed ? `${failed} 次失敗（算 0）` : '' })
+        repeatResult.push({
+          kind: name,
+          label: `${c.label} ${c.question}`,
+          rate: overlapRate(runs),
+          basisRate: overlapRate(basisRuns),
+          wordRate: overlapRate(wordRuns),
+          note: failed ? `${failed} 次失敗（算 0）` : '',
+        })
       }
     }
     expect(mean(repeatResult.map((r) => r.rate))).toBeGreaterThanOrEqual(PASS_OVERLAP)
