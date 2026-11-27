@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import './records.css'
 import { proxyUrl } from '../ai'
-import { clearRecords, deleteRecord, loadRecords, RECORDS_MAX } from '../storage/records'
+import { clearRecords, deleteRecord, loadRecords, RECORDS_MAX, TRACKED_MAX } from '../storage/records'
 import type { ReadingRecord } from '../storage/records'
 import { AiReadingView } from './AiReadingView'
 import ComboPicker from './ComboPicker'
@@ -88,7 +88,7 @@ export default function RecordsPage() {
   return (
     <section className="ml-view ml-records" data-testid="ml-records">
       <h1 className="ml-page-title">紀錄</h1>
-      <p className="ml-page-line">算過的梅花、塔羅和合併解讀會自動收在這裡，只存在這台裝置、不會上傳；換瀏覽器或清除網站資料就會不見。最多留 {RECORDS_MAX} 筆。</p>
+      <p className="ml-page-line">算過的梅花、塔羅和合併解讀會自動收在這裡，只存在這台裝置、不會上傳；換瀏覽器或清除網站資料就會不見。最多留 {RECORDS_MAX} 筆；附預測、可以回來對答案的另外最多留 {TRACKED_MAX} 筆。</p>
       {list && list.length === 0 && (
         <div className="ml-rec-empty" data-testid="ml-rec-empty">
           <p>還沒有紀錄。</p>

@@ -4,6 +4,8 @@ import type { AiReading, AiTone, ThreadEntry } from '../ai'
 
 export const RECORDS_KEY = 'ml-records'
 export const RECORDS_MAX = 100
+// 有預測（可以對答案）的紀錄另外算上限：不跟一般紀錄搶位子，免得還沒到期或填過結果就被擠掉、命中率少算
+export const TRACKED_MAX = 300
 // 合併解讀只挑這幾天內的另一邊紀錄
 export const COMBO_DAYS = 7
 const DAY_MS = 24 * 3600 * 1000
@@ -64,10 +66,18 @@ const isRecord = (v: unknown): v is ReadingRecord => {
     && Array.isArray(r.followups)
 }
 
-// 新的在前；同 id 取代舊的；超過 100 筆丟最舊的
+const hasPrediction = (r: ReadingRecord) => typeof r.reading?.prediction?.dueDate === 'string'
+
+// 新的在前；沒有預測的留最新 RECORDS_MAX 筆、有預測的留最新 TRACKED_MAX 筆，各丟各的最舊
+export function trimRecords(list: readonly ReadingRecord[]): ReadingRecord[] {
+  let plain = 0
+  let tracked = 0
+  return [...list].sort((a, b) => b.at - a.at).filter((r) => (hasPrediction(r) ? ++tracked <= TRACKED_MAX : ++plain <= RECORDS_MAX))
+}
+
+// 同 id 取代舊的，再照上限修剪
 export function upsert(list: readonly ReadingRecord[], rec: ReadingRecord): ReadingRecord[] {
-  const rest = list.filter((r) => r.id !== rec.id)
-  return [rec, ...rest].sort((a, b) => b.at - a.at).slice(0, RECORDS_MAX)
+  return trimRecords([rec, ...list.filter((r) => r.id !== rec.id)])
 }
 
 // 比對題目時忽略空白與標點
@@ -94,7 +104,7 @@ export function comboPair(a: ReadingRecord, b: ReadingRecord): [ReadingRecord, R
 // 裝置裡存的原樣（只濾掉壞掉的筆）；存檔、刪除用這份寫回，不會把畫面用的補值寫進去
 async function readStored(): Promise<ReadingRecord[]> {
   const v = await get(RECORDS_KEY)
-  return Array.isArray(v) ? v.filter(isRecord).sort((a, b) => b.at - a.at).slice(0, RECORDS_MAX) : []
+  return Array.isArray(v) ? trimRecords(v.filter(isRecord)) : []
 }
 
 // 合併紀錄的 combo 欄位沒有或格式不對（2026-11-25 前的舊版）：來源還在用來源，不在就從「梅花｜塔羅」標題拆

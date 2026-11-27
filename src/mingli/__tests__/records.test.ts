@@ -10,7 +10,7 @@ vi.mock('idb-keyval', () => ({
   del: async (k: string) => { store.delete(k) },
 }))
 const {
-  RECORDS_KEY, RECORDS_MAX, clearRecords, comboCandidates, comboPair, deleteRecord, loadRecords, normQuestion, saveRecord, upsert,
+  RECORDS_KEY, RECORDS_MAX, TRACKED_MAX, clearRecords, comboCandidates, comboPair, deleteRecord, loadRecords, normQuestion, saveRecord, upsert,
 } = await import('../storage/records')
 type Rec = Awaited<ReturnType<typeof loadRecords>>[number]
 const { comboContext, comboPath } = await import('../ui/recordText')
@@ -47,6 +47,31 @@ describe('紀錄存取', () => {
     expect(list).toHaveLength(RECORDS_MAX)
     expect(list.some((r) => r.id === 'r0')).toBe(false)
     expect(list[0].id).toBe(`r${RECORDS_MAX}`)
+  })
+  it(`有預測的另外算上限：一般紀錄擠爆 ${RECORDS_MAX} 筆，舊的有預測、填過結果的都還在`, () => {
+    const pred = (id: string, at: number, outcome?: Rec['outcome']): Rec => rec({
+      id, at, outcome,
+      reading: { verdict: '可以', tone: '吉', paragraphs: [], prediction: { claim: '一個月內有消息', dueDate: '2026-12-20' } },
+    })
+    let list: Rec[] = [pred('old-pending', NOW - 60 * DAY), pred('old-done', NOW - 80 * DAY, { result: 'hit', at: NOW })]
+    for (let i = 0; i < RECORDS_MAX + 20; i++) list = upsert(list, rec({ id: `p${i}`, at: NOW + i }))
+    expect(list.filter((r) => r.id.startsWith('p'))).toHaveLength(RECORDS_MAX)
+    expect(list.map((r) => r.id)).toEqual(expect.arrayContaining(['old-pending', 'old-done']))
+    expect(list.find((r) => r.id === 'old-done')?.outcome?.result).toBe('hit')
+  })
+  it(`有預測的超過 ${TRACKED_MAX} 筆才丟它們之中最舊的`, () => {
+    let list: Rec[] = []
+    for (let i = 0; i < TRACKED_MAX + 1; i++) {
+      list = upsert(list, rec({ id: `t${i}`, at: NOW + i, reading: { verdict: '可以', tone: '吉', paragraphs: [], prediction: { claim: '有消息', dueDate: '2026-12-20' } } }))
+    }
+    expect(list).toHaveLength(TRACKED_MAX)
+    expect(list.some((r) => r.id === 't0')).toBe(false)
+  })
+  it('裝置裡已經超過上限的舊資料，讀出來也照同樣規則修剪', async () => {
+    store.set(RECORDS_KEY, Array.from({ length: RECORDS_MAX + 5 }, (_, i) => rec({ id: `x${i}`, at: NOW + i })))
+    const all = await loadRecords()
+    expect(all).toHaveLength(RECORDS_MAX)
+    expect(all.some((r) => r.id === 'x0')).toBe(false)
   })
   it('單筆刪、全部刪', async () => {
     await saveRecord(rec({ id: 'a' }))
